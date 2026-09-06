@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { Geist, Geist_Mono, Manrope } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -24,10 +25,12 @@ export const metadata: Metadata = {
     "AI receptionist for dental clinics. Answer patient questions, manage appointments, and provide 24/7 assistance.",
 };
 
+import { TRPCProvider } from "@/lib/trpc/Provider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: ReactNode;
 }>) {
   return (
     <html
@@ -41,7 +44,9 @@ export default function RootLayout({
         manrope.variable,
       )}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <TRPCProvider>{children}</TRPCProvider>
+      </body>
     </html>
   );
 }
