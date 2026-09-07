@@ -1,6 +1,7 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { type Context } from "./context";
+import { getActiveOrganization } from "@/lib/auth/organization";
 
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
@@ -29,3 +30,29 @@ export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
     },
   });
 });
+
+export const organizationProcedure = protectedProcedure.use(
+  async ({ ctx, next }) => {
+    const activeOrg = await getActiveOrganization(
+      ctx.user.id,
+      ctx.activeOrgCookie,
+    );
+
+    if (!activeOrg) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message:
+          "No active organization found. Please create an organization first.",
+      });
+    }
+
+    return next({
+      ctx: {
+        ...ctx,
+        organization: activeOrg,
+        organizationId: activeOrg.id,
+        role: activeOrg.role,
+      },
+    });
+  },
+);

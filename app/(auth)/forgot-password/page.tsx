@@ -139,7 +139,7 @@ export default function ForgotPasswordPage() {
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="email">Work Email</Label>
             <Input
               id="email"
@@ -153,7 +153,7 @@ export default function ForgotPasswordPage() {
               aria-invalid={!!errors.email}
             />
             {errors.email && (
-              <p className="text-xs text-destructive">{errors.email}</p>
+              <p className="text-xs text-destructive mt-0.5">{errors.email}</p>
             )}
           </div>
 

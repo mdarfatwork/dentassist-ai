@@ -116,3 +116,26 @@ Moderate rounding across all UI components. Avoid the "everything is a giant pil
 - **Library:** [Lucide Icons](https://lucide.dev/) (strictly single library, do not mix icon sets).
 - **Icon Sizing:** `16px`, `18px`, `20px`.
 - **Style:** Mostly stroke icons with consistent stroke widths.
+
+---
+
+## 7. Form Layout, Inputs & Labels
+
+Clean, accessible forms require consistent spacing and visual hierarchy to prevent cramped or confusing interfaces.
+
+### Vertical Spacing Hierarchy
+
+| Element Relationship             | Spacing / Tailwind Class        | Description                                                                       |
+| :------------------------------- | :------------------------------ | :-------------------------------------------------------------------------------- |
+| **Label to Input**               | `8px` (`gap-2`)                 | Visible vertical separation between label and control. Minimum `6px` (`gap-1.5`). |
+| **Input to Error / Helper Text** | `2px–4px` (`mt-0.5` / `mt-1`)   | Placed directly below the input with tight, clear association.                    |
+| **Between Form Fields**          | `16px–20px` (`gap-4` / `gap-5`) | Clear breathing room between separate input fields.                               |
+| **Form to Action Buttons**       | `16px–24px` (`pt-2` / `gap-4`)  | Clear separation between fields and submit/cancel buttons.                        |
+
+### Layout Rules
+
+1. **Flex Column Structure:** Always wrap each field (Label + Input + Error) in a dedicated column container (`<div className="flex flex-col gap-2">` or `<div className="grid gap-2">`).
+2. **Avoid `space-y-*` for Form Groups:** Do not rely on `space-y-*` on unstyled `div`s with inline `<label>` elements, as margin-collapsing can cause labels to stick flush against inputs.
+3. **Label Display:** Labels should render with `inline-block` or `block` geometry and `text-sm font-medium text-foreground`.
+4. **Input Sizing:** Standard inputs use `h-9` (`36px`) or `h-10` (`40px`) with `rounded-lg` (`8px`) border radius and `px-3` padding.
+5. **Clear Validation States:** Use `aria-invalid` with red border and subtle focus rings (`aria-invalid:border-destructive aria-invalid:ring-destructive/20`), accompanied by concise `text-xs text-destructive` error text.

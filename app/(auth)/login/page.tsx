@@ -130,7 +130,7 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="email">Email Address</Label>
             <Input
               id="email"
@@ -144,11 +144,11 @@ export default function LoginPage() {
               aria-invalid={!!errors.email}
             />
             {errors.email && (
-              <p className="text-xs text-destructive">{errors.email}</p>
+              <p className="text-xs text-destructive mt-0.5">{errors.email}</p>
             )}
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
               <Link

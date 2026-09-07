@@ -195,7 +195,7 @@ function ResetPasswordForm() {
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="password">New Password</Label>
             <div className="relative">
               <Input
@@ -225,12 +225,14 @@ function ResetPasswordForm() {
               </button>
             </div>
             {errors.password && (
-              <p className="text-xs text-destructive">{errors.password}</p>
+              <p className="text-xs text-destructive mt-0.5">
+                {errors.password}
+              </p>
             )}
             <PasswordStrength password={formData.password} />
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="confirmPassword">Confirm New Password</Label>
             <div className="relative">
               <Input
@@ -262,7 +264,7 @@ function ResetPasswordForm() {
               </button>
             </div>
             {errors.confirmPassword && (
-              <p className="text-xs text-destructive">
+              <p className="text-xs text-destructive mt-0.5">
                 {errors.confirmPassword}
               </p>
             )}

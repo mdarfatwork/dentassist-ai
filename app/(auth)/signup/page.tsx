@@ -156,7 +156,7 @@ export default function SignupPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="name">Full Name</Label>
             <Input
               id="name"
@@ -170,11 +170,11 @@ export default function SignupPage() {
               aria-invalid={!!errors.name}
             />
             {errors.name && (
-              <p className="text-xs text-destructive">{errors.name}</p>
+              <p className="text-xs text-destructive mt-0.5">{errors.name}</p>
             )}
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="email">Work Email</Label>
             <Input
               id="email"
@@ -188,11 +188,11 @@ export default function SignupPage() {
               aria-invalid={!!errors.email}
             />
             {errors.email && (
-              <p className="text-xs text-destructive">{errors.email}</p>
+              <p className="text-xs text-destructive mt-0.5">{errors.email}</p>
             )}
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="password">Password</Label>
             <div className="relative">
               <Input
@@ -222,12 +222,14 @@ export default function SignupPage() {
               </button>
             </div>
             {errors.password && (
-              <p className="text-xs text-destructive">{errors.password}</p>
+              <p className="text-xs text-destructive mt-0.5">
+                {errors.password}
+              </p>
             )}
             <PasswordStrength password={formData.password} />
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="confirmPassword">Confirm Password</Label>
             <div className="relative">
               <Input
@@ -259,7 +261,7 @@ export default function SignupPage() {
               </button>
             </div>
             {errors.confirmPassword && (
-              <p className="text-xs text-destructive">
+              <p className="text-xs text-destructive mt-0.5">
                 {errors.confirmPassword}
               </p>
             )}
