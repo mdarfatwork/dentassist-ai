@@ -1,9 +1,11 @@
-import { router, protectedProcedure } from "../trpc";
+import { router, protectedProcedure, organizationProcedure } from "../trpc";
+import { TRPCError } from "@trpc/server";
 import {
   createOrganizationSchema,
   switchOrganizationSchema,
   getOrganizationSchema,
 } from "@/lib/validations/organization";
+import { updateClinicProfileSchema } from "@/lib/validations/clinic";
 import {
   getUserOrganizations,
   getActiveOrganization,
@@ -42,9 +44,59 @@ export const organizationRouter = router({
         id: organization.id,
         name: organization.name,
         slug: organization.slug,
+        description: organization.description,
+        logoUrl: organization.logoUrl,
+        phone: organization.phone,
+        email: organization.email,
+        address: organization.address,
+        timezone: organization.timezone,
         role,
         createdAt: organization.createdAt,
         updatedAt: organization.updatedAt,
+      };
+    }),
+
+  /**
+   * Updates clinic profile information for the active organization.
+   */
+  updateProfile: organizationProcedure
+    .input(updateClinicProfileSchema)
+    .mutation(async ({ ctx, input }) => {
+      // Validate role permissions (OWNER or ADMIN)
+      if (ctx.role !== "OWNER" && ctx.role !== "ADMIN") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "Only organization owners and admins can update clinic profile settings.",
+        });
+      }
+
+      const updated = await ctx.db.organization.update({
+        where: { id: ctx.organizationId },
+        data: {
+          name: input.name,
+          description: input.description,
+          logoUrl: input.logoUrl,
+          phone: input.phone,
+          email: input.email,
+          address: input.address,
+          timezone: input.timezone,
+        },
+      });
+
+      return {
+        id: updated.id,
+        name: updated.name,
+        slug: updated.slug,
+        description: updated.description,
+        logoUrl: updated.logoUrl,
+        phone: updated.phone,
+        email: updated.email,
+        address: updated.address,
+        timezone: updated.timezone,
+        role: ctx.role,
+        createdAt: updated.createdAt,
+        updatedAt: updated.updatedAt,
       };
     }),
 

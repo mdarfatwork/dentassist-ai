@@ -75,15 +75,92 @@ enum Role {
 }
 
 model Organization {
-  id          String                   @id @default(cuid())
-  name        String
-  slug        String                   @unique
-  createdAt   DateTime                 @default(now())
-  updatedAt   DateTime                 @updatedAt
-  memberships OrganizationMembership[]
+  id           String                   @id @default(cuid())
+  name         String
+  slug         String                   @unique
+  description  String?
+  logoUrl      String?
+  phone        String?
+  email        String?
+  address      String?
+  timezone     String                   @default("UTC")
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  memberships  OrganizationMembership[]
+  dentists     Dentist[]
+  services     Service[]
+  workingHours WorkingHours[]
+  holidays     Holiday[]
 
   @@index([slug])
   @@map("organization")
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+model Dentist {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  specialization String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("dentist")
+}
+
+model Service {
+  id              String       @id @default(cuid())
+  organizationId  String
+  name            String
+  description     String?
+  durationMinutes Int
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("service")
+}
+
+model WorkingHours {
+  id             String       @id @default(cuid())
+  organizationId String
+  dayOfWeek      DayOfWeek
+  isOpen         Boolean      @default(true)
+  startTime      String?
+  endTime        String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, dayOfWeek])
+  @@index([organizationId])
+  @@map("working_hours")
+}
+
+model Holiday {
+  id             String       @id @default(cuid())
+  organizationId String
+  date           DateTime
+  name           String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, date])
+  @@index([organizationId])
+  @@map("holiday")
 }
 
 model OrganizationMembership {

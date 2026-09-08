@@ -7,6 +7,12 @@ export interface OrganizationWithMembership {
   id: string;
   name: string;
   slug: string;
+  description: string | null;
+  logoUrl: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  timezone: string;
   role: Role;
   createdAt: Date;
   updatedAt: Date;
@@ -33,6 +39,12 @@ export async function getUserOrganizations(
     id: m.organization.id,
     name: m.organization.name,
     slug: m.organization.slug,
+    description: m.organization.description,
+    logoUrl: m.organization.logoUrl,
+    phone: m.organization.phone,
+    email: m.organization.email,
+    address: m.organization.address,
+    timezone: m.organization.timezone,
     role: m.role,
     createdAt: m.organization.createdAt,
     updatedAt: m.organization.updatedAt,
@@ -154,6 +166,12 @@ export async function createOrganizationWithMembership(
       id: org.id,
       name: org.name,
       slug: org.slug,
+      description: org.description,
+      logoUrl: org.logoUrl,
+      phone: org.phone,
+      email: org.email,
+      address: org.address,
+      timezone: org.timezone,
       role: membership.role,
       createdAt: org.createdAt,
       updatedAt: org.updatedAt,
