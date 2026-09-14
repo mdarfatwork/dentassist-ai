@@ -16,6 +16,7 @@ concurrency:
 jobs:
   quality:
     runs-on: ubuntu-latest
+
     env:
       DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/dentassist?sslmode=disable"
       BETTER_AUTH_SECRET: "mock-secret-for-ci-build-and-checks-32-chars-min"
@@ -32,6 +33,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
+          version: 10.3.0
           run_install: false
 
       - name: Setup Node
