@@ -23,7 +23,7 @@ export function PasswordStrength({
     if (score === 0) return "bg-muted";
     if (score <= 1) return "bg-destructive";
     if (score <= 2) return "bg-amber-500";
-    if (score <= 3) return "bg-blue-500";
+    if (score <= 3) return "bg-primary";
     return "bg-emerald-600";
   };
 
@@ -38,27 +38,27 @@ export function PasswordStrength({
   if (!password) return null;
 
   return (
-    <div className="flex flex-col gap-2.5 mt-1.5 animate-fadeIn">
+    <div className="flex flex-col gap-2 mt-1.5 animate-fadeIn">
       <div className="flex items-center justify-between text-xs">
         <span className="text-muted-foreground">Password strength</span>
         <span
-          className={cn("font-medium", {
+          className={cn("font-semibold text-[11px]", {
             "text-destructive": score <= 1,
             "text-amber-600": score === 2,
-            "text-blue-600": score === 3,
-            "text-emerald-600": score === 4,
+            "text-primary": score === 3,
+            "text-emerald-700 dark:text-emerald-400": score === 4,
           })}
         >
           {getStrengthText()}
         </span>
       </div>
 
-      <div className="grid grid-cols-4 gap-1.5 h-1.5 w-full bg-muted rounded-full overflow-hidden">
+      <div className="grid grid-cols-4 gap-1 h-1 w-full bg-muted rounded-[2px] overflow-hidden">
         {[1, 2, 3, 4].map((step) => (
           <div
             key={step}
             className={cn(
-              "h-full rounded-full transition-all duration-300",
+              "h-full rounded-[2px] transition-all duration-200",
               step <= score ? getStrengthColor() : "bg-transparent",
             )}
           />
@@ -70,9 +70,9 @@ export function PasswordStrength({
           <div
             key={req.label}
             className={cn(
-              "flex items-center gap-1.5 text-xs transition-colors",
+              "flex items-center gap-1.5 text-[11px] transition-colors",
               req.met
-                ? "text-emerald-700 dark:text-emerald-400 font-medium"
+                ? "text-emerald-800 dark:text-emerald-300 font-medium"
                 : "text-muted-foreground",
             )}
           >

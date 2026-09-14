@@ -186,12 +186,12 @@ export function WorkingHoursEditor({
   };
 
   return (
-    <Card className="border-border shadow-xs">
+    <Card className="border-border shadow-none">
       <form onSubmit={handleSave}>
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <CardTitle className="text-xl font-bold flex items-center gap-2">
-              <Clock className="size-5 text-primary" /> Regular Working Hours
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <Clock className="size-4 text-primary" /> Regular Working Hours
             </CardTitle>
             <CardDescription>
               Set weekly recurring opening hours. Used by the AI to offer valid
@@ -230,7 +230,7 @@ export function WorkingHoursEditor({
               <Spinner /> Loading working hours...
             </div>
           ) : (
-            <div className="divide-y divide-border/60 rounded-xl border border-border bg-card overflow-hidden">
+            <div className="divide-y divide-border rounded-[4px] border border-border bg-card overflow-hidden">
               {DAYS_OF_WEEK.map((day) => {
                 const daySchedule = schedules.find(
                   (s) => s.dayOfWeek === day,

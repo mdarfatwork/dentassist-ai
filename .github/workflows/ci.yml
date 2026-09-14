@@ -16,6 +16,14 @@ concurrency:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/dentassist?sslmode=disable"
+      BETTER_AUTH_SECRET: "mock-secret-for-ci-build-and-checks-32-chars-min"
+      BETTER_AUTH_URL: "http://localhost:3000"
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+      GOOGLE_CLIENT_ID: "mock-google-client-id"
+      GOOGLE_CLIENT_SECRET: "mock-google-client-secret"
+      RESEND_API_KEY: "re_mock_resend_api_key"
 
     steps:
       - name: Checkout
@@ -24,6 +32,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
+          version: 10
           run_install: false
 
       - name: Setup Node
@@ -34,6 +43,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm db:generate
 
       - name: Lint
         run: pnpm lint

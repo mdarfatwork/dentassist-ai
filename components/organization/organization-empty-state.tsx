@@ -13,13 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Building2,
-  Sparkles,
-  Plus,
-  AlertCircle,
-  CheckCircle2,
-} from "lucide-react";
+import { Building2, Plus, AlertCircle, CheckCircle2 } from "lucide-react";
 
 interface OrganizationEmptyStateProps {
   userName: string;
@@ -76,21 +70,22 @@ export function OrganizationEmptyState({
 
   return (
     <div className="max-w-2xl mx-auto py-8 sm:py-12 flex flex-col items-center">
-      {/* Welcome Card */}
-      <Card className="w-full border-border shadow-sm overflow-hidden">
-        <div className="bg-gradient-to-r from-primary/15 via-primary/5 to-transparent p-6 sm:p-8 border-b border-border/80">
-          <div className="size-12 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shadow-xs shadow-primary/20 mb-4">
-            <Building2 className="size-6" />
+      {/* Welcome Card - Clean Clinical Workspace Initializer */}
+      <Card className="w-full border-border shadow-none overflow-hidden">
+        <div className="p-6 sm:p-8 border-b border-border bg-card">
+          <div className="size-9 rounded-[3px] bg-primary text-primary-foreground flex items-center justify-center mb-3">
+            <Building2 className="size-4.5" />
           </div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/15 text-primary text-xs font-semibold mb-2">
-            <Sparkles className="size-3.5" /> First-Time Setup
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[2px] border border-primary/20 bg-primary/10 text-primary text-[11px] font-semibold mb-2">
+            Practice Initializer
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
             Welcome to DentAssist AI, {userName}
           </h2>
-          <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-            Create your first dental clinic organization to unlock your AI
-            receptionist portal, schedule management, and clinic workflows.
+          <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+            Create your primary dental clinic organization to unlock your
+            receptionist portal, practitioner schedule, and appointment
+            workflows.
           </p>
         </div>
 
@@ -102,20 +97,20 @@ export function OrganizationEmptyState({
             </Alert>
           )}
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="first-org-name" className="text-sm font-semibold">
-                Dental Clinic / Practice Name
+              <Label htmlFor="first-org-name" className="text-xs font-semibold">
+                Dental Clinic / Practice Legal Name
               </Label>
               <Input
                 id="first-org-name"
                 name="name"
-                placeholder="e.g. Bright Smile Dental Clinic"
+                placeholder="e.g. Metro Dental Associates"
                 value={name}
                 onChange={handleNameChange}
                 disabled={createMutation.isPending}
                 autoFocus
-                className="h-10 text-sm"
+                className="h-9 text-xs"
                 aria-invalid={!!fieldError}
               />
               {fieldError && (
@@ -126,11 +121,11 @@ export function OrganizationEmptyState({
             </div>
 
             {previewSlug && (
-              <div className="rounded-lg bg-muted/70 border border-border/80 px-3.5 py-2.5 text-xs flex items-center justify-between">
-                <span className="text-muted-foreground flex items-center gap-1.5">
-                  <Sparkles className="size-3.5 text-primary" /> Generated Slug:
+              <div className="rounded-[3px] bg-muted/50 border border-border px-3 py-2 text-xs flex items-center justify-between">
+                <span className="text-muted-foreground text-[11px]">
+                  Generated Practice Identifier:
                 </span>
-                <code className="font-mono text-foreground font-semibold">
+                <code className="font-mono text-foreground font-semibold text-xs">
                   {previewSlug}
                 </code>
               </div>
@@ -139,37 +134,37 @@ export function OrganizationEmptyState({
             <Button
               type="submit"
               disabled={createMutation.isPending || !name.trim()}
-              className="w-full h-10 font-semibold gap-2 shadow-xs"
+              className="w-full h-9 font-semibold gap-2 mt-1"
             >
               {createMutation.isPending ? (
                 <>
-                  <Spinner className="mr-2" /> Creating Practice...
+                  <Spinner className="mr-2" /> Initializing Workspace...
                 </>
               ) : (
                 <>
-                  <Plus className="size-4" /> Create Organization & Get Started
+                  <Plus className="size-3.5" /> Initialize Clinic Organization
                 </>
               )}
             </Button>
           </form>
 
           {/* Value checklist */}
-          <div className="pt-4 border-t border-border/60 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-muted-foreground">
+          <div className="pt-4 border-t border-border grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="size-4 text-primary shrink-0" />
+              <CheckCircle2 className="size-3.5 text-primary shrink-0" />
               <span>Full practice owner privileges</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="size-4 text-primary shrink-0" />
+              <CheckCircle2 className="size-3.5 text-primary shrink-0" />
               <span>Multi-tenant data isolation</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="size-4 text-primary shrink-0" />
-              <span>Switch between multiple clinics</span>
+              <CheckCircle2 className="size-3.5 text-primary shrink-0" />
+              <span>Multiple clinic branch switching</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="size-4 text-primary shrink-0" />
-              <span>Ready for AI receptionist tools</span>
+              <CheckCircle2 className="size-3.5 text-primary shrink-0" />
+              <span>Autonomous AI receptionist ready</span>
             </div>
           </div>
         </CardContent>

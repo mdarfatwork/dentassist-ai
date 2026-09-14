@@ -119,12 +119,12 @@ function ResetPasswordForm() {
 
   if (tokenError || (!token && !isSuccess)) {
     return (
-      <Card className="border-border shadow-sm">
-        <CardHeader className="text-center pb-3">
-          <div className="mx-auto size-12 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mb-2">
-            <AlertCircle className="size-6" />
+      <Card className="border-border shadow-none">
+        <CardHeader className="text-center pb-3 border-b-0">
+          <div className="mx-auto size-10 rounded-[3px] bg-destructive/10 text-destructive flex items-center justify-center mb-2">
+            <AlertCircle className="size-5" />
           </div>
-          <CardTitle className="text-2xl font-bold">
+          <CardTitle className="text-lg font-bold">
             Invalid or Expired Link
           </CardTitle>
           <CardDescription>
@@ -150,12 +150,12 @@ function ResetPasswordForm() {
 
   if (isSuccess) {
     return (
-      <Card className="border-border shadow-sm">
-        <CardHeader className="text-center pb-3">
-          <div className="mx-auto size-12 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-2">
-            <CheckCircle2 className="size-6" />
+      <Card className="border-border shadow-none">
+        <CardHeader className="text-center pb-3 border-b-0">
+          <div className="mx-auto size-10 rounded-[3px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 flex items-center justify-center mb-2">
+            <CheckCircle2 className="size-5" />
           </div>
-          <CardTitle className="text-2xl font-bold">
+          <CardTitle className="text-lg font-bold">
             Password Reset Successful
           </CardTitle>
           <CardDescription>
@@ -173,16 +173,16 @@ function ResetPasswordForm() {
   }
 
   return (
-    <Card className="border-border shadow-sm">
+    <Card className="border-border shadow-none">
       <CardHeader className="space-y-1">
-        <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-1">
-          <KeyRound className="size-5" />
+        <div className="size-8 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center mb-1">
+          <KeyRound className="size-4" />
         </div>
-        <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
-          Set new password
+        <CardTitle className="text-lg font-bold tracking-tight text-foreground">
+          Set New Password
         </CardTitle>
         <CardDescription>
-          Choose a strong password with at least 8 characters.
+          Choose a secure clinical account password.
         </CardDescription>
       </CardHeader>
 

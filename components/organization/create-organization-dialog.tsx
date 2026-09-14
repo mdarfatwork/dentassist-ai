@@ -8,20 +8,20 @@ import { slugify } from "@/lib/organization/slug";
 import { setActiveOrgCookie } from "@/lib/organization/cookies";
 import { useOrganization } from "./organization-provider";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Credenza,
+  CredenzaContent,
+  CredenzaDescription,
+  CredenzaFooter,
+  CredenzaHeader,
+  CredenzaTitle,
+  CredenzaTrigger,
+} from "@/components/ui/credenza";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
-import { Building2, Plus, AlertCircle, Sparkles } from "lucide-react";
+import { Building2, Plus, AlertCircle } from "lucide-react";
 
 interface CreateOrganizationDialogProps {
   open?: boolean;
@@ -93,27 +93,27 @@ export function CreateOrganizationDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Credenza open={isOpen} onOpenChange={setIsOpen}>
       {trigger ? (
-        <DialogTrigger render={trigger as React.ReactElement} />
+        <CredenzaTrigger render={trigger as React.ReactElement} />
       ) : (
-        <DialogTrigger render={<Button size="sm" className="gap-1.5" />}>
-          <Plus className="size-4" /> Create Organization
-        </DialogTrigger>
+        <CredenzaTrigger render={<Button size="sm" className="gap-1.5" />}>
+          <Plus className="size-3.5" /> Create Practice Organization
+        </CredenzaTrigger>
       )}
 
-      <DialogContent className="sm:max-w-md">
+      <CredenzaContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-2">
-              <Building2 className="size-5" />
+          <CredenzaHeader>
+            <div className="size-8 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center mb-1">
+              <Building2 className="size-4" />
             </div>
-            <DialogTitle>Create New Organization</DialogTitle>
-            <DialogDescription>
-              Set up a dental clinic or practice organization. You will be
-              assigned as the <strong>OWNER</strong>.
-            </DialogDescription>
-          </DialogHeader>
+            <CredenzaTitle>Create Practice Organization</CredenzaTitle>
+            <CredenzaDescription>
+              Establish a new dental practice tenant. Your account will be
+              designated as OWNER.
+            </CredenzaDescription>
+          </CredenzaHeader>
 
           {error && (
             <Alert variant="destructive" className="my-3">
@@ -122,15 +122,15 @@ export function CreateOrganizationDialog({
             </Alert>
           )}
 
-          <div className="flex flex-col gap-4 py-3">
+          <div className="flex flex-col gap-3 py-3">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="org-name" className="text-sm font-medium">
-                Organization / Clinic Name
+              <Label htmlFor="org-name" className="text-xs font-semibold">
+                Practice Organization Name
               </Label>
               <Input
                 id="org-name"
                 name="name"
-                placeholder="e.g. Bright Smile Dental"
+                placeholder="e.g. Downtown Dental Care"
                 value={name}
                 onChange={handleNameChange}
                 disabled={createMutation.isPending}
@@ -143,21 +143,22 @@ export function CreateOrganizationDialog({
             </div>
 
             {previewSlug && (
-              <div className="rounded-lg bg-muted/60 border border-border/80 px-3 py-2 text-xs flex items-center justify-between">
-                <span className="text-muted-foreground flex items-center gap-1.5">
-                  <Sparkles className="size-3.5 text-primary" /> Generated Slug:
+              <div className="rounded-[3px] bg-muted/50 border border-border px-3 py-2 text-xs flex items-center justify-between">
+                <span className="text-muted-foreground text-[11px]">
+                  Generated Tenant Slug:
                 </span>
-                <code className="font-mono text-foreground font-medium">
+                <code className="font-mono text-foreground font-semibold text-xs">
                   {previewSlug}
                 </code>
               </div>
             )}
           </div>
 
-          <DialogFooter>
+          <CredenzaFooter>
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => setIsOpen(false)}
               disabled={createMutation.isPending}
             >
@@ -165,8 +166,9 @@ export function CreateOrganizationDialog({
             </Button>
             <Button
               type="submit"
+              size="sm"
               disabled={createMutation.isPending || !name.trim()}
-              className="gap-1.5 font-medium"
+              className="gap-1.5 font-semibold"
             >
               {createMutation.isPending ? (
                 <>
@@ -175,14 +177,14 @@ export function CreateOrganizationDialog({
                 </>
               ) : (
                 <>
-                  <Plus className="size-4" />
+                  <Plus className="size-3.5" />
                   Create Practice
                 </>
               )}
             </Button>
-          </DialogFooter>
+          </CredenzaFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </CredenzaContent>
+    </Credenza>
   );
 }

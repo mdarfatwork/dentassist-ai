@@ -64,7 +64,7 @@ export function ClinicSetupHub() {
             onClick={() => setIsWizardMode(false)}
             className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
           >
-            ← Exit to Tabbed Hub
+            ← Exit Guided Setup to Operations Hub
           </Button>
         </div>
         <ClinicSetupWizard onComplete={() => setIsWizardMode(false)} />
@@ -74,37 +74,37 @@ export function ClinicSetupHub() {
 
   return (
     <div className="space-y-6">
-      {/* Clinic Setup Status Banner */}
-      <div className="rounded-xl border border-border bg-card p-5 sm:p-6 shadow-xs">
+      {/* Clinic Setup Status Header - Structured Clinical Console */}
+      <div className="rounded-[4px] border border-border bg-card p-5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-xl">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                <Sliders className="size-3.5" /> Phase 3: Clinic Setup
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[2px] border border-primary/20 bg-primary/10 text-primary text-[11px] font-semibold tracking-tight">
+                <Sliders className="size-3" /> Practice Configuration
               </span>
               <Badge
                 variant={completionPercentage === 100 ? "success" : "secondary"}
-                className="text-xs"
+                className="text-[10px] font-mono"
               >
                 {completionPercentage}% Configured
               </Badge>
             </div>
 
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-              {activeOrganization?.name} Clinic Hub
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
+              {activeOrganization?.name} Operations Hub
             </h2>
 
-            <p className="text-sm text-muted-foreground">
-              Configure clinic information, dentists, treatments, and working
-              hours for this practice.
+            <p className="text-xs text-muted-foreground leading-normal">
+              Manage practice identity, practitioner rosters, appointment
+              services, and operating hours for this clinic tenant.
             </p>
 
-            {/* Checklist Pills */}
-            <div className="flex flex-wrap items-center gap-2 pt-1">
+            {/* Checklist items - Flat and bordered */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
               <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border ${
+                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[2px] text-[11px] font-medium border ${
                   profileConfigured
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-500/20 dark:bg-emerald-950/40 dark:text-emerald-300"
+                    ? "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-600/20"
                     : "bg-muted text-muted-foreground border-border"
                 }`}
               >
@@ -112,9 +112,9 @@ export function ClinicSetupHub() {
               </span>
 
               <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border ${
+                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[2px] text-[11px] font-medium border ${
                   dentistsCount > 0
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-500/20 dark:bg-emerald-950/40 dark:text-emerald-300"
+                    ? "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-600/20"
                     : "bg-muted text-muted-foreground border-border"
                 }`}
               >
@@ -123,9 +123,9 @@ export function ClinicSetupHub() {
               </span>
 
               <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border ${
+                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[2px] text-[11px] font-medium border ${
                   servicesCount > 0
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-500/20 dark:bg-emerald-950/40 dark:text-emerald-300"
+                    ? "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-600/20"
                     : "bg-muted text-muted-foreground border-border"
                 }`}
               >
@@ -133,9 +133,9 @@ export function ClinicSetupHub() {
               </span>
 
               <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border ${
+                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[2px] text-[11px] font-medium border ${
                   hoursConfigured
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-500/20 dark:bg-emerald-950/40 dark:text-emerald-300"
+                    ? "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-600/20"
                     : "bg-muted text-muted-foreground border-border"
                 }`}
               >
@@ -143,9 +143,9 @@ export function ClinicSetupHub() {
               </span>
 
               <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border ${
+                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[2px] text-[11px] font-medium border ${
                   holidaysCount > 0
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-500/20 dark:bg-emerald-950/40 dark:text-emerald-300"
+                    ? "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-600/20"
                     : "bg-muted text-muted-foreground border-border"
                 }`}
               >
@@ -159,31 +159,38 @@ export function ClinicSetupHub() {
               onClick={() => setIsWizardMode(true)}
               variant="outline"
               size="sm"
-              className="gap-1.5 text-xs font-medium"
+              className="gap-1.5 text-xs font-semibold"
             >
-              <Compass className="size-3.5 text-primary" /> Launch Onboarding
-              Wizard
+              <Compass className="size-3.5 text-primary" /> Guided Setup Wizard
             </Button>
-            <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-              <ShieldCheck className="size-3 text-emerald-600" /> Scoped to{" "}
-              <code className="font-mono text-[10px] bg-muted px-1 rounded font-semibold text-foreground">
-                {activeOrganization?.slug}
-              </code>
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[11px] text-muted-foreground flex items-center gap-1 font-mono">
+                <Clock className="size-3 text-primary" /> Timezone:{" "}
+                <code className="font-mono text-[11px] bg-muted px-1 rounded-[2px] font-semibold text-foreground border border-border">
+                  {activeOrganization?.timezone || "UTC"}
+                </code>
+              </span>
+              <span className="text-[11px] text-muted-foreground flex items-center gap-1 font-mono">
+                <ShieldCheck className="size-3 text-emerald-600" /> Tenant:{" "}
+                <code className="font-mono text-[11px] bg-muted px-1 rounded-[2px] font-semibold text-foreground border border-border">
+                  {activeOrganization?.slug}
+                </code>
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Tabs Navigation for Clinic Setup */}
+      {/* Structured Clinical Workspace Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full justify-start overflow-x-auto">
+        <TabsList className="w-full justify-start border-b border-border">
           <TabsTrigger value="profile" className="gap-1.5">
             <Building2 className="size-3.5" /> Clinic Profile
           </TabsTrigger>
           <TabsTrigger value="dentists" className="gap-1.5">
             <Stethoscope className="size-3.5" /> Dentists
             {dentistsCount > 0 && (
-              <span className="ml-1 px-1.5 py-0.2 rounded-full bg-muted-foreground/15 text-[10px] font-mono">
+              <span className="ml-1 px-1.5 py-0.2 rounded-[2px] bg-muted text-[10px] font-mono border border-border">
                 {dentistsCount}
               </span>
             )}
@@ -191,7 +198,7 @@ export function ClinicSetupHub() {
           <TabsTrigger value="services" className="gap-1.5">
             <Sparkles className="size-3.5" /> Services
             {servicesCount > 0 && (
-              <span className="ml-1 px-1.5 py-0.2 rounded-full bg-muted-foreground/15 text-[10px] font-mono">
+              <span className="ml-1 px-1.5 py-0.2 rounded-[2px] bg-muted text-[10px] font-mono border border-border">
                 {servicesCount}
               </span>
             )}
@@ -202,7 +209,7 @@ export function ClinicSetupHub() {
           <TabsTrigger value="holidays" className="gap-1.5">
             <CalendarOff className="size-3.5" /> Closures & Holidays
             {holidaysCount > 0 && (
-              <span className="ml-1 px-1.5 py-0.2 rounded-full bg-muted-foreground/15 text-[10px] font-mono">
+              <span className="ml-1 px-1.5 py-0.2 rounded-[2px] bg-muted text-[10px] font-mono border border-border">
                 {holidaysCount}
               </span>
             )}
@@ -233,71 +240,71 @@ export function ClinicSetupHub() {
         </TabsContent>
 
         <TabsContent value="roadmap">
-          <Card className="border-border shadow-xs">
-            <CardContent className="py-6 space-y-6">
-              <div>
-                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <Compass className="size-5 text-primary" /> Product Launchpad
-                  & Next Phases
+          <Card className="border-border shadow-none">
+            <CardContent className="p-6 space-y-6">
+              <div className="pb-4 border-b border-border">
+                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                  <Compass className="size-4 text-primary" /> Autonomous Clinic
+                  Launchpad
                 </h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Now that your clinic configuration is in place, the upcoming
-                  modules will leverage this structure.
+                <p className="text-xs text-muted-foreground mt-1">
+                  Once your clinic configuration is complete, the following
+                  autonomous capabilities activate for patient communications.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-xl border border-border bg-card space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 border border-border divide-y md:divide-y-0 md:divide-x divide-border rounded-[4px] bg-card">
+                <div className="p-4 space-y-2">
                   <div className="flex items-center justify-between">
-                    <div className="size-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                      <Calendar className="size-4" />
+                    <div className="size-7 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center">
+                      <Calendar className="size-3.5" />
                     </div>
-                    <Badge variant="outline" className="text-[11px]">
+                    <Badge variant="outline" className="text-[10px] font-mono">
                       Phase 4
                     </Badge>
                   </div>
-                  <h4 className="font-semibold text-sm text-foreground">
+                  <h4 className="font-semibold text-xs text-foreground">
                     Google Calendar Sync
                   </h4>
-                  <p className="text-xs text-muted-foreground">
-                    Direct two-way calendar sync for Dr. staff availability and
-                    automated bookings.
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Direct two-way calendar sync for doctor chair availability
+                    and real-time appointment booking.
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl border border-border bg-card space-y-2">
+                <div className="p-4 space-y-2">
                   <div className="flex items-center justify-between">
-                    <div className="size-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                      <BookOpen className="size-4" />
+                    <div className="size-7 rounded-[3px] bg-amber-500/10 text-amber-700 dark:text-amber-300 flex items-center justify-center">
+                      <BookOpen className="size-3.5" />
                     </div>
-                    <Badge variant="outline" className="text-[11px]">
+                    <Badge variant="outline" className="text-[10px] font-mono">
                       Phase 4
                     </Badge>
                   </div>
-                  <h4 className="font-semibold text-sm text-foreground">
+                  <h4 className="font-semibold text-xs text-foreground">
                     Knowledge Base (RAG)
                   </h4>
-                  <p className="text-xs text-muted-foreground">
-                    AI clinic knowledge ingest from PDFs, brochures, FAQ, and
-                    treatment guidelines.
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Clinic policy ingest from treatment brochures, insurance
+                    FAQs, and clinical protocols.
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl border border-border bg-card space-y-2">
+                <div className="p-4 space-y-2">
                   <div className="flex items-center justify-between">
-                    <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                      <Bot className="size-4" />
+                    <div className="size-7 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center">
+                      <Bot className="size-3.5" />
                     </div>
-                    <Badge variant="outline" className="text-[11px]">
+                    <Badge variant="outline" className="text-[10px] font-mono">
                       Phase 5
                     </Badge>
                   </div>
-                  <h4 className="font-semibold text-sm text-foreground">
+                  <h4 className="font-semibold text-xs text-foreground">
                     AI Receptionist Engine
                   </h4>
-                  <p className="text-xs text-muted-foreground">
-                    Voice call answering, website booking widget, and
-                    conversational patient triage.
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Voice call handling, online booking widget, and emergency
+                    tooth pain qualification.
                   </p>
                 </div>
               </div>

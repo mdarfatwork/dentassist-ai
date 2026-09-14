@@ -81,12 +81,12 @@ export default function ForgotPasswordPage() {
 
   if (isSubmitted) {
     return (
-      <Card className="border-border shadow-sm">
-        <CardHeader className="text-center pb-3">
-          <div className="mx-auto size-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-2">
-            <Mail className="size-6" />
+      <Card className="border-border shadow-none">
+        <CardHeader className="text-center pb-3 border-b-0">
+          <div className="mx-auto size-10 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center mb-2">
+            <Mail className="size-5" />
           </div>
-          <CardTitle className="text-2xl font-bold">Check your inbox</CardTitle>
+          <CardTitle className="text-lg font-bold">Check Your Inbox</CardTitle>
           <CardDescription>
             If an account exists for{" "}
             <strong className="text-foreground">{formData.email}</strong>, we’ve
@@ -119,14 +119,13 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <Card className="border-border shadow-sm">
+    <Card className="border-border shadow-none">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
-          Forgot password?
+        <CardTitle className="text-lg font-bold tracking-tight text-foreground">
+          Password Reset Request
         </CardTitle>
         <CardDescription>
-          Enter the email associated with your account and we’ll send a link to
-          reset your password.
+          Enter the practitioner email associated with your clinic account.
         </CardDescription>
       </CardHeader>
 

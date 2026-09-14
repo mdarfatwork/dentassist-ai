@@ -1,55 +1,57 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ShieldCheck, Sparkles, Stethoscope } from "lucide-react";
+import { ShieldCheck, Stethoscope } from "lucide-react";
 
 export default function AuthLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-background selection:bg-primary/10 selection:text-primary relative overflow-hidden">
-      {/* Ambient background decoration (subtle healthcare/clinical glow) */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-b from-primary/5 via-primary/2 to-transparent blur-3xl pointer-events-none -z-10" />
-
+    <div className="min-h-screen flex flex-col justify-between bg-background text-foreground selection:bg-primary/10 selection:text-primary">
       {/* Top Header */}
-      <header className="w-full max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
-        <Link
-          href="/"
-          className="flex items-center gap-2.5 group transition-opacity hover:opacity-90"
-        >
-          <div className="size-9 rounded-lg bg-primary flex items-center justify-center text-primary-foreground shadow-xs shadow-primary/20">
-            <Stethoscope className="size-5" />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-lg leading-tight tracking-tight text-foreground flex items-center gap-1.5">
-              DentAssist{" "}
-              <span className="text-primary font-semibold text-xs px-1.5 py-0.5 rounded bg-primary/10">
+      <header className="w-full border-b border-border bg-card">
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 group transition-opacity hover:opacity-90"
+          >
+            <div className="size-7.5 rounded-[3px] bg-primary flex items-center justify-center text-primary-foreground shadow-none">
+              <Stethoscope className="size-4" />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-sm leading-tight tracking-tight text-foreground">
+                DentAssist
+              </span>
+              <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-[2px] bg-primary/10 text-primary border border-primary/20">
                 AI
               </span>
-            </span>
-            <span className="text-[11px] text-muted-foreground font-medium">
-              Clinical Intelligence Platform
+              <span className="hidden sm:inline text-xs text-muted-foreground ml-2 pl-2 border-l border-border">
+                Clinical Access Portal
+              </span>
+            </div>
+          </Link>
+
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <ShieldCheck className="size-3.5 text-primary" />
+            <span className="text-[11px] font-mono">
+              HIPAA Encrypted Session
             </span>
           </div>
-        </Link>
-
-        <div className="flex items-center gap-2 text-xs text-muted-foreground hidden sm:flex">
-          <ShieldCheck className="size-4 text-primary" />
-          <span>HIPAA-Ready & Encrypted</span>
         </div>
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex items-center justify-center px-4 py-8 sm:px-6">
-        <div className="w-full max-w-md animate-fadeIn">{children}</div>
+      <main className="flex-1 flex items-center justify-center px-4 py-10 sm:px-6">
+        <div className="w-full max-w-md">{children}</div>
       </main>
 
       {/* Footer */}
-      <footer className="w-full max-w-6xl mx-auto px-6 py-6 border-t border-border/50 text-center text-xs text-muted-foreground flex flex-col sm:flex-row items-center justify-between gap-3">
-        <p>© {new Date().getFullYear()} DentAssist AI. All rights reserved.</p>
-        <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1 text-[11px]">
-            <Sparkles className="size-3 text-primary" /> Multi-Tenant Clinic
-            Cloud
+      <footer className="w-full border-t border-border bg-card py-4 px-6 text-xs text-muted-foreground">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+          <span>
+            © {new Date().getFullYear()} DentAssist AI. All rights reserved.
+          </span>
+          <span className="text-[11px] font-mono">
+            Clinical Authentication Protocol
           </span>
         </div>
       </footer>

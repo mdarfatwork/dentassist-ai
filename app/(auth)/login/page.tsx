@@ -100,13 +100,13 @@ export default function LoginPage() {
   };
 
   return (
-    <Card className="border-border shadow-sm">
+    <Card className="border-border shadow-none">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
-          Welcome back
+        <CardTitle className="text-lg font-bold tracking-tight text-foreground">
+          Clinic Sign In
         </CardTitle>
         <CardDescription>
-          Sign in to your DentAssist AI clinic dashboard
+          Access your DentAssist AI clinic workspace
         </CardDescription>
       </CardHeader>
 

@@ -107,32 +107,34 @@ export default function SignupPage() {
 
   if (isSuccess) {
     return (
-      <Card className="border-border shadow-sm">
-        <CardHeader className="text-center pb-4">
-          <div className="mx-auto size-12 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-2">
-            <CheckCircle2 className="size-6" />
+      <Card className="border-border shadow-none">
+        <CardHeader className="text-center pb-4 border-b-0">
+          <div className="mx-auto size-10 rounded-[3px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 flex items-center justify-center mb-2">
+            <CheckCircle2 className="size-5" />
           </div>
-          <CardTitle className="text-2xl font-bold">Account Created!</CardTitle>
+          <CardTitle className="text-lg font-bold text-foreground">
+            Practice Account Created
+          </CardTitle>
           <CardDescription>
             We’ve sent a verification link to{" "}
             <strong className="text-foreground">{formData.email}</strong>.
           </CardDescription>
         </CardHeader>
-        <CardContent className="text-center text-sm text-muted-foreground pb-6">
-          Redirecting to verification page...
+        <CardContent className="text-center text-xs text-muted-foreground pb-6">
+          Redirecting to clinic verification...
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="border-border shadow-sm">
+    <Card className="border-border shadow-none">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
-          Create an account
+        <CardTitle className="text-lg font-bold tracking-tight text-foreground">
+          Create Practice Account
         </CardTitle>
         <CardDescription>
-          Get started with DentAssist AI for your dental practice
+          Establish your dental clinic operating workspace
         </CardDescription>
       </CardHeader>
 

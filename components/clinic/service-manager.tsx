@@ -21,13 +21,13 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Credenza,
+  CredenzaContent,
+  CredenzaDescription,
+  CredenzaFooter,
+  CredenzaHeader,
+  CredenzaTitle,
+} from "@/components/ui/credenza";
 import {
   Sparkles,
   Plus,
@@ -194,19 +194,23 @@ export function ServiceManager() {
     if (services.length === 0) {
       return (
         /* Empty State */
-        <div className="flex flex-col items-center justify-center py-12 px-4 text-center rounded-xl border border-dashed border-border bg-muted/20">
-          <div className="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-3">
-            <Sparkles className="size-6" />
+        <div className="flex flex-col items-center justify-center py-10 px-4 text-center rounded-[4px] border border-dashed border-border bg-muted/20">
+          <div className="size-9 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center mb-2.5">
+            <Sparkles className="size-4" />
           </div>
-          <h3 className="text-base font-semibold text-foreground">
-            No services yet
+          <h3 className="text-sm font-semibold text-foreground">
+            No treatments configured
           </h3>
-          <p className="text-sm text-muted-foreground max-w-sm mt-1 mb-4">
-            Add the dental procedures and treatments your clinic provides to
-            enable automated slot allocation.
+          <p className="text-xs text-muted-foreground max-w-sm mt-1 mb-4 leading-relaxed">
+            Add the dental procedures and clinical services your practice
+            provides to enable automated chair allocation.
           </p>
-          <Button onClick={openAddDialog} size="sm" className="gap-1.5">
-            <Plus className="size-4" /> Add First Service
+          <Button
+            onClick={openAddDialog}
+            size="sm"
+            className="gap-1.5 font-semibold"
+          >
+            <Plus className="size-3.5" /> Add First Service
           </Button>
         </div>
       );
@@ -214,28 +218,28 @@ export function ServiceManager() {
 
     return (
       /* Services Grid */
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {services.map((service) => (
           <div
             key={service.id}
-            className="group relative flex flex-col justify-between p-4 rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-xs transition-all"
+            className="group relative flex flex-col justify-between p-3.5 rounded-[4px] border border-border bg-card hover:border-primary/40 transition-colors"
           >
             <div className="space-y-2">
               <div className="flex items-start justify-between gap-2">
-                <h4 className="font-semibold text-sm text-foreground">
+                <h4 className="font-semibold text-xs text-foreground">
                   {service.name}
                 </h4>
                 <Badge
                   variant="secondary"
-                  className="font-mono text-xs shrink-0 gap-1 font-medium"
+                  className="font-mono text-[10px] shrink-0 gap-1 font-semibold"
                 >
-                  <Clock className="size-3 text-primary" />{" "}
-                  {service.durationMinutes} min
+                  <Clock className="size-2.5 text-primary" />{" "}
+                  {service.durationMinutes}m
                 </Badge>
               </div>
 
               {service.description ? (
-                <p className="text-xs text-muted-foreground line-clamp-2">
+                <p className="text-xs text-muted-foreground line-clamp-2 leading-normal">
                   {service.description}
                 </p>
               ) : (
@@ -298,25 +302,25 @@ export function ServiceManager() {
       <CardContent>{renderContent()}</CardContent>
 
       {/* Add / Edit Dialog */}
-      <Dialog
+      <Credenza
         open={isAddOpen || editingService !== null}
         onOpenChange={(open) => {
           if (!open) closeDialogs();
         }}
       >
-        <DialogContent className="sm:max-w-md">
+        <CredenzaContent className="sm:max-w-md">
           <form onSubmit={handleSave}>
-            <DialogHeader>
-              <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-2">
-                <Sparkles className="size-5" />
+            <CredenzaHeader>
+              <div className="size-8 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center mb-1">
+                <Sparkles className="size-4" />
               </div>
-              <DialogTitle>
+              <CredenzaTitle>
                 {editingService ? "Edit Service" : "Add Dental Service"}
-              </DialogTitle>
-              <DialogDescription>
+              </CredenzaTitle>
+              <CredenzaDescription>
                 Configure service duration and patient description.
-              </DialogDescription>
-            </DialogHeader>
+              </CredenzaDescription>
+            </CredenzaHeader>
 
             {actionError && (
               <Alert variant="destructive" className="my-3">
@@ -422,7 +426,7 @@ export function ServiceManager() {
               </div>
             </div>
 
-            <DialogFooter>
+            <CredenzaFooter>
               <Button
                 type="button"
                 variant="outline"
@@ -447,29 +451,29 @@ export function ServiceManager() {
                   </>
                 )}
               </Button>
-            </DialogFooter>
+            </CredenzaFooter>
           </form>
-        </DialogContent>
-      </Dialog>
+        </CredenzaContent>
+      </Credenza>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
+      <Credenza
         open={deletingService !== null}
         onOpenChange={(open) => {
           if (!open) closeDialogs();
         }}
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="size-10 rounded-lg bg-destructive/10 text-destructive flex items-center justify-center mb-2">
-              <Trash2 className="size-5" />
+        <CredenzaContent className="sm:max-w-md">
+          <CredenzaHeader>
+            <div className="size-8 rounded-[3px] bg-destructive/10 text-destructive flex items-center justify-center mb-1">
+              <AlertCircle className="size-4" />
             </div>
-            <DialogTitle>Delete {deletingService?.name}?</DialogTitle>
-            <DialogDescription>
+            <CredenzaTitle>Delete {deletingService?.name}?</CredenzaTitle>
+            <CredenzaDescription>
               Are you sure you want to delete this treatment? This action cannot
               be undone.
-            </DialogDescription>
-          </DialogHeader>
+            </CredenzaDescription>
+          </CredenzaHeader>
 
           {actionError && (
             <Alert variant="destructive" className="my-2">
@@ -478,7 +482,7 @@ export function ServiceManager() {
             </Alert>
           )}
 
-          <DialogFooter className="mt-4">
+          <CredenzaFooter className="mt-4">
             <Button
               type="button"
               variant="outline"
@@ -504,9 +508,9 @@ export function ServiceManager() {
                 </>
               )}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </CredenzaFooter>
+        </CredenzaContent>
+      </Credenza>
     </Card>
   );
 }

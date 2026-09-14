@@ -20,13 +20,13 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Credenza,
+  CredenzaContent,
+  CredenzaDescription,
+  CredenzaFooter,
+  CredenzaHeader,
+  CredenzaTitle,
+} from "@/components/ui/credenza";
 import {
   UserCheck,
   Plus,
@@ -185,19 +185,23 @@ export function DentistManager() {
     if (dentists.length === 0) {
       return (
         /* Empty State */
-        <div className="flex flex-col items-center justify-center py-12 px-4 text-center rounded-xl border border-dashed border-border bg-muted/20">
-          <div className="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-3">
-            <Stethoscope className="size-6" />
+        <div className="flex flex-col items-center justify-center py-10 px-4 text-center rounded-[4px] border border-dashed border-border bg-muted/20">
+          <div className="size-9 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center mb-2.5">
+            <Stethoscope className="size-4" />
           </div>
-          <h3 className="text-base font-semibold text-foreground">
-            No dentists yet
+          <h3 className="text-sm font-semibold text-foreground">
+            No practitioners registered
           </h3>
-          <p className="text-sm text-muted-foreground max-w-sm mt-1 mb-4">
-            Add your clinic&apos;s dentists to prepare for appointment
-            scheduling and AI consultation.
+          <p className="text-xs text-muted-foreground max-w-sm mt-1 mb-4 leading-relaxed">
+            Add your clinic&apos;s dentists to configure chair availability,
+            specialized treatments, and appointment booking.
           </p>
-          <Button onClick={openAddDialog} size="sm" className="gap-1.5">
-            <Plus className="size-4" /> Add First Dentist
+          <Button
+            onClick={openAddDialog}
+            size="sm"
+            className="gap-1.5 font-semibold"
+          >
+            <Plus className="size-3.5" /> Add First Dentist
           </Button>
         </div>
       );
@@ -205,24 +209,24 @@ export function DentistManager() {
 
     return (
       /* Dentists Grid */
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {dentists.map((dentist) => (
           <div
             key={dentist.id}
-            className="group relative flex flex-col justify-between p-4 rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-xs transition-all"
+            className="group relative flex flex-col justify-between p-3.5 rounded-[4px] border border-border bg-card hover:border-primary/40 transition-colors"
           >
             <div className="space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="size-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 font-bold text-sm">
+                  <div className="size-7.5 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center shrink-0 font-bold text-xs">
                     {dentist.name.replace(/^Dr\.\s*/i, "").charAt(0)}
                   </div>
                   <div>
-                    <h4 className="font-semibold text-sm text-foreground leading-snug">
+                    <h4 className="font-semibold text-xs text-foreground leading-snug">
                       {dentist.name}
                     </h4>
-                    <span className="text-[11px] text-muted-foreground">
-                      Clinic Practitioner
+                    <span className="text-[10px] text-muted-foreground font-mono">
+                      Practitioner
                     </span>
                   </div>
                 </div>
@@ -296,27 +300,27 @@ export function DentistManager() {
       <CardContent>{renderContent()}</CardContent>
 
       {/* Add / Edit Dialog */}
-      <Dialog
+      <Credenza
         open={isAddOpen || editingDentist !== null}
         onOpenChange={(open) => {
           if (!open) closeDialogs();
         }}
       >
-        <DialogContent className="sm:max-w-md">
+        <CredenzaContent className="sm:max-w-md">
           <form onSubmit={handleSave}>
-            <DialogHeader>
-              <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-2">
-                <Stethoscope className="size-5" />
+            <CredenzaHeader>
+              <div className="size-8 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center mb-1">
+                <Stethoscope className="size-4" />
               </div>
-              <DialogTitle>
+              <CredenzaTitle>
                 {editingDentist ? "Edit Dentist" : "Add New Dentist"}
-              </DialogTitle>
-              <DialogDescription>
+              </CredenzaTitle>
+              <CredenzaDescription>
                 {editingDentist
                   ? "Update dentist information and clinical specialization."
                   : "Add a dentist to your clinic for appointment routing."}
-              </DialogDescription>
-            </DialogHeader>
+              </CredenzaDescription>
+            </CredenzaHeader>
 
             {actionError && (
               <Alert variant="destructive" className="my-3">
@@ -374,7 +378,7 @@ export function DentistManager() {
               </div>
             </div>
 
-            <DialogFooter>
+            <CredenzaFooter>
               <Button
                 type="button"
                 variant="outline"
@@ -399,29 +403,29 @@ export function DentistManager() {
                   </>
                 )}
               </Button>
-            </DialogFooter>
+            </CredenzaFooter>
           </form>
-        </DialogContent>
-      </Dialog>
+        </CredenzaContent>
+      </Credenza>
 
       {/* Safe Delete Confirmation Dialog */}
-      <Dialog
+      <Credenza
         open={deletingDentist !== null}
         onOpenChange={(open) => {
           if (!open) closeDialogs();
         }}
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="size-10 rounded-lg bg-destructive/10 text-destructive flex items-center justify-center mb-2">
-              <Trash2 className="size-5" />
+        <CredenzaContent className="sm:max-w-md">
+          <CredenzaHeader>
+            <div className="size-8 rounded-[3px] bg-destructive/10 text-destructive flex items-center justify-center mb-1">
+              <AlertCircle className="size-4" />
             </div>
-            <DialogTitle>Delete {deletingDentist?.name}?</DialogTitle>
-            <DialogDescription>
+            <CredenzaTitle>Delete {deletingDentist?.name}?</CredenzaTitle>
+            <CredenzaDescription>
               This action cannot be undone. Removing this dentist will detach
               them from future appointment availability.
-            </DialogDescription>
-          </DialogHeader>
+            </CredenzaDescription>
+          </CredenzaHeader>
 
           {actionError && (
             <Alert variant="destructive" className="my-2">
@@ -430,7 +434,7 @@ export function DentistManager() {
             </Alert>
           )}
 
-          <DialogFooter className="mt-4">
+          <CredenzaFooter className="mt-4">
             <Button
               type="button"
               variant="outline"
@@ -456,9 +460,9 @@ export function DentistManager() {
                 </>
               )}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </CredenzaFooter>
+        </CredenzaContent>
+      </Credenza>
     </Card>
   );
 }

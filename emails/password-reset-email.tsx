@@ -117,8 +117,8 @@ const logoMark: React.CSSProperties = {
   width: "28px",
   height: "28px",
   lineHeight: "28px",
-  borderRadius: "6px",
-  backgroundColor: "#0F766E",
+  borderRadius: "3px",
+  backgroundColor: "#1E40AF",
   color: "#FFFFFF",
   fontSize: "18px",
   fontWeight: "bold",
@@ -135,10 +135,10 @@ const logoText: React.CSSProperties = {
 
 const card: React.CSSProperties = {
   backgroundColor: "#FFFFFF",
-  borderRadius: "12px",
+  borderRadius: "4px",
   border: "1px solid #E2E8F0",
   padding: "36px 32px",
-  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.04)",
+  boxShadow: "none",
 };
 
 const heading: React.CSSProperties = {
@@ -169,8 +169,8 @@ const buttonContainer: React.CSSProperties = {
 };
 
 const button: React.CSSProperties = {
-  backgroundColor: "#0F766E",
-  borderRadius: "8px",
+  backgroundColor: "#1E40AF",
+  borderRadius: "3px",
   color: "#FFFFFF",
   fontSize: "15px",
   fontWeight: "600",
@@ -193,7 +193,7 @@ const fallbackText: React.CSSProperties = {
 
 const link: React.CSSProperties = {
   fontSize: "12px",
-  color: "#0F766E",
+  color: "#1E40AF",
   wordBreak: "break-all",
   textDecoration: "underline",
 };

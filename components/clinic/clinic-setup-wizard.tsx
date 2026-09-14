@@ -77,41 +77,41 @@ export function ClinicSetupWizard({
 
   return (
     <div className="space-y-6">
-      {/* Wizard Progress Stepper */}
-      <div className="rounded-xl border border-border bg-card p-4 sm:p-5 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-border/60">
+      {/* Wizard Progress Stepper - Flat Clinical Stepper */}
+      <div className="rounded-[4px] border border-border bg-card p-4 sm:p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-border">
           <div>
-            <span className="text-xs font-semibold text-primary uppercase tracking-wider">
-              Onboarding Walkthrough
+            <span className="text-[10px] font-mono font-bold text-primary uppercase tracking-wider">
+              Onboarding Checklist
             </span>
-            <h2 className="text-lg font-bold text-foreground">
-              Clinic Configuration for {activeOrganization?.name}
+            <h2 className="text-base font-bold text-foreground">
+              Clinic Configuration: {activeOrganization?.name}
             </h2>
           </div>
-          <span className="text-xs font-mono text-muted-foreground bg-muted px-2.5 py-1 rounded-full self-start sm:self-auto">
+          <span className="text-[11px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded-[2px] border border-border self-start sm:self-auto">
             Step {currentStepIndex + 1} of {STEPS.length}
           </span>
         </div>
 
-        {/* Stepper pills */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+        {/* Stepper tabs */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-1.5">
           {STEPS.map((step, idx) => {
             const Icon = step.icon;
             const isDone = idx < currentStepIndex;
             const isCurrent = idx === currentStepIndex;
 
             let stepStatusClass =
-              "bg-muted/40 text-muted-foreground hover:bg-muted/70";
+              "bg-muted/30 text-muted-foreground hover:bg-muted/60 border-border/60";
             let iconStatusClass = "bg-muted text-muted-foreground";
 
             if (isCurrent) {
               stepStatusClass =
-                "bg-primary text-primary-foreground font-semibold shadow-xs";
+                "bg-primary text-primary-foreground font-semibold border-primary";
               iconStatusClass =
                 "bg-primary-foreground/20 text-primary-foreground";
             } else if (isDone) {
               stepStatusClass =
-                "bg-primary/10 text-primary hover:bg-primary/15";
+                "bg-primary/10 text-primary hover:bg-primary/15 border-primary/20";
               iconStatusClass = "bg-primary text-primary-foreground";
             }
 
@@ -120,15 +120,15 @@ export function ClinicSetupWizard({
                 key={step.id}
                 type="button"
                 onClick={() => setCurrentStepIndex(idx)}
-                className={`flex items-center gap-2 p-2 rounded-lg text-left transition-all cursor-pointer ${stepStatusClass}`}
+                className={`flex items-center gap-2 p-2 rounded-[3px] border text-left transition-all cursor-pointer ${stepStatusClass}`}
               >
                 <div
-                  className={`size-6 rounded-md flex items-center justify-center shrink-0 text-xs ${iconStatusClass}`}
+                  className={`size-5 rounded-[2px] flex items-center justify-center shrink-0 text-xs ${iconStatusClass}`}
                 >
                   {isDone ? (
-                    <CheckCircle2 className="size-3.5" />
+                    <CheckCircle2 className="size-3" />
                   ) : (
-                    <Icon className="size-3.5" />
+                    <Icon className="size-3" />
                   )}
                 </div>
                 <span className="text-xs truncate">{step.label}</span>
@@ -155,52 +155,52 @@ export function ClinicSetupWizard({
         {currentStep.id === "holidays" && <HolidayManager />}
 
         {currentStep.id === "complete" && (
-          <Card className="border-border shadow-xs">
-            <CardHeader className="text-center pb-4">
-              <div className="size-14 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-2 shadow-xs">
-                <CheckCircle2 className="size-8" />
+          <Card className="border-border shadow-none">
+            <CardHeader className="text-center pb-4 border-b-0">
+              <div className="size-10 rounded-[3px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 flex items-center justify-center mx-auto mb-2">
+                <CheckCircle2 className="size-6" />
               </div>
-              <CardTitle className="text-2xl font-bold">
-                Clinic Setup Complete!
+              <CardTitle className="text-lg font-bold">
+                Clinic Configuration Ready
               </CardTitle>
               <CardDescription className="max-w-md mx-auto">
-                Your clinic profile, practitioners, treatment catalog, and
-                weekly schedules are ready.
+                Clinic profile, practitioners, treatment catalog, and weekly
+                schedules are synchronized.
               </CardDescription>
             </CardHeader>
 
             <CardContent className="space-y-6 max-w-2xl mx-auto">
               {/* Setup Summary Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-muted/30 border border-border/80 text-center">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 rounded-[3px] bg-muted/30 border border-border text-center">
                 <div className="p-2">
-                  <span className="text-xs text-muted-foreground block">
+                  <span className="text-[11px] text-muted-foreground block">
                     Timezone
                   </span>
-                  <span className="font-semibold text-sm text-foreground truncate block">
+                  <span className="font-semibold text-xs text-foreground truncate block font-mono">
                     {activeOrganization?.timezone || "UTC"}
                   </span>
                 </div>
-                <div className="p-2 border-l border-border/60">
-                  <span className="text-xs text-muted-foreground block">
+                <div className="p-2 border-l border-border">
+                  <span className="text-[11px] text-muted-foreground block">
                     Dentists
                   </span>
-                  <span className="font-semibold text-sm text-foreground">
+                  <span className="font-semibold text-xs text-foreground">
                     {dentistsCount} {dentistsCount === 1 ? "Doctor" : "Doctors"}
                   </span>
                 </div>
-                <div className="p-2 border-l border-border/60">
-                  <span className="text-xs text-muted-foreground block">
+                <div className="p-2 border-l border-border">
+                  <span className="text-[11px] text-muted-foreground block">
                     Services
                   </span>
-                  <span className="font-semibold text-sm text-foreground">
+                  <span className="font-semibold text-xs text-foreground">
                     {servicesCount} Treatments
                   </span>
                 </div>
-                <div className="p-2 border-l border-border/60">
-                  <span className="text-xs text-muted-foreground block">
+                <div className="p-2 border-l border-border">
+                  <span className="text-[11px] text-muted-foreground block">
                     Closures
                   </span>
-                  <span className="font-semibold text-sm text-foreground">
+                  <span className="font-semibold text-xs text-foreground">
                     {holidaysCount} Days
                   </span>
                 </div>
@@ -208,21 +208,21 @@ export function ClinicSetupWizard({
 
               {/* Next Phases Preview */}
               <div className="space-y-3">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Upcoming System Integrations
+                <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Upcoming Autonomous Modules
                 </h4>
 
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-card">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-3 rounded-[3px] border border-border bg-card">
                     <div className="flex items-center gap-3">
-                      <div className="size-9 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                        <Calendar className="size-4" />
+                      <div className="size-7 rounded-[2px] bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                        <Calendar className="size-3.5" />
                       </div>
                       <div>
-                        <h5 className="text-sm font-semibold text-foreground">
+                        <h5 className="text-xs font-semibold text-foreground">
                           Google Calendar Sync
                         </h5>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-[11px] text-muted-foreground">
                           Connect doctor calendars for real-time slot
                           synchronization.
                         </p>
@@ -230,22 +230,22 @@ export function ClinicSetupWizard({
                     </div>
                     <Badge
                       variant="outline"
-                      className="text-xs shrink-0 text-muted-foreground"
+                      className="text-[10px] font-mono shrink-0 text-muted-foreground"
                     >
                       Phase 4
                     </Badge>
                   </div>
 
-                  <div className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-card">
+                  <div className="flex items-center justify-between p-3 rounded-[3px] border border-border bg-card">
                     <div className="flex items-center gap-3">
-                      <div className="size-9 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                        <BookOpen className="size-4" />
+                      <div className="size-7 rounded-[2px] bg-amber-500/10 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
+                        <BookOpen className="size-3.5" />
                       </div>
                       <div>
-                        <h5 className="text-sm font-semibold text-foreground">
-                          Knowledge Base & RAG
+                        <h5 className="text-xs font-semibold text-foreground">
+                          Knowledge Base (RAG)
                         </h5>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-[11px] text-muted-foreground">
                           Upload clinic documents, FAQ, and pricing for AI
                           context.
                         </p>
@@ -253,22 +253,22 @@ export function ClinicSetupWizard({
                     </div>
                     <Badge
                       variant="outline"
-                      className="text-xs shrink-0 text-muted-foreground"
+                      className="text-[10px] font-mono shrink-0 text-muted-foreground"
                     >
                       Phase 4
                     </Badge>
                   </div>
 
-                  <div className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-card">
+                  <div className="flex items-center justify-between p-3 rounded-[3px] border border-border bg-card">
                     <div className="flex items-center gap-3">
-                      <div className="size-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                        <Bot className="size-4" />
+                      <div className="size-7 rounded-[2px] bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                        <Bot className="size-3.5" />
                       </div>
                       <div>
-                        <h5 className="text-sm font-semibold text-foreground">
+                        <h5 className="text-xs font-semibold text-foreground">
                           AI Voice & Web Receptionist
                         </h5>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-[11px] text-muted-foreground">
                           24/7 conversational AI answering calls and booking
                           patients.
                         </p>
@@ -276,7 +276,7 @@ export function ClinicSetupWizard({
                     </div>
                     <Badge
                       variant="outline"
-                      className="text-xs shrink-0 text-muted-foreground"
+                      className="text-[10px] font-mono shrink-0 text-muted-foreground"
                     >
                       Phase 5
                     </Badge>
@@ -289,33 +289,36 @@ export function ClinicSetupWizard({
       </div>
 
       {/* Navigation Buttons */}
-      <div className="flex items-center justify-between pt-2">
+      <div className="flex items-center justify-between pt-2 border-t border-border">
         <Button
           type="button"
           variant="outline"
+          size="sm"
           onClick={handleBack}
           disabled={currentStepIndex === 0}
-          className="gap-1.5"
+          className="gap-1.5 text-xs"
         >
-          <ArrowLeft className="size-4" /> Previous Step
+          <ArrowLeft className="size-3.5" /> Previous Step
         </Button>
 
         <div className="flex items-center gap-2">
           {currentStepIndex < STEPS.length - 1 ? (
             <Button
               type="button"
+              size="sm"
               onClick={handleNext}
-              className="gap-1.5 font-medium"
+              className="gap-1.5 text-xs font-semibold"
             >
-              Next Step <ArrowRight className="size-4" />
+              Next Step <ArrowRight className="size-3.5" />
             </Button>
           ) : (
             <Button
               type="button"
+              size="sm"
               onClick={() => onComplete?.()}
-              className="gap-1.5 font-medium bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="gap-1.5 text-xs font-semibold"
             >
-              <CheckCircle2 className="size-4" /> Finish Setup & Go to Dashboard
+              <CheckCircle2 className="size-3.5" /> Complete Setup & Go to Hub
             </Button>
           )}
         </div>

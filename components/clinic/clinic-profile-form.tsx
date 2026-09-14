@@ -3,6 +3,7 @@
 import {
   useState,
   useRef,
+  useMemo,
   useTransition,
   ChangeEvent,
   SubmitEvent,
@@ -15,6 +16,14 @@ import {
   IANA_TIMEZONES,
   type UpdateClinicProfileInput,
 } from "@/lib/validations/clinic";
+import {
+  Combobox,
+  ComboboxInput,
+  ComboboxContent,
+  ComboboxList,
+  ComboboxItem,
+  ComboboxEmpty,
+} from "@/components/ui/combobox";
 import {
   Card,
   CardContent,
@@ -70,6 +79,14 @@ export function ClinicProfileForm({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [logoFileError, setLogoFileError] = useState<string | null>(null);
+
+  const timezoneOptions = useMemo(() => {
+    const list = [...IANA_TIMEZONES];
+    if (formData.timezone && !list.includes(formData.timezone)) {
+      list.unshift(formData.timezone);
+    }
+    return list;
+  }, [formData.timezone]);
 
   const [prevOrgId, setPrevOrgId] = useState(activeOrganization?.id);
 
@@ -209,11 +226,11 @@ export function ClinicProfileForm({
   };
 
   return (
-    <Card className="border-border shadow-xs">
+    <Card className="border-border shadow-none">
       <form onSubmit={handleSubmit}>
         <CardHeader>
-          <CardTitle className="text-xl font-bold flex items-center gap-2">
-            <Building2 className="size-5 text-primary" /> Clinic Information
+          <CardTitle className="text-base font-bold flex items-center gap-2">
+            <Building2 className="size-4 text-primary" /> Clinic Information
           </CardTitle>
           <CardDescription>
             Configure your dental practice profile, contact channels, and
@@ -237,8 +254,8 @@ export function ClinicProfileForm({
           )}
 
           {/* Logo Section */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-xl bg-muted/40 border border-border/60">
-            <div className="relative size-20 rounded-xl border border-border bg-background flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-[4px] bg-muted/30 border border-border">
+            <div className="relative size-16 rounded-[3px] border border-border bg-background flex items-center justify-center overflow-hidden shrink-0 shadow-none">
               {formData.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -247,7 +264,7 @@ export function ClinicProfileForm({
                   className="size-full object-contain p-1"
                 />
               ) : (
-                <ImageIcon className="size-8 text-muted-foreground/60" />
+                <ImageIcon className="size-6 text-muted-foreground/60" />
               )}
             </div>
 
@@ -337,21 +354,35 @@ export function ClinicProfileForm({
                 <span className="text-destructive">*</span>
               </Label>
               <div className="relative">
-                <select
-                  id="clinic-timezone"
-                  value={formData.timezone}
-                  onChange={(e) =>
-                    handleInputChange("timezone", e.target.value)
-                  }
+                <Combobox
+                  items={timezoneOptions}
+                  value={formData.timezone || "UTC"}
+                  onValueChange={(val) => {
+                    if (val) {
+                      handleInputChange("timezone", val);
+                    }
+                  }}
                   disabled={updateProfileMutation.isPending}
-                  className="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1.5 text-sm shadow-xs transition-colors focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {IANA_TIMEZONES.map((tz) => (
-                    <option key={tz} value={tz}>
-                      {tz}
-                    </option>
-                  ))}
-                </select>
+                  <ComboboxInput
+                    id="clinic-timezone"
+                    placeholder="Search & select timezone (e.g. New York, London, Kolkata)..."
+                    className="w-full"
+                    showClear
+                  />
+                  <ComboboxContent className="max-h-72 w-(--anchor-width) overflow-y-auto">
+                    <ComboboxEmpty className="py-3 text-xs text-muted-foreground text-center">
+                      No matching timezone found.
+                    </ComboboxEmpty>
+                    <ComboboxList className="max-h-60 overflow-y-auto">
+                      {(tz: string) => (
+                        <ComboboxItem key={tz} value={tz}>
+                          {tz}
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
               </div>
               <p className="text-[11px] text-muted-foreground">
                 Determines scheduling slots and calendar event offsets.

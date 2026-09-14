@@ -25,7 +25,7 @@ function Tabs({
   className,
   children,
   ...props
-}: TabsProps) {
+}: Readonly<TabsProps>) {
   const [uncontrolledValue, setUncontrolledValue] = React.useState(
     defaultValue || "",
   );
@@ -42,10 +42,13 @@ function Tabs({
     [isControlled, onValueChange],
   );
 
+  const contextValue = React.useMemo(
+    () => ({ value: activeValue, onValueChange: handleValueChange }),
+    [activeValue, handleValueChange],
+  );
+
   return (
-    <TabsContext.Provider
-      value={{ value: activeValue, onValueChange: handleValueChange }}
-    >
+    <TabsContext.Provider value={contextValue}>
       <div className={cn("w-full flex flex-col gap-4", className)} {...props}>
         {children}
       </div>
@@ -56,12 +59,12 @@ function Tabs({
 function TabsList({
   className,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+}: Readonly<React.HTMLAttributes<HTMLDivElement>>) {
   return (
     <div
       role="tablist"
       className={cn(
-        "inline-flex h-10 items-center justify-start rounded-lg bg-muted p-1 text-muted-foreground gap-1 border border-border/60 overflow-x-auto max-w-full",
+        "inline-flex h-9 items-center justify-start border-b border-border bg-transparent p-0 text-muted-foreground gap-1 overflow-x-auto max-w-full",
         className,
       )}
       {...props}
@@ -78,7 +81,7 @@ function TabsTrigger({
   className,
   children,
   ...props
-}: TabsTriggerProps) {
+}: Readonly<TabsTriggerProps>) {
   const context = React.useContext(TabsContext);
   if (!context) {
     throw new Error("TabsTrigger must be used within a Tabs component");
@@ -93,10 +96,10 @@ function TabsTrigger({
       aria-selected={isSelected}
       onClick={() => context.onValueChange(value)}
       className={cn(
-        "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs sm:text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 cursor-pointer",
+        "inline-flex items-center justify-center whitespace-nowrap px-3.5 py-2 text-xs font-semibold tracking-tight transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 cursor-pointer border-b-2 -mb-px",
         isSelected
-          ? "bg-background text-foreground shadow-xs font-semibold"
-          : "hover:bg-background/50 hover:text-foreground text-muted-foreground",
+          ? "border-primary text-foreground font-semibold"
+          : "border-transparent text-muted-foreground hover:text-foreground hover:border-border",
         className,
       )}
       {...props}
@@ -115,7 +118,7 @@ function TabsContent({
   className,
   children,
   ...props
-}: TabsContentProps) {
+}: Readonly<TabsContentProps>) {
   const context = React.useContext(TabsContext);
   if (!context) {
     throw new Error("TabsContent must be used within a Tabs component");
@@ -130,7 +133,7 @@ function TabsContent({
       role="tabpanel"
       tabIndex={0}
       className={cn(
-        "outline-none animate-in fade-in-50 duration-150",
+        "outline-none animate-in fade-in-50 duration-100",
         className,
       )}
       {...props}

@@ -112,15 +112,15 @@ function VerifyEmailContent() {
   // State 1: Verifying token
   if (status === "verifying") {
     return (
-      <Card className="border-border shadow-sm text-center p-8">
-        <div className="mx-auto size-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-3">
-          <Spinner className="size-6" />
+      <Card className="border-border shadow-none text-center p-8">
+        <div className="mx-auto size-10 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center mb-3">
+          <Spinner className="size-5" />
         </div>
-        <CardTitle className="text-xl font-bold">
-          Verifying your email...
+        <CardTitle className="text-lg font-bold">
+          Verifying clinic token...
         </CardTitle>
-        <CardDescription className="mt-2">
-          Please wait while we confirm your email address.
+        <CardDescription className="mt-1">
+          Validating practitioner email authentication.
         </CardDescription>
       </Card>
     );
@@ -129,19 +129,19 @@ function VerifyEmailContent() {
   // State 2: Verification Success
   if (status === "success") {
     return (
-      <Card className="border-border shadow-sm text-center">
-        <CardHeader className="pb-3">
-          <div className="mx-auto size-12 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-2">
-            <CheckCircle2 className="size-6" />
+      <Card className="border-border shadow-none text-center">
+        <CardHeader className="pb-3 border-b-0">
+          <div className="mx-auto size-10 rounded-[3px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 flex items-center justify-center mb-2">
+            <CheckCircle2 className="size-5" />
           </div>
-          <CardTitle className="text-2xl font-bold">Email Verified!</CardTitle>
+          <CardTitle className="text-lg font-bold">Email Verified</CardTitle>
           <CardDescription>
-            Your email has been successfully verified. Welcome to DentAssist AI.
+            Your practitioner address has been authenticated.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-xs text-muted-foreground">
-            Redirecting you to your dashboard in a few seconds...
+            Redirecting to workspace...
           </p>
           <Link href="/dashboard">
             <Button className="w-full">Continue to Dashboard</Button>
@@ -154,12 +154,12 @@ function VerifyEmailContent() {
   // State 3: Verification Error
   if (status === "error") {
     return (
-      <Card className="border-border shadow-sm text-center">
-        <CardHeader className="pb-3">
-          <div className="mx-auto size-12 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mb-2">
-            <AlertCircle className="size-6" />
+      <Card className="border-border shadow-none text-center">
+        <CardHeader className="pb-3 border-b-0">
+          <div className="mx-auto size-10 rounded-[3px] bg-destructive/10 text-destructive flex items-center justify-center mb-2">
+            <AlertCircle className="size-5" />
           </div>
-          <CardTitle className="text-2xl font-bold">
+          <CardTitle className="text-lg font-bold">
             Verification Failed
           </CardTitle>
           <CardDescription>
@@ -176,7 +176,7 @@ function VerifyEmailContent() {
               {resendStatus === "sending" ? (
                 <Spinner className="mr-2" />
               ) : (
-                <RotateCw className="size-4 mr-2" />
+                <RotateCw className="size-3.5 mr-2" />
               )}
               {resendCountdown > 0
                 ? `Resend available in ${resendCountdown}s`
@@ -195,20 +195,20 @@ function VerifyEmailContent() {
 
   // State 4: Default Idle state (after signup, awaiting click)
   return (
-    <Card className="border-border shadow-sm text-center">
-      <CardHeader className="pb-3">
-        <div className="mx-auto size-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-2">
-          <MailCheck className="size-6" />
+    <Card className="border-border shadow-none text-center">
+      <CardHeader className="pb-3 border-b-0">
+        <div className="mx-auto size-10 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center mb-2">
+          <MailCheck className="size-5" />
         </div>
-        <CardTitle className="text-2xl font-bold">Verify your email</CardTitle>
+        <CardTitle className="text-lg font-bold">Verify Your Email</CardTitle>
         <CardDescription>
           {email ? (
             <>
-              We&apos;ve sent a verification link to{" "}
+              Verification link dispatched to{" "}
               <strong className="text-foreground">{email}</strong>.
             </>
           ) : (
-            "Please check your email for the verification link to activate your account."
+            "Please check your email for the verification link to activate your clinic workspace."
           )}
         </CardDescription>
       </CardHeader>

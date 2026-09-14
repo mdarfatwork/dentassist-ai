@@ -1,6 +1,7 @@
 "use client";
 
-import { SubmitEvent, useState } from "react";
+import { SubmitEvent, useMemo, useState } from "react";
+import { format } from "date-fns";
 import { trpc } from "@/lib/trpc/client";
 import {
   createHolidaySchema,
@@ -18,23 +19,31 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
+import { Calendar } from "@/components/ui/calendar";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Credenza,
+  CredenzaContent,
+  CredenzaDescription,
+  CredenzaFooter,
+  CredenzaHeader,
+  CredenzaTitle,
+} from "@/components/ui/credenza";
 import {
   CalendarOff,
   Plus,
   Pencil,
   Trash2,
   AlertCircle,
-  Calendar,
+  Calendar as CalendarIcon,
   CheckCircle2,
+  ChevronDown,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Holiday {
   id: string;
@@ -68,8 +77,21 @@ export function HolidayManager() {
   // Form state
   const [name, setName] = useState("");
   const [dateStr, setDateStr] = useState("");
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [actionError, setActionError] = useState<string | null>(null);
+
+  const selectedDate = useMemo(() => {
+    if (!dateStr) return undefined;
+    const [y, m, d] = dateStr.split("-").map(Number);
+    if (!y || !m || !d) return undefined;
+    return new Date(y, m - 1, d);
+  }, [dateStr]);
+
+  const formattedSelectedDate = useMemo(() => {
+    if (!selectedDate) return null;
+    return format(selectedDate, "EEEE, MMMM d, yyyy");
+  }, [selectedDate]);
 
   const createMutation = trpc.holiday.create.useMutation({
     onSuccess: async () => {
@@ -107,6 +129,7 @@ export function HolidayManager() {
     setDeletingHoliday(null);
     setName("");
     setDateStr("");
+    setIsCalendarOpen(false);
     setFieldErrors({});
     setActionError(null);
   };
@@ -186,19 +209,23 @@ export function HolidayManager() {
     if (holidays.length === 0) {
       return (
         /* Empty State */
-        <div className="flex flex-col items-center justify-center py-12 px-4 text-center rounded-xl border border-dashed border-border bg-muted/20">
-          <div className="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-3">
-            <CalendarOff className="size-6" />
+        <div className="flex flex-col items-center justify-center py-10 px-4 text-center rounded-[4px] border border-dashed border-border bg-muted/20">
+          <div className="size-9 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center mb-2.5">
+            <CalendarOff className="size-4" />
           </div>
-          <h3 className="text-base font-semibold text-foreground">
-            No holidays configured
+          <h3 className="text-sm font-semibold text-foreground">
+            No planned closures
           </h3>
-          <p className="text-sm text-muted-foreground max-w-sm mt-1 mb-4">
-            Add upcoming closure dates and public holidays when your practice
+          <p className="text-xs text-muted-foreground max-w-sm mt-1 mb-4 leading-relaxed">
+            Add upcoming practice closures and public holidays when your clinic
             will be unavailable.
           </p>
-          <Button onClick={openAddDialog} size="sm" className="gap-1.5">
-            <Plus className="size-4" /> Add First Holiday
+          <Button
+            onClick={openAddDialog}
+            size="sm"
+            className="gap-1.5 font-semibold"
+          >
+            <Plus className="size-3.5" /> Add First Holiday
           </Button>
         </div>
       );
@@ -206,7 +233,7 @@ export function HolidayManager() {
 
     return (
       /* Holidays List */
-      <div className="divide-y divide-border/60 rounded-xl border border-border bg-card overflow-hidden">
+      <div className="divide-y divide-border rounded-[4px] border border-border bg-card overflow-hidden">
         {holidays.map((holiday) => {
           const dateObj = new Date(holiday.date);
           const formattedDate = dateObj.toLocaleDateString("en-US", {
@@ -220,17 +247,17 @@ export function HolidayManager() {
           return (
             <div
               key={holiday.id}
-              className="flex items-center justify-between p-3.5 sm:px-4 hover:bg-muted/30 transition-colors"
+              className="flex items-center justify-between p-3 sm:px-4 hover:bg-muted/30 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="size-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                  <Calendar className="size-4" />
+                <div className="size-7.5 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <CalendarIcon className="size-3.5" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm text-foreground">
+                  <h4 className="font-semibold text-xs text-foreground">
                     {holiday.name}
                   </h4>
-                  <p className="text-xs text-muted-foreground font-mono">
+                  <p className="text-[11px] text-muted-foreground font-mono">
                     {formattedDate}
                   </p>
                 </div>
@@ -291,28 +318,28 @@ export function HolidayManager() {
       <CardContent>{renderContent()}</CardContent>
 
       {/* Add / Edit Dialog */}
-      <Dialog
+      <Credenza
         open={isAddOpen || editingHoliday !== null}
         onOpenChange={(open) => {
           if (!open) closeDialogs();
         }}
       >
-        <DialogContent className="sm:max-w-md">
+        <CredenzaContent className="sm:max-w-md">
           <form onSubmit={handleSave}>
-            <DialogHeader>
-              <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-2">
-                <CalendarOff className="size-5" />
+            <CredenzaHeader>
+              <div className="size-8 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center mb-1">
+                <CalendarIcon className="size-4" />
               </div>
-              <DialogTitle>
+              <CredenzaTitle>
                 {editingHoliday
                   ? "Edit Holiday / Closure"
                   : "Add Holiday Closure"}
-              </DialogTitle>
-              <DialogDescription>
+              </CredenzaTitle>
+              <CredenzaDescription>
                 Specify the date and closure reason (e.g. Christmas Day, Clinic
                 Renovation).
-              </DialogDescription>
-            </DialogHeader>
+              </CredenzaDescription>
+            </CredenzaHeader>
 
             {actionError && (
               <Alert variant="destructive" className="my-3">
@@ -329,20 +356,11 @@ export function HolidayManager() {
                 <Input
                   id="holiday-name"
                   value={name}
-                  onChange={(e) => {
-                    setName(e.target.value);
-                    if (fieldErrors.name) {
-                      setFieldErrors((prev) => {
-                        const updated = { ...prev };
-                        delete updated.name;
-                        return updated;
-                      });
-                    }
-                  }}
-                  placeholder="e.g. Christmas Day, New Year's Day, Staff Training"
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Christmas Day"
                   disabled={isSaving}
-                  autoFocus
                   aria-invalid={!!fieldErrors.name}
+                  autoFocus
                 />
                 {fieldErrors.name && (
                   <p className="text-xs text-destructive">{fieldErrors.name}</p>
@@ -350,33 +368,58 @@ export function HolidayManager() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label htmlFor="holiday-date" className="text-sm font-medium">
-                  Date of Closure <span className="text-destructive">*</span>
+                <Label className="text-sm font-medium">
+                  Closure Date <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  id="holiday-date"
-                  type="date"
-                  value={dateStr}
-                  onChange={(e) => {
-                    setDateStr(e.target.value);
-                    if (fieldErrors.date) {
-                      setFieldErrors((prev) => {
-                        const updated = { ...prev };
-                        delete updated.date;
-                        return updated;
-                      });
+                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !dateStr && "text-muted-foreground",
+                          fieldErrors.date && "border-destructive",
+                        )}
+                        disabled={isSaving}
+                      />
                     }
-                  }}
-                  disabled={isSaving}
-                  aria-invalid={!!fieldErrors.date}
-                />
+                  >
+                    <CalendarIcon className="mr-2 size-4" />
+                    {formattedSelectedDate ?? "Select closure date..."}
+                    <ChevronDown className="ml-auto size-3 opacity-50" />
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-auto p-0 z-[60]"
+                    align="start"
+                    sideOffset={4}
+                  >
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(d) => {
+                        if (d) {
+                          setDateStr(format(d, "yyyy-MM-dd"));
+                          if (fieldErrors.date) {
+                            setFieldErrors((prev) => {
+                              const next = { ...prev };
+                              delete next.date;
+                              return next;
+                            });
+                          }
+                          setIsCalendarOpen(false);
+                        }
+                      }}
+                    />
+                  </PopoverContent>
+                </Popover>
                 {fieldErrors.date && (
                   <p className="text-xs text-destructive">{fieldErrors.date}</p>
                 )}
               </div>
             </div>
 
-            <DialogFooter>
+            <CredenzaFooter>
               <Button
                 type="button"
                 variant="outline"
@@ -401,29 +444,29 @@ export function HolidayManager() {
                   </>
                 )}
               </Button>
-            </DialogFooter>
+            </CredenzaFooter>
           </form>
-        </DialogContent>
-      </Dialog>
+        </CredenzaContent>
+      </Credenza>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
+      <Credenza
         open={deletingHoliday !== null}
         onOpenChange={(open) => {
           if (!open) closeDialogs();
         }}
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="size-10 rounded-lg bg-destructive/10 text-destructive flex items-center justify-center mb-2">
-              <Trash2 className="size-5" />
+        <CredenzaContent className="sm:max-w-md">
+          <CredenzaHeader>
+            <div className="size-8 rounded-[3px] bg-destructive/10 text-destructive flex items-center justify-center mb-1">
+              <AlertCircle className="size-4" />
             </div>
-            <DialogTitle>Delete {deletingHoliday?.name}?</DialogTitle>
-            <DialogDescription>
+            <CredenzaTitle>Delete {deletingHoliday?.name}?</CredenzaTitle>
+            <CredenzaDescription>
               Are you sure you want to remove this closure? The date will become
               available for appointments again.
-            </DialogDescription>
-          </DialogHeader>
+            </CredenzaDescription>
+          </CredenzaHeader>
 
           {actionError && (
             <Alert variant="destructive" className="my-2">
@@ -432,7 +475,7 @@ export function HolidayManager() {
             </Alert>
           )}
 
-          <DialogFooter className="mt-4">
+          <CredenzaFooter className="mt-4">
             <Button
               type="button"
               variant="outline"
@@ -458,9 +501,9 @@ export function HolidayManager() {
                 </>
               )}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </CredenzaFooter>
+        </CredenzaContent>
+      </Credenza>
     </Card>
   );
 }

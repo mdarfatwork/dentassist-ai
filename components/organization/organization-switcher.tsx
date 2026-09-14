@@ -38,7 +38,7 @@ export function OrganizationSwitcher() {
         <Button
           size="sm"
           variant="outline"
-          className="gap-1.5 border-dashed border-primary/40 text-primary hover:bg-primary/5"
+          className="gap-1.5 border-dashed border-primary/40 text-primary hover:bg-primary/5 h-7.5 text-xs font-semibold"
           onClick={() => setCreateDialogOpen(true)}
         >
           <Plus className="size-3.5" /> Create Organization
@@ -59,27 +59,27 @@ export function OrganizationSwitcher() {
             <Button
               variant="outline"
               size="sm"
-              className="h-9 px-2.5 gap-2 border-border/80 bg-background hover:bg-muted/60 text-foreground font-medium transition-all max-w-[220px] sm:max-w-[260px] justify-between shadow-2xs"
+              className="h-8 px-2.5 gap-2 border-border bg-background hover:bg-muted/70 text-foreground font-medium transition-all max-w-[220px] sm:max-w-[260px] justify-between shadow-none rounded-[3px]"
             />
           }
         >
           <div className="flex items-center gap-2 truncate">
-            <div className="size-5 rounded bg-primary/10 text-primary flex items-center justify-center shrink-0">
-              <Building2 className="size-3.5" />
+            <div className="size-4.5 rounded-[2px] bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Building2 className="size-3" />
             </div>
-            <span className="truncate text-xs sm:text-sm font-semibold">
-              {activeOrganization?.name || "Select Clinic"}
+            <span className="truncate text-xs font-semibold">
+              {activeOrganization?.name || "Select Practice"}
             </span>
           </div>
-          <ChevronsUpDown className="size-3.5 text-muted-foreground shrink-0 opacity-70" />
+          <ChevronsUpDown className="size-3 text-muted-foreground shrink-0 opacity-70" />
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="start" className="w-64 p-1.5 shadow-md">
-          <DropdownMenuLabel className="flex items-center justify-between text-[11px] uppercase tracking-wider text-muted-foreground font-semibold px-2 py-1">
-            <span>Your Clinics</span>
-            <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
+        <DropdownMenuContent align="start" className="w-64 p-1 shadow-md">
+          <DropdownMenuLabel className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground font-semibold px-2 py-1">
+            <span>Your Practices</span>
+            <span className="text-[10px] font-mono bg-muted px-1.5 py-0.2 rounded-[2px] text-muted-foreground border border-border/60">
               {organizations.length}{" "}
-              {organizations.length === 1 ? "org" : "orgs"}
+              {organizations.length === 1 ? "clinic" : "clinics"}
             </span>
           </DropdownMenuLabel>
 
@@ -90,20 +90,20 @@ export function OrganizationSwitcher() {
 
               let statusIcon: React.ReactNode = null;
               if (isPending) {
-                statusIcon = <Spinner className="size-3.5 text-primary" />;
+                statusIcon = <Spinner className="size-3 text-primary" />;
               } else if (isActive) {
-                statusIcon = <Check className="size-4 text-primary" />;
+                statusIcon = <Check className="size-3.5 text-primary" />;
               }
 
               return (
                 <DropdownMenuItem
                   key={org.id}
                   onClick={() => handleSelect(org.id)}
-                  className="flex items-center justify-between py-2 px-2.5 rounded-md cursor-pointer hover:bg-muted/80 transition-colors"
+                  className="flex items-center justify-between py-1.5 px-2 rounded-[2px] cursor-pointer hover:bg-muted/80 transition-colors"
                 >
                   <div className="flex items-center gap-2 min-w-0 pr-2">
                     <div
-                      className={`size-7 rounded-md flex items-center justify-center shrink-0 ${
+                      className={`size-6 rounded-[2px] flex items-center justify-center shrink-0 ${
                         isActive
                           ? "bg-primary text-primary-foreground font-bold text-xs"
                           : "bg-muted text-muted-foreground text-xs"
@@ -115,7 +115,7 @@ export function OrganizationSwitcher() {
                       <span className="text-xs font-semibold text-foreground truncate">
                         {org.name}
                       </span>
-                      <span className="text-[10px] text-muted-foreground truncate">
+                      <span className="text-[10px] font-mono text-muted-foreground truncate">
                         {org.slug}
                       </span>
                     </div>
@@ -124,7 +124,7 @@ export function OrganizationSwitcher() {
                   <div className="flex items-center gap-1.5 shrink-0">
                     <Badge
                       variant="secondary"
-                      className="text-[10px] px-1.5 py-0 h-4 uppercase font-semibold"
+                      className="text-[9px] px-1 py-0 h-4 uppercase font-semibold font-mono"
                     >
                       {org.role}
                     </Badge>
@@ -139,12 +139,12 @@ export function OrganizationSwitcher() {
 
           <DropdownMenuItem
             onClick={() => setCreateDialogOpen(true)}
-            className="flex items-center gap-2 py-2 px-2.5 text-xs text-primary font-medium cursor-pointer hover:bg-primary/10 hover:text-primary rounded-md"
+            className="flex items-center gap-2 py-1.5 px-2 text-xs text-primary font-medium cursor-pointer hover:bg-primary/10 hover:text-primary rounded-[2px]"
           >
-            <div className="size-6 rounded border border-dashed border-primary/40 flex items-center justify-center">
-              <Plus className="size-3.5" />
+            <div className="size-5 rounded-[2px] border border-dashed border-primary/40 flex items-center justify-center">
+              <Plus className="size-3" />
             </div>
-            <span>Create New Organization</span>
+            <span>New Clinic Organization</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
