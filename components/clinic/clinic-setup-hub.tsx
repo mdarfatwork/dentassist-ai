@@ -4,6 +4,7 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc/client";
 import { useOrganization } from "@/components/organization/organization-provider";
 import { ClinicProfileForm } from "./clinic-profile-form";
+import { ClinicPhotoGallery } from "./clinic-photo-gallery";
 import { DentistManager } from "./dentist-manager";
 import { ServiceManager } from "./service-manager";
 import { WorkingHoursEditor } from "./working-hours-editor";
@@ -219,8 +220,9 @@ export function ClinicSetupHub() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="profile">
+        <TabsContent value="profile" className="space-y-6">
           <ClinicProfileForm />
+          <ClinicPhotoGallery />
         </TabsContent>
 
         <TabsContent value="dentists">

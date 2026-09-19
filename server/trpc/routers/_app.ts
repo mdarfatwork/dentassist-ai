@@ -5,6 +5,7 @@ import { dentistRouter } from "./dentist";
 import { serviceRouter } from "./service";
 import { workingHoursRouter } from "./working-hours";
 import { holidayRouter } from "./holiday";
+import { storageRouter } from "./storage";
 
 export const appRouter = router({
   auth: authRouter,
@@ -13,6 +14,7 @@ export const appRouter = router({
   service: serviceRouter,
   workingHours: workingHoursRouter,
   holiday: holidayRouter,
+  storage: storageRouter,
 });
 
 export type AppRouter = typeof appRouter;

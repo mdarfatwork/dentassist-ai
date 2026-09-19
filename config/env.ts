@@ -13,6 +13,12 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),
+  // S3-compatible Object Storage
+  AWS_ENDPOINT_URL_S3: z.string().optional(),
+  AWS_ACCESS_KEY_ID: z.string().optional(),
+  AWS_SECRET_ACCESS_KEY: z.string().optional(),
+  AWS_REGION: z.string().default("us-east-2"),
+  AWS_S3_BUCKET_NAME: z.string().default("assets"),
 });
 
 const rawEnv = {
@@ -27,6 +33,11 @@ const rawEnv = {
     process.env.BETTER_AUTH_URL ||
     "http://localhost:3000",
   NODE_ENV: process.env.NODE_ENV || "development",
+  AWS_ENDPOINT_URL_S3: process.env.AWS_ENDPOINT_URL_S3,
+  AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+  AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
+  AWS_REGION: process.env.AWS_REGION || "us-east-2",
+  AWS_S3_BUCKET_NAME: process.env.AWS_S3_BUCKET_NAME || "assets",
 };
 
 const parsed = envSchema.safeParse(rawEnv);

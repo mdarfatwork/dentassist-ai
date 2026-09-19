@@ -5,8 +5,8 @@ import {
   useRef,
   useMemo,
   useTransition,
-  ChangeEvent,
-  SubmitEvent,
+  type ChangeEvent,
+  type SubmitEvent,
 } from "react";
 import { useRouter } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
@@ -79,6 +79,7 @@ export function ClinicProfileForm({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [logoFileError, setLogoFileError] = useState<string | null>(null);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   const timezoneOptions = useMemo(() => {
     const list = [...IANA_TIMEZONES];
@@ -125,7 +126,7 @@ export function ClinicProfileForm({
     if (successMessage) setSuccessMessage(null);
   };
 
-  const handleLogoUpload = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     setLogoFileError(null);
     const file = e.target.files?.[0];
     if (!file) return;
@@ -144,22 +145,53 @@ export function ClinicProfileForm({
       return;
     }
 
-    // Validate size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      setLogoFileError("Image size must not exceed 2MB.");
+    // Validate size (max 5MB for S3 upload)
+    if (file.size > 5 * 1024 * 1024) {
+      setLogoFileError("Image size must not exceed 5MB.");
       return;
     }
 
-    // Convert to Data URL for instant preview & storage reference
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      handleInputChange("logoUrl", result);
-    };
-    reader.onerror = () => {
-      setLogoFileError("Failed to read image file.");
-    };
-    reader.readAsDataURL(file);
+    try {
+      setIsUploadingLogo(true);
+      const uploadFormData = new FormData();
+      uploadFormData.append("file", file);
+      if (activeOrganization?.id) {
+        uploadFormData.append("organizationId", activeOrganization.id);
+      }
+      uploadFormData.append("folder", "photos");
+
+      const res = await fetch("/api/upload/clinic-photo", {
+        method: "POST",
+        body: uploadFormData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(
+          data.error ||
+            "Unable to upload photo. Please check the image and try again.",
+        );
+      }
+
+      // Persist the permanent storage URL in the form state
+      handleInputChange("logoUrl", data.url);
+      setSuccessMessage(
+        "Photo uploaded successfully! Click 'Save Clinic Profile' below to apply changes.",
+      );
+    } catch (err) {
+      console.error("Photo upload failed:", err);
+      setLogoFileError(
+        err instanceof Error
+          ? err.message
+          : "Unable to upload photo. Please try again.",
+      );
+    } finally {
+      setIsUploadingLogo(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
   };
 
   const handleRemoveLogo = () => {
@@ -225,6 +257,43 @@ export function ClinicProfileForm({
     }
   };
 
+  let logoPreviewContent = (
+    <ImageIcon className="size-6 text-muted-foreground/60" />
+  );
+
+  if (isUploadingLogo) {
+    logoPreviewContent = <Spinner className="size-5 text-primary" />;
+  } else if (formData.logoUrl) {
+    logoPreviewContent = (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={formData.logoUrl}
+        alt="Clinic Logo Preview"
+        className="size-full object-contain p-1"
+      />
+    );
+  }
+
+  let submitButtonContent = (
+    <>
+      <CheckCircle2 className="size-4" /> Save Clinic Profile
+    </>
+  );
+
+  if (updateProfileMutation.isPending) {
+    submitButtonContent = (
+      <>
+        <Spinner className="mr-1.5" /> Saving Changes...
+      </>
+    );
+  } else if (isUploadingLogo) {
+    submitButtonContent = (
+      <>
+        <Spinner className="mr-1.5" /> Uploading Photo...
+      </>
+    );
+  }
+
   return (
     <Card className="border-border shadow-none">
       <form onSubmit={handleSubmit}>
@@ -253,33 +322,24 @@ export function ClinicProfileForm({
             </Alert>
           )}
 
-          {/* Logo Section */}
+          {/* Logo & Clinic Photo Section */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-[4px] bg-muted/30 border border-border">
             <div className="relative size-16 rounded-[3px] border border-border bg-background flex items-center justify-center overflow-hidden shrink-0 shadow-none">
-              {formData.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={formData.logoUrl}
-                  alt="Clinic Logo Preview"
-                  className="size-full object-contain p-1"
-                />
-              ) : (
-                <ImageIcon className="size-6 text-muted-foreground/60" />
-              )}
+              {logoPreviewContent}
             </div>
 
             <div className="space-y-1.5 flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-foreground">
-                  Clinic Logo
+                  Clinic Logo / Primary Photo
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  (PNG, JPEG, WebP, SVG • Max 2MB)
+                  (PNG, JPEG, WebP, SVG • Max 5MB)
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Displayed across patient booking widgets and clinic
-                communications.
+                Displayed across patient booking widgets, appointment
+                confirmations, and clinic records.
               </p>
 
               {logoFileError && (
@@ -294,6 +354,7 @@ export function ClinicProfileForm({
                   accept="image/png,image/jpeg,image/webp,image/svg+xml"
                   className="hidden"
                   id="clinic-logo-input"
+                  disabled={isUploadingLogo || updateProfileMutation.isPending}
                 />
                 <Button
                   type="button"
@@ -301,12 +362,21 @@ export function ClinicProfileForm({
                   size="sm"
                   className="gap-1.5"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={updateProfileMutation.isPending}
+                  disabled={isUploadingLogo || updateProfileMutation.isPending}
                 >
-                  <Upload className="size-3.5" />
-                  {formData.logoUrl ? "Replace Logo" : "Upload Logo"}
+                  {isUploadingLogo ? (
+                    <>
+                      <Spinner className="size-3.5" />
+                      Uploading photo...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="size-3.5" />
+                      {formData.logoUrl ? "Replace Photo" : "Upload Photo"}
+                    </>
+                  )}
                 </Button>
-                {formData.logoUrl && (
+                {formData.logoUrl && !isUploadingLogo && (
                   <Button
                     type="button"
                     variant="ghost"
@@ -489,7 +559,7 @@ export function ClinicProfileForm({
             variant="outline"
             size="sm"
             onClick={handleReset}
-            disabled={updateProfileMutation.isPending}
+            disabled={updateProfileMutation.isPending || isUploadingLogo}
             className="gap-1.5"
           >
             <RotateCcw className="size-3.5" /> Reset
@@ -497,18 +567,10 @@ export function ClinicProfileForm({
 
           <Button
             type="submit"
-            disabled={updateProfileMutation.isPending}
+            disabled={updateProfileMutation.isPending || isUploadingLogo}
             className="gap-1.5 font-medium"
           >
-            {updateProfileMutation.isPending ? (
-              <>
-                <Spinner className="mr-1.5" /> Saving Changes...
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="size-4" /> Save Clinic Profile
-              </>
-            )}
+            {submitButtonContent}
           </Button>
         </CardFooter>
       </form>
