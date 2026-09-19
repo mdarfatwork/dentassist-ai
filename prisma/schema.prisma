@@ -86,11 +86,13 @@ model Organization {
   timezone     String                   @default("UTC")
   createdAt    DateTime                 @default(now())
   updatedAt    DateTime                 @updatedAt
-  memberships  OrganizationMembership[]
-  dentists     Dentist[]
-  services     Service[]
-  workingHours WorkingHours[]
-  holidays     Holiday[]
+  memberships    OrganizationMembership[]
+  dentists       Dentist[]
+  services       Service[]
+  workingHours   WorkingHours[]
+  holidays       Holiday[]
+  documents      Document[]
+  documentChunks DocumentChunk[]
 
   @@index([slug])
   @@map("organization")
@@ -177,5 +179,54 @@ model OrganizationMembership {
   @@index([userId])
   @@index([organizationId])
   @@map("organization_membership")
+}
+
+enum DocumentStatus {
+  PROCESSING
+  REVIEW
+  READY
+  FAILED
+}
+
+model Document {
+  id                 String          @id @default(cuid())
+  organizationId     String
+  name               String
+  mimeType           String
+  sizeBytes          Int
+  originalStorageKey String
+  markdownStorageKey String?
+  status             DocumentStatus  @default(PROCESSING)
+  errorMessage       String?
+  chunkCount         Int             @default(0)
+  processedAt        DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  organization       Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  chunks             DocumentChunk[]
+
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@map("document")
+}
+
+model DocumentChunk {
+  id               String       @id @default(cuid())
+  documentId       String
+  organizationId   String
+  chunkIndex       Int
+  content          String       @db.Text
+  headingPath      String?
+  pageNumber       Int?
+  pineconeVectorId String
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  document         Document     @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, chunkIndex])
+  @@index([organizationId])
+  @@index([documentId])
+  @@map("document_chunk")
 }
 

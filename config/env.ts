@@ -19,6 +19,24 @@ const envSchema = z.object({
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
   AWS_REGION: z.string().default("us-east-2"),
   AWS_S3_BUCKET_NAME: z.string().default("assets"),
+  // Pinecone Vector DB
+  PINECONE_API_KEY: z.string().optional(),
+  PINECONE_INDEX: z.string().default("dentassist"),
+  PINECONE_HOST: z.string().optional(),
+  PINECONE_NAMESPACE_PREFIX: z.string().optional(),
+  // Groq LLM & Prompt Guard
+  GROQ_API_KEY: z.string().optional(),
+  GROQ_LLM_MODEL: z.string().default("qwen/qwen3.6-27b"),
+  GROQ_PROMPT_GUARD_MODEL: z
+    .string()
+    .default("meta-llama/llama-prompt-guard-2-86m"),
+  // Embeddings & RAG
+  EMBEDDING_PROVIDER: z.enum(["pinecone", "mock"]).default("pinecone"),
+  EMBEDDING_MODEL: z.string().default("multilingual-e5-large"),
+  MAX_KNOWLEDGE_FILE_SIZE: z.coerce.number().default(10 * 1024 * 1024),
+  RAG_TOP_K: z.coerce.number().default(5),
+  RAG_CHUNK_SIZE: z.coerce.number().default(600),
+  RAG_CHUNK_OVERLAP: z.coerce.number().default(80),
 });
 
 const rawEnv = {
@@ -38,6 +56,23 @@ const rawEnv = {
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
   AWS_REGION: process.env.AWS_REGION || "us-east-2",
   AWS_S3_BUCKET_NAME: process.env.AWS_S3_BUCKET_NAME || "assets",
+  PINECONE_API_KEY: process.env.PINECONE_API_KEY,
+  PINECONE_INDEX: process.env.PINECONE_INDEX || "dentassist",
+  PINECONE_HOST: process.env.PINECONE_HOST,
+  PINECONE_NAMESPACE_PREFIX: process.env.PINECONE_NAMESPACE_PREFIX,
+  GROQ_API_KEY: process.env.GROQ_API_KEY,
+  GROQ_LLM_MODEL: process.env.GROQ_LLM_MODEL || "qwen/qwen3.6-27b",
+  GROQ_PROMPT_GUARD_MODEL:
+    process.env.GROQ_PROMPT_GUARD_MODEL ||
+    "meta-llama/llama-prompt-guard-2-86m",
+  EMBEDDING_PROVIDER:
+    (process.env.EMBEDDING_PROVIDER as "pinecone" | "mock") || "pinecone",
+  EMBEDDING_MODEL: process.env.EMBEDDING_MODEL || "multilingual-e5-large",
+  MAX_KNOWLEDGE_FILE_SIZE:
+    process.env.MAX_KNOWLEDGE_FILE_SIZE || 10 * 1024 * 1024,
+  RAG_TOP_K: process.env.RAG_TOP_K || 5,
+  RAG_CHUNK_SIZE: process.env.RAG_CHUNK_SIZE || 600,
+  RAG_CHUNK_OVERLAP: process.env.RAG_CHUNK_OVERLAP || 80,
 };
 
 const parsed = envSchema.safeParse(rawEnv);

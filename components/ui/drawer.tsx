@@ -17,7 +17,12 @@ function useDrawer() {
   const context = React.useContext(DrawerContext);
 
   if (!context) {
-    throw new Error("useDrawer must be used within a Drawer.");
+    return {
+      hasSnapPoints: false,
+      modal: true,
+      showSwipeHandle: true,
+      swipeDirection: "down" as const,
+    };
   }
 
   return context;

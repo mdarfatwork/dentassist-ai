@@ -10,6 +10,7 @@ import { ServiceManager } from "./service-manager";
 import { WorkingHoursEditor } from "./working-hours-editor";
 import { HolidayManager } from "./holiday-manager";
 import { ClinicSetupWizard } from "./clinic-setup-wizard";
+import { KnowledgeManager } from "@/components/knowledge/knowledge-manager";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,22 +39,25 @@ export function ClinicSetupHub() {
   const servicesQuery = trpc.service.list.useQuery();
   const hoursQuery = trpc.workingHours.get.useQuery();
   const holidaysQuery = trpc.holiday.list.useQuery();
+  const knowledgeQuery = trpc.knowledge.list.useQuery();
 
   const dentistsCount = dentistsQuery.data?.length ?? 0;
   const servicesCount = servicesQuery.data?.length ?? 0;
   const holidaysCount = holidaysQuery.data?.length ?? 0;
+  const docsCount = knowledgeQuery.data?.length ?? 0;
   const hoursConfigured = (hoursQuery.data?.length ?? 0) > 0;
   const profileConfigured = Boolean(
     activeOrganization?.name && activeOrganization?.timezone,
   );
 
-  // Calculate setup score out of 4 core items
+  // Calculate setup score out of 5 core items
   const completedCount =
     (profileConfigured ? 1 : 0) +
     (dentistsCount > 0 ? 1 : 0) +
     (servicesCount > 0 ? 1 : 0) +
-    (hoursConfigured ? 1 : 0);
-  const completionPercentage = Math.round((completedCount / 4) * 100);
+    (hoursConfigured ? 1 : 0) +
+    (docsCount > 0 ? 1 : 0);
+  const completionPercentage = Math.round((completedCount / 5) * 100);
 
   if (isWizardMode) {
     return (
@@ -97,7 +101,8 @@ export function ClinicSetupHub() {
 
             <p className="text-xs text-muted-foreground leading-normal">
               Manage practice identity, practitioner rosters, appointment
-              services, and operating hours for this clinic tenant.
+              services, operating hours, and grounded knowledge base for this
+              clinic tenant.
             </p>
 
             {/* Checklist items - Flat and bordered */}
@@ -151,6 +156,17 @@ export function ClinicSetupHub() {
                 }`}
               >
                 <CheckCircle2 className="size-3" /> {holidaysCount} Closures
+              </span>
+
+              <span
+                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[2px] text-[11px] font-medium border ${
+                  docsCount > 0
+                    ? "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-600/20"
+                    : "bg-muted text-muted-foreground border-border"
+                }`}
+              >
+                <CheckCircle2 className="size-3" /> {docsCount}{" "}
+                {docsCount === 1 ? "Doc" : "Docs"}
               </span>
             </div>
           </div>
@@ -215,6 +231,14 @@ export function ClinicSetupHub() {
               </span>
             )}
           </TabsTrigger>
+          <TabsTrigger value="knowledge" className="gap-1.5">
+            <BookOpen className="size-3.5" /> Knowledge Base
+            {docsCount > 0 && (
+              <span className="ml-1 px-1.5 py-0.2 rounded-[2px] bg-muted text-[10px] font-mono border border-border">
+                {docsCount}
+              </span>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="roadmap" className="gap-1.5">
             <Compass className="size-3.5" /> Launchpad
           </TabsTrigger>
@@ -239,6 +263,10 @@ export function ClinicSetupHub() {
 
         <TabsContent value="holidays">
           <HolidayManager />
+        </TabsContent>
+
+        <TabsContent value="knowledge">
+          <KnowledgeManager />
         </TabsContent>
 
         <TabsContent value="roadmap">
