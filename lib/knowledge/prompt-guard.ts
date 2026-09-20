@@ -8,27 +8,31 @@ export interface PromptGuardResult {
 
 /**
  * PromptGuardService
- * Uses Meta Llama Prompt Guard 2 (meta-llama/llama-prompt-guard-2-86m) on Groq to classify patient/user prompts.
+ * Provides fast-path heuristic detection and NVIDIA model classification for patient/user prompts.
  */
 export class PromptGuardService {
-  private static groqClient: unknown = null;
+  private static nvidiaClient: unknown = null;
 
-  private static async getGroq() {
-    if (this.groqClient) return this.groqClient;
+  private static async getNvidia() {
+    if (this.nvidiaClient) return this.nvidiaClient;
 
-    if (!env.GROQ_API_KEY) {
+    if (!env.NVIDIA_API_KEY) {
       return null;
     }
 
-    const { default: Groq } = await import("groq-sdk");
-    this.groqClient = new Groq({ apiKey: env.GROQ_API_KEY });
-    return this.groqClient;
+    const { default: OpenAI } = await import("openai");
+    this.nvidiaClient = new OpenAI({
+      apiKey: env.NVIDIA_API_KEY,
+      baseURL: env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1",
+    });
+    return this.nvidiaClient;
   }
 
   /**
    * Evaluates a user prompt for potential prompt injection or jailbreak attempts.
    */
   public static async checkPrompt(prompt: string): Promise<PromptGuardResult> {
+    const startTime = performance.now();
     const trimmed = prompt.trim();
     if (trimmed.length === 0) {
       return { isSafe: true };
@@ -51,6 +55,10 @@ export class PromptGuardService {
 
     for (const pattern of suspiciousPatterns) {
       if (lower.includes(pattern)) {
+        const heuristicMs = (performance.now() - startTime).toFixed(1);
+        console.log(
+          `[PromptGuard] ⚠️ Flagged by local heuristic in ${heuristicMs}ms`,
+        );
         return {
           isSafe: false,
           reason: "Prompt contains restricted instruction-override patterns.",
@@ -58,24 +66,30 @@ export class PromptGuardService {
       }
     }
 
-    // Call Groq Prompt Guard model if API key is present
+    // Call NVIDIA Prompt Guard / Classifier model if API key is present
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const groq = (await this.getGroq()) as any;
-      if (!groq) {
-        // No Groq key configured yet; fast-path heuristic check passed
+      const nvidia = (await this.getNvidia()) as any;
+      if (!nvidia) {
+        // No NVIDIA key configured yet; fast-path heuristic check passed
         return { isSafe: true };
       }
 
       const model =
-        env.GROQ_PROMPT_GUARD_MODEL || "meta-llama/llama-prompt-guard-2-86m";
+        env.NVIDIA_PROMPT_GUARD_MODEL ||
+        "nvidia/nemotron-3.5-lightning-30b-a3b";
 
-      const response = await groq.chat.completions.create({
+      const apiStartTime = performance.now();
+      const response = await nvidia.chat.completions.create({
         model,
         messages: [{ role: "user", content: trimmed }],
         max_tokens: 10,
         temperature: 0,
       });
+      const apiDurationMs = (performance.now() - apiStartTime).toFixed(1);
+      console.log(
+        `[PromptGuard] 🛡️ NVIDIA Prompt Guard API [${model}] completed in ${apiDurationMs}ms`,
+      );
 
       const reply = response.choices?.[0]?.message?.content?.trim() || "";
 

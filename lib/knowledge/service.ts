@@ -405,7 +405,7 @@ export class KnowledgeService {
   }
 
   /**
-   * Queries the organization's knowledge base using Prompt Guard, Vector Retrieval, and Groq LLM.
+   * Queries the organization's knowledge base using Prompt Guard, Vector Retrieval, and NVIDIA LLM.
    */
   public static async queryKnowledge(params: {
     organizationId: string;
@@ -416,7 +416,7 @@ export class KnowledgeService {
   > {
     const { organizationId, query, topK = 5 } = params;
 
-    // 1. Run prompt through Meta Llama Prompt Guard 2
+    // 1. Run prompt through Prompt Guard
     const guardResult = await PromptGuardService.checkPrompt(query);
     if (!guardResult.isSafe) {
       return {
@@ -439,7 +439,7 @@ export class KnowledgeService {
     // 3. Delimit context into safe XML blocks
     const contextXml = ContextBuilder.buildContext(retrievedChunks);
 
-    // 4. Generate grounded answer via Groq LLM
+    // 4. Generate grounded answer via NVIDIA LLM
     const ragResponse = await llmService.generateAnswer({
       question: query,
       contextXml,

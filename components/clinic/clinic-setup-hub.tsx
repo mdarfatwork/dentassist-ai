@@ -11,6 +11,8 @@ import { WorkingHoursEditor } from "./working-hours-editor";
 import { HolidayManager } from "./holiday-manager";
 import { ClinicSetupWizard } from "./clinic-setup-wizard";
 import { KnowledgeManager } from "@/components/knowledge/knowledge-manager";
+import { ReceptionistPlayground } from "@/components/receptionist/receptionist-playground";
+import { AppointmentManager } from "@/components/appointment/appointment-manager";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,6 +30,7 @@ import {
   BookOpen,
   Bot,
   Sliders,
+  CalendarCheck,
 } from "lucide-react";
 
 export function ClinicSetupHub() {
@@ -40,9 +43,11 @@ export function ClinicSetupHub() {
   const hoursQuery = trpc.workingHours.get.useQuery();
   const holidaysQuery = trpc.holiday.list.useQuery();
   const knowledgeQuery = trpc.knowledge.list.useQuery();
+  const appointmentsQuery = trpc.appointment.list.useQuery();
 
   const dentistsCount = dentistsQuery.data?.length ?? 0;
   const servicesCount = servicesQuery.data?.length ?? 0;
+  const appointmentsCount = appointmentsQuery.data?.length ?? 0;
   const holidaysCount = holidaysQuery.data?.length ?? 0;
   const docsCount = knowledgeQuery.data?.length ?? 0;
   const hoursConfigured = (hoursQuery.data?.length ?? 0) > 0;
@@ -239,6 +244,17 @@ export function ClinicSetupHub() {
               </span>
             )}
           </TabsTrigger>
+          <TabsTrigger value="receptionist" className="gap-1.5">
+            <Bot className="size-3.5 text-primary" /> AI Receptionist
+          </TabsTrigger>
+          <TabsTrigger value="appointments" className="gap-1.5">
+            <CalendarCheck className="size-3.5" /> Appointments
+            {appointmentsCount > 0 && (
+              <span className="ml-1 px-1.5 py-0.2 rounded-[2px] bg-muted text-[10px] font-mono border border-border">
+                {appointmentsCount}
+              </span>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="roadmap" className="gap-1.5">
             <Compass className="size-3.5" /> Launchpad
           </TabsTrigger>
@@ -267,6 +283,14 @@ export function ClinicSetupHub() {
 
         <TabsContent value="knowledge">
           <KnowledgeManager />
+        </TabsContent>
+
+        <TabsContent value="receptionist">
+          <ReceptionistPlayground />
+        </TabsContent>
+
+        <TabsContent value="appointments">
+          <AppointmentManager />
         </TabsContent>
 
         <TabsContent value="roadmap">

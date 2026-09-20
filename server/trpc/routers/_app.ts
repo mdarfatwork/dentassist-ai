@@ -7,6 +7,8 @@ import { workingHoursRouter } from "./working-hours";
 import { holidayRouter } from "./holiday";
 import { storageRouter } from "./storage";
 import { knowledgeRouter } from "./knowledge";
+import { receptionistRouter } from "./receptionist";
+import { appointmentRouter } from "./appointment";
 
 export const appRouter = router({
   auth: authRouter,
@@ -17,6 +19,8 @@ export const appRouter = router({
   holiday: holidayRouter,
   storage: storageRouter,
   knowledge: knowledgeRouter,
+  receptionist: receptionistRouter,
+  appointment: appointmentRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -35,50 +35,57 @@ STRICT OPERATIONAL RULES:
 7. Maintain a professional, calm, clinical, and reassuring tone. Do not use conversational filler or emoji sparkles.`;
 
 /**
- * Groq LLM Service implementation for RAG answers.
+ * NVIDIA NIM LLM Service implementation for RAG answers.
  */
-export class GroqLLMService implements ILLMService {
-  private groqClient: unknown = null;
+export class NvidiaLLMService implements ILLMService {
+  private nvidiaClient: unknown = null;
   private readonly model: string;
   private activeModel: string;
   private availableModelsCache: string[] | null = null;
 
   constructor(model?: string) {
-    this.model = model || env.GROQ_LLM_MODEL || "qwen/qwen3.6-27b";
+    this.model =
+      model || env.NVIDIA_LLM_MODEL || "nvidia/nemotron-3.5-lightning-30b-a3b";
     this.activeModel = this.model;
   }
 
-  private async getGroq() {
-    if (this.groqClient) return this.groqClient;
+  private async getNvidia() {
+    if (this.nvidiaClient) return this.nvidiaClient;
 
-    if (!env.GROQ_API_KEY) {
+    if (!env.NVIDIA_API_KEY) {
       return null;
     }
 
-    const { default: Groq } = await import("groq-sdk");
-    this.groqClient = new Groq({ apiKey: env.GROQ_API_KEY });
-    return this.groqClient;
+    const { default: OpenAI } = await import("openai");
+    this.nvidiaClient = new OpenAI({
+      apiKey: env.NVIDIA_API_KEY,
+      baseURL: env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1",
+    });
+    return this.nvidiaClient;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async getAvailableModels(groq: any): Promise<string[]> {
+  private async getAvailableModels(nvidia: any): Promise<string[]> {
     if (this.availableModelsCache && this.availableModelsCache.length > 0) {
       return this.availableModelsCache;
     }
     try {
-      const list = await groq.models.list();
+      const list = await nvidia.models.list();
 
       const ids: string[] = (list?.data || [])
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((m: any) => m.id as string)
-        .filter((id: string) => Boolean(id) && !id.includes("whisper"));
+        .filter(
+          (id: string) =>
+            Boolean(id) && !id.includes("whisper") && !id.includes("embed"),
+        );
       console.info(
-        `[Groq LLM] Active models for this API key: [${ids.join(", ")}]`,
+        `[NVIDIA LLM] Active models for this API key: [${ids.join(", ")}]`,
       );
       this.availableModelsCache = ids;
       return ids;
     } catch (err) {
-      console.warn("[Groq LLM] Could not fetch models list:", err);
+      console.warn("[NVIDIA LLM] Could not fetch models list:", err);
       return [];
     }
   }
@@ -108,10 +115,10 @@ export class GroqLLMService implements ILLMService {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const groq = (await this.getGroq()) as any;
+    const nvidia = (await this.getNvidia()) as any;
 
-    if (!groq) {
-      // Mock / fallback response when Groq key is not configured
+    if (!nvidia) {
+      // Mock / fallback response when NVIDIA key is not configured
       if (retrievedChunks.length === 0) {
         return {
           answer:
@@ -131,32 +138,17 @@ export class GroqLLMService implements ILLMService {
       };
     }
 
-    const activeModels = await this.getAvailableModels(groq);
+    const activeModels = await this.getAvailableModels(nvidia);
 
-    // Filter active models: if user wants Qwen, prioritize all available Qwen variants
-    const matchingQwen = activeModels.filter(
-      (id) =>
-        id.toLowerCase().includes("qwen") || id.toLowerCase().includes("qwq"),
-    );
-
-    // Other text generation models
-    const otherTextModels = activeModels.filter(
-      (id) =>
-        !matchingQwen.includes(id) &&
-        !id.includes("guard") &&
-        !id.includes("embedding") &&
-        !id.includes("tts") &&
-        !id.includes("whisper"),
-    );
-
-    // Ordered preference list
+    // Candidate preference list
     const candidateModels = Array.from(
       new Set([
         this.model,
         this.activeModel,
-        ...matchingQwen,
-        ...otherTextModels,
-        "gemma2-9b-it",
+        "nvidia/nemotron-3.5-lightning-30b-a3b",
+        "meta/llama-3.3-70b-instruct",
+        "nvidia/llama-3.1-nemotron-70b-instruct",
+        ...activeModels,
       ]),
     );
 
@@ -165,7 +157,7 @@ export class GroqLLMService implements ILLMService {
 
     for (const modelToTry of candidateModels) {
       try {
-        const completion = await groq.chat.completions.create({
+        const completion = await nvidia.chat.completions.create({
           model: modelToTry,
           messages: [
             { role: "system", content: RAG_SYSTEM_PROMPT },
@@ -197,18 +189,21 @@ export class GroqLLMService implements ILLMService {
           msg.includes("400");
 
         if (!isModelUnavailable) {
-          throw new Error(`Groq LLM generation error: ${msg}`);
+          throw new Error(`NVIDIA LLM generation error: ${msg}`);
         }
 
         console.warn(
-          `[Groq LLM] Model "${modelToTry}" unavailable (${msg}). Trying fallback model...`,
+          `[NVIDIA LLM] Model "${modelToTry}" unavailable (${msg}). Trying fallback model...`,
         );
       }
     }
 
     const finalMsg = getErrorMessage(lastError);
-    throw new Error(`Groq LLM generation error: ${finalMsg}`);
+    throw new Error(`NVIDIA LLM generation error: ${finalMsg}`);
   }
 }
 
-export const llmService: ILLMService = new GroqLLMService();
+// Backward-compatibility alias
+export class GroqLLMService extends NvidiaLLMService {}
+
+export const llmService: ILLMService = new NvidiaLLMService();

@@ -93,6 +93,8 @@ model Organization {
   holidays       Holiday[]
   documents      Document[]
   documentChunks DocumentChunk[]
+  appointments   Appointment[]
+  conversations  Conversation[]
 
   @@index([slug])
   @@map("organization")
@@ -113,9 +115,10 @@ model Dentist {
   organizationId String
   name           String
   specialization String?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  appointments   Appointment[]
 
   @@index([organizationId])
   @@map("dentist")
@@ -127,9 +130,10 @@ model Service {
   name            String
   description     String?
   durationMinutes Int
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  appointments    Appointment[]
 
   @@index([organizationId])
   @@map("service")
@@ -228,5 +232,75 @@ model DocumentChunk {
   @@index([organizationId])
   @@index([documentId])
   @@map("document_chunk")
+}
+
+enum AppointmentStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+model Appointment {
+  id                    String            @id @default(cuid())
+  reference             String            @unique
+  organizationId        String
+  dentistId             String?
+  serviceId             String
+  startTime             DateTime
+  endTime               DateTime
+  status                AppointmentStatus @default(CONFIRMED)
+  patientName           String
+  patientEmail          String
+  patientPhone          String
+  googleCalendarEventId String?
+  notes                 String?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  organization          Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  dentist               Dentist?          @relation(fields: [dentistId], references: [id], onDelete: SetNull)
+  service               Service           @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, dentistId, startTime])
+  @@index([organizationId])
+  @@index([organizationId, startTime])
+  @@index([patientEmail])
+  @@index([reference])
+  @@map("appointment")
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  TOOL
+  SYSTEM
+}
+
+model Conversation {
+  id             String                @id @default(cuid())
+  organizationId String
+  sessionId      String?
+  bookingState   Json?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  messages       ConversationMessage[]
+
+  @@index([organizationId])
+  @@map("conversation")
+}
+
+model ConversationMessage {
+  id             String       @id @default(cuid())
+  conversationId String
+  role           MessageRole
+  content        String       @db.Text
+  toolName       String?
+  toolCallId     String?
+  toolArgs       Json?
+  toolResult     Json?
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@map("conversation_message")
 }
 
