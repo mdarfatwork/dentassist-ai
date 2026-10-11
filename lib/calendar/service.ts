@@ -1,14 +1,5 @@
-/**
- * Calendar Service Abstraction
- *
- * Provides a clean interface for checking external calendar availability,
- * creating, updating, and deleting appointment events.
- *
- * NOTE: Full Google Calendar OAuth sync is scheduled for Phase 6.
- * The LocalCalendarService implementation manages event identifiers and
- * external slot conflicts locally, providing an exact seam for Phase 6
- * Google Calendar API integration without breaking or faking external API calls.
- */
+import { GoogleCalendarService } from "./google-calendar-service";
+import { CalendarDomainError } from "./types";
 
 export interface CalendarSlotQuery {
   organizationId: string;
@@ -38,7 +29,7 @@ export interface UpdateCalendarEventInput {
 
 export interface CalendarEventResult {
   eventId: string;
-  syncStatus: "synced" | "local_pending_phase6";
+  syncStatus: "synced" | "local_pending_phase6" | "skipped";
 }
 
 export interface ICalendarService {
@@ -134,6 +125,117 @@ export class LocalCalendarService implements ICalendarService {
       LocalCalendarService.events.delete(params.eventId);
     }
   }
+
+  public static clear(): void {
+    LocalCalendarService.events.clear();
+  }
 }
 
-export const calendarService: ICalendarService = new LocalCalendarService();
+/**
+ * Hybrid calendar service:
+ * Checks Google Calendar FreeBusy when configured and connected.
+ * Creates, updates, and deletes events directly on the clinic's Google Calendar.
+ * Falls back to LocalCalendarService if Google Calendar is not yet linked.
+ */
+export class HybridCalendarService implements ICalendarService {
+  private local = new LocalCalendarService();
+
+  public async checkAvailability(
+    query: CalendarSlotQuery,
+  ): Promise<{ isAvailable: boolean; conflictReason?: string }> {
+    try {
+      const busyList = await GoogleCalendarService.queryFreeBusy({
+        organizationId: query.organizationId,
+        timeMin: query.startTime,
+        timeMax: query.endTime,
+      });
+
+      for (const busy of busyList) {
+        if (query.startTime < busy.end && query.endTime > busy.start) {
+          return {
+            isAvailable: false,
+            conflictReason:
+              "Conflict detected: Overlaps with busy period on Google Calendar.",
+          };
+        }
+      }
+    } catch (err) {
+      if (
+        err instanceof CalendarDomainError &&
+        err.code === "CALENDAR_AVAILABILITY_UNAVAILABLE"
+      ) {
+        throw err;
+      }
+      // Non-fatal or disconnected, fall back to checking local service
+    }
+
+    return this.local.checkAvailability(query);
+  }
+
+  public async createEvent(
+    input: CreateCalendarEventInput,
+  ): Promise<CalendarEventResult> {
+    try {
+      const res = await GoogleCalendarService.createEvent({
+        organizationId: input.organizationId,
+        dentistId: input.dentistId,
+        title: input.title,
+        description: input.description,
+        startTime: input.startTime,
+        endTime: input.endTime,
+        attendeeEmail: input.attendeeEmail,
+        attendeeName: input.attendeeName,
+      });
+
+      if (res.syncStatus === "synced" && res.eventId) {
+        return { eventId: res.eventId, syncStatus: "synced" };
+      }
+    } catch (err) {
+      console.error(
+        "[CalendarService] Google Calendar createEvent failed:",
+        err,
+      );
+      throw err;
+    }
+
+    return this.local.createEvent(input);
+  }
+
+  public async updateEvent(
+    input: UpdateCalendarEventInput,
+  ): Promise<CalendarEventResult> {
+    try {
+      const res = await GoogleCalendarService.updateEvent({
+        organizationId: input.organizationId,
+        eventId: input.eventId,
+        startTime: input.startTime,
+        endTime: input.endTime,
+        title: input.title,
+      });
+
+      if (res.syncStatus === "synced") {
+        return { eventId: res.eventId, syncStatus: "synced" };
+      }
+    } catch (err) {
+      console.warn(
+        "[CalendarService] Google Calendar updateEvent failed:",
+        err,
+      );
+    }
+
+    return this.local.updateEvent(input);
+  }
+
+  public async deleteEvent(params: {
+    organizationId: string;
+    eventId: string;
+  }): Promise<void> {
+    await GoogleCalendarService.deleteEvent({
+      organizationId: params.organizationId,
+      eventId: params.eventId,
+    });
+    await this.local.deleteEvent(params);
+  }
+}
+
+export const calendarService: ICalendarService = new HybridCalendarService();

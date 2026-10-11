@@ -9,6 +9,8 @@ import { storageRouter } from "./storage";
 import { knowledgeRouter } from "./knowledge";
 import { receptionistRouter } from "./receptionist";
 import { appointmentRouter } from "./appointment";
+import { googleCalendarRouter } from "./google-calendar";
+import { availabilityRouter } from "./availability";
 
 export const appRouter = router({
   auth: authRouter,
@@ -21,6 +23,8 @@ export const appRouter = router({
   knowledge: knowledgeRouter,
   receptionist: receptionistRouter,
   appointment: appointmentRouter,
+  googleCalendar: googleCalendarRouter,
+  availability: availabilityRouter,
 });
 
 export type AppRouter = typeof appRouter;

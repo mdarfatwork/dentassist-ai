@@ -94,6 +94,7 @@ model Organization {
   documents      Document[]
   documentChunks DocumentChunk[]
   appointments   Appointment[]
+  googleCalendarConnection GoogleCalendarConnection?
   conversations  Conversation[]
 
   @@index([slug])
@@ -236,7 +237,40 @@ model DocumentChunk {
 
 enum AppointmentStatus {
   CONFIRMED
+  SCHEDULED
+  COMPLETED
   CANCELLED
+}
+
+enum AppointmentSource {
+  AI_CHAT
+  AI_VOICE
+  MANUAL
+}
+
+enum GoogleCalendarStatus {
+  DISCONNECTED
+  CONNECTED
+  REAUTH_REQUIRED
+}
+
+model GoogleCalendarConnection {
+  id                 String               @id @default(cuid())
+  organizationId     String               @unique
+  googleAccountEmail String?
+  calendarId         String?
+  calendarName       String?
+  accessToken        String?              @db.Text
+  refreshToken       String?              @db.Text
+  tokenExpiry        DateTime?
+  scopes             String?
+  status             GoogleCalendarStatus @default(CONNECTED)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  organization       Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("google_calendar_connection")
 }
 
 model Appointment {
@@ -248,6 +282,7 @@ model Appointment {
   startTime             DateTime
   endTime               DateTime
   status                AppointmentStatus @default(CONFIRMED)
+  source                AppointmentSource @default(AI_CHAT)
   patientName           String
   patientEmail          String
   patientPhone          String

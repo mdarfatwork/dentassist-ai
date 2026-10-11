@@ -1,3 +1,6 @@
+import { env } from "@/config/env";
+import { type ReceptionistTelemetry } from "./types";
+
 /**
  * High-resolution Latency Profiler for AI Receptionist Pipeline
  * Measures each phase of the conversation lifecycle (Prompt Guard, DB queries,
@@ -126,5 +129,53 @@ export class ReceptionistProfiler {
 
   public getTotalDurationMs(): number {
     return Number((performance.now() - this.startTime).toFixed(1));
+  }
+
+  public getStages(): LatencyStage[] {
+    return [...this.stages];
+  }
+
+  public getTelemetry(counts?: {
+    llmCalls?: number;
+    toolCalls?: number;
+    ragCalls?: number;
+    promptGuardCalls?: number;
+    dbCalls?: number;
+    provider?: string;
+    model?: string;
+  }): ReceptionistTelemetry {
+    const latencies: Record<string, number> = {};
+    for (const stage of this.stages) {
+      latencies[stage.name] = stage.durationMs;
+    }
+
+    return {
+      totalLatencyMs: this.getTotalDurationMs(),
+      promptGuardLatencyMs: latencies["Prompt Guard Security Check"] || 0,
+      conversationLatencyMs: latencies["DB Get/Create Conversation"] || 0,
+      userMessageSaveLatencyMs: latencies["DB Save User Message"] || 0,
+      clinicInfoLatencyMs:
+        latencies["Clinic Info Lookup"] ||
+        latencies["Tool [getClinicInfo]"] ||
+        0,
+      intentExtractionLatencyMs: latencies["Intent & Entity Extraction"] || 0,
+      serviceResolutionLatencyMs: latencies["Service Resolution"] || 0,
+      availabilityLatencyMs: latencies["Tool [checkAvailability]"] || 0,
+      bookingLatencyMs:
+        latencies["Final Availability Check & Booking"] ||
+        latencies["Tool [bookAppointment]"] ||
+        0,
+      ragLatencyMs: latencies["Tool [searchKnowledge]"] || 0,
+      responseGenerationLatencyMs: latencies["Response Generation"] || 0,
+      assistantSaveLatencyMs: latencies["DB Save Assistant Response"] || 0,
+      llmCalls: counts?.llmCalls ?? 0,
+      toolCalls: counts?.toolCalls ?? 0,
+      ragCalls: counts?.ragCalls ?? 0,
+      promptGuardCalls: counts?.promptGuardCalls ?? 0,
+      dbCalls: counts?.dbCalls ?? 0,
+      provider: counts?.provider || env.AI_PROVIDER,
+      model: counts?.model || env.AI_MODEL,
+      latencies,
+    };
   }
 }

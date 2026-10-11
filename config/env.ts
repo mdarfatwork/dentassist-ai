@@ -24,7 +24,44 @@ const envSchema = z.object({
   PINECONE_INDEX: z.string().default("dentassist"),
   PINECONE_HOST: z.string().optional(),
   PINECONE_NAMESPACE_PREFIX: z.string().optional(),
-  // NVIDIA NIM LLM & Prompt Guard
+  // AI Provider & Model Configuration (Legacy & Defaults)
+  AI_PROVIDER: z.string().default("gemini"),
+  AI_MODEL: z.string().default("gemini-2.5-flash-lite"),
+  // Three Provider Failover Configuration
+  AI_PROVIDER_1: z.string().default("gemini"),
+  AI_MODEL_1: z.string().default("gemini-2.5-flash-lite"),
+  AI_PRIORITY_1: z.coerce.number().default(1),
+  GEMINI_API_KEY: z.string().optional(),
+  GEMINI_BASE_URL: z
+    .string()
+    .default("https://generativelanguage.googleapis.com/v1beta/openai/"),
+
+  AI_PROVIDER_2: z.string().default("groq"),
+  AI_MODEL_2: z.string().default("openai/gpt-oss-20b"),
+  AI_PRIORITY_2: z.coerce.number().default(2),
+  GROQ_API_KEY: z.string().optional(),
+  GROQ_BASE_URL: z.string().default("https://api.groq.com/openai/v1"),
+
+  AI_PROVIDER_3: z.string().default("openrouter"),
+  AI_MODEL_3: z.string().default("google/gemma-4-31b-it:free"),
+  AI_PRIORITY_3: z.coerce.number().default(3),
+  OPENROUTER_API_KEY: z.string().optional(),
+  OPENROUTER_BASE_URL: z.string().default("https://openrouter.ai/api/v1"),
+  OPENROUTER_MODEL: z.string().optional(),
+
+  // Circuit Breaker & Failover Settings
+  AI_REQUEST_TIMEOUT_MS: z.coerce.number().default(15000),
+  AI_PROVIDER_COOLDOWN_MS: z.coerce.number().default(60000),
+  AI_RATE_LIMIT_COOLDOWN_MS: z.coerce.number().default(60000),
+  AI_TIMEOUT_COOLDOWN_MS: z.coerce.number().default(30000),
+  AI_PROVIDER_ERROR_COOLDOWN_MS: z.coerce.number().default(30000),
+  AI_NETWORK_ERROR_COOLDOWN_MS: z.coerce.number().default(30000),
+  AI_INVALID_OUTPUT_COOLDOWN_MS: z.coerce.number().default(30000),
+  AI_AUTH_ERROR_COOLDOWN_MS: z.coerce.number().default(600000),
+  AI_CONFIG_ERROR_COOLDOWN_MS: z.coerce.number().default(600000),
+  AI_FAILURE_THRESHOLD: z.coerce.number().default(1),
+
+  // NVIDIA NIM LLM & Prompt Guard (Preserved for prompt guard & legacy embeddings)
   NVIDIA_API_KEY: z.string().optional(),
   NVIDIA_BASE_URL: z.string().default("https://integrate.api.nvidia.com/v1"),
   NVIDIA_LLM_MODEL: z.string().default("nvidia/nemotron-3.5-lightning-30b-a3b"),
@@ -61,6 +98,48 @@ const rawEnv = {
   PINECONE_INDEX: process.env.PINECONE_INDEX || "dentassist",
   PINECONE_HOST: process.env.PINECONE_HOST,
   PINECONE_NAMESPACE_PREFIX: process.env.PINECONE_NAMESPACE_PREFIX,
+  AI_PROVIDER: process.env.AI_PROVIDER || "gemini",
+  AI_MODEL:
+    process.env.AI_MODEL || process.env.AI_MODEL_1 || "gemini-2.5-flash-lite",
+  AI_PROVIDER_1: process.env.AI_PROVIDER_1 || "gemini",
+  AI_MODEL_1: process.env.AI_MODEL_1 || "gemini-2.5-flash-lite",
+  AI_PRIORITY_1: process.env.AI_PRIORITY_1 || 1,
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+  GEMINI_BASE_URL:
+    process.env.GEMINI_BASE_URL ||
+    "https://generativelanguage.googleapis.com/v1beta/openai/",
+
+  AI_PROVIDER_2: process.env.AI_PROVIDER_2 || "groq",
+  AI_MODEL_2: process.env.AI_MODEL_2 || "openai/gpt-oss-20b",
+  AI_PRIORITY_2: process.env.AI_PRIORITY_2 || 2,
+  GROQ_API_KEY: process.env.GROQ_API_KEY,
+  GROQ_BASE_URL: process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1",
+
+  AI_PROVIDER_3: process.env.AI_PROVIDER_3 || "openrouter",
+  AI_MODEL_3:
+    process.env.AI_MODEL_3 ||
+    process.env.OPENROUTER_MODEL ||
+    "google/gemma-4-31b-it:free",
+  AI_PRIORITY_3: process.env.AI_PRIORITY_3 || 3,
+  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
+  OPENROUTER_BASE_URL:
+    process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1",
+  OPENROUTER_MODEL: process.env.OPENROUTER_MODEL,
+
+  AI_REQUEST_TIMEOUT_MS: process.env.AI_REQUEST_TIMEOUT_MS || 15000,
+  AI_PROVIDER_COOLDOWN_MS: process.env.AI_PROVIDER_COOLDOWN_MS || 60000,
+  AI_RATE_LIMIT_COOLDOWN_MS: process.env.AI_RATE_LIMIT_COOLDOWN_MS || 60000,
+  AI_TIMEOUT_COOLDOWN_MS: process.env.AI_TIMEOUT_COOLDOWN_MS || 30000,
+  AI_PROVIDER_ERROR_COOLDOWN_MS:
+    process.env.AI_PROVIDER_ERROR_COOLDOWN_MS || 30000,
+  AI_NETWORK_ERROR_COOLDOWN_MS:
+    process.env.AI_NETWORK_ERROR_COOLDOWN_MS || 30000,
+  AI_INVALID_OUTPUT_COOLDOWN_MS:
+    process.env.AI_INVALID_OUTPUT_COOLDOWN_MS || 30000,
+  AI_AUTH_ERROR_COOLDOWN_MS: process.env.AI_AUTH_ERROR_COOLDOWN_MS || 600000,
+  AI_CONFIG_ERROR_COOLDOWN_MS:
+    process.env.AI_CONFIG_ERROR_COOLDOWN_MS || 600000,
+  AI_FAILURE_THRESHOLD: process.env.AI_FAILURE_THRESHOLD || 1,
   NVIDIA_API_KEY: process.env.NVIDIA_API_KEY,
   NVIDIA_BASE_URL:
     process.env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1",

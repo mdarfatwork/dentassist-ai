@@ -44,25 +44,31 @@ export function ClinicSetupHub() {
   const holidaysQuery = trpc.holiday.list.useQuery();
   const knowledgeQuery = trpc.knowledge.list.useQuery();
   const appointmentsQuery = trpc.appointment.list.useQuery();
+  const calendarStatusQuery = trpc.googleCalendar.getStatus.useQuery();
 
   const dentistsCount = dentistsQuery.data?.length ?? 0;
   const servicesCount = servicesQuery.data?.length ?? 0;
   const appointmentsCount = appointmentsQuery.data?.length ?? 0;
   const holidaysCount = holidaysQuery.data?.length ?? 0;
   const docsCount = knowledgeQuery.data?.length ?? 0;
+  const isCalendarConnected = Boolean(
+    calendarStatusQuery.data?.status === "CONNECTED" &&
+    calendarStatusQuery.data?.calendarId,
+  );
   const hoursConfigured = (hoursQuery.data?.length ?? 0) > 0;
   const profileConfigured = Boolean(
     activeOrganization?.name && activeOrganization?.timezone,
   );
 
-  // Calculate setup score out of 5 core items
+  // Calculate setup score out of 6 core items
   const completedCount =
     (profileConfigured ? 1 : 0) +
     (dentistsCount > 0 ? 1 : 0) +
     (servicesCount > 0 ? 1 : 0) +
     (hoursConfigured ? 1 : 0) +
-    (docsCount > 0 ? 1 : 0);
-  const completionPercentage = Math.round((completedCount / 5) * 100);
+    (docsCount > 0 ? 1 : 0) +
+    (isCalendarConnected ? 1 : 0);
+  const completionPercentage = Math.round((completedCount / 6) * 100);
 
   if (isWizardMode) {
     return (
@@ -172,6 +178,16 @@ export function ClinicSetupHub() {
               >
                 <CheckCircle2 className="size-3" /> {docsCount}{" "}
                 {docsCount === 1 ? "Doc" : "Docs"}
+              </span>
+
+              <span
+                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[2px] text-[11px] font-medium border ${
+                  isCalendarConnected
+                    ? "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-600/20"
+                    : "bg-muted text-muted-foreground border-border"
+                }`}
+              >
+                <CheckCircle2 className="size-3" /> Google Calendar
               </span>
             </div>
           </div>

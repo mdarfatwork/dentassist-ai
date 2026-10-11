@@ -463,15 +463,6 @@ export function ReceptionistPlayground() {
               <span className="font-semibold text-foreground">
                 {activeOrganization?.name}
               </span>
-              <span>•</span>
-              <span className="font-mono text-[11px]">
-                {activeOrganization?.timezone || "UTC"}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono text-muted-foreground">
-                NVIDIA Nemotron 30B
-              </span>
             </div>
           </div>
 
