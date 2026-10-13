@@ -10,6 +10,41 @@ export function isSecureOrigin(): boolean {
   return host === "localhost" || host === "127.0.0.1" || host === "[::1]";
 }
 
+function getEnvironmentIssue(): {
+  state: MicrophonePermissionState;
+  error: string;
+} | null {
+  if (typeof window === "undefined") return null;
+
+  if (!isSecureOrigin()) {
+    return {
+      state: "denied",
+      error: `Microphone is blocked by the browser on non-secure origins (http://${window.location.host}). Please access using http://localhost:3000, HTTPS, or enable Chrome's insecure origin flag for this IP.`,
+    };
+  }
+
+  if (!navigator?.mediaDevices?.getUserMedia) {
+    return {
+      state: "unsupported",
+      error:
+        "Microphone device access (getUserMedia) is not supported in this browser.",
+    };
+  }
+
+  return null;
+}
+
+async function queryMicrophonePermissionStatus(): Promise<PermissionStatus | null> {
+  if (!navigator?.permissions?.query) return null;
+  try {
+    return await navigator.permissions.query({
+      name: "microphone" as PermissionName,
+    });
+  } catch {
+    return null;
+  }
+}
+
 const emptySubscribe = () => () => {};
 
 export function useMicrophonePermission() {
@@ -25,54 +60,46 @@ export function useMicrophonePermission() {
   // Check initial permission status and secure context
   useEffect(() => {
     let isMounted = true;
+    let permissionStatus: PermissionStatus | null = null;
+
+    const safeSet = (
+      state: MicrophonePermissionState,
+      error?: string | null,
+    ) => {
+      if (!isMounted) return;
+      setPermissionState(state);
+      if (error !== undefined) {
+        setPermissionError(error);
+      }
+    };
 
     const checkPermission = async () => {
-      if (!isSecureOrigin()) {
-        if (!isMounted) return;
-        setPermissionState("denied");
-        setPermissionError(
-          `Microphone is blocked by the browser on non-secure origins (http://${window.location.host}). Please access using http://localhost:3000, HTTPS, or enable Chrome's insecure origin flag for this IP.`,
-        );
+      const issue = getEnvironmentIssue();
+      if (issue) {
+        safeSet(issue.state, issue.error);
         return;
       }
 
-      if (!navigator?.mediaDevices?.getUserMedia) {
-        if (!isMounted) return;
-        setPermissionState("unsupported");
-        setPermissionError(
-          "Microphone device access (getUserMedia) is not supported in this browser.",
-        );
+      permissionStatus = await queryMicrophonePermissionStatus();
+      if (!permissionStatus) {
+        safeSet("prompt");
         return;
       }
 
-      if (navigator?.permissions?.query) {
-        try {
-          const status = await navigator.permissions.query({
-            name: "microphone" as PermissionName,
-          });
-          if (!isMounted) return;
-          setPermissionState(status.state as MicrophonePermissionState);
-          status.onchange = () => {
-            if (!isMounted) return;
-            setPermissionState(status.state as MicrophonePermissionState);
-            if (status.state === "granted") {
-              setPermissionError(null);
-            }
-          };
-        } catch {
-          if (!isMounted) return;
-          setPermissionState("prompt");
-        }
-      } else {
-        if (!isMounted) return;
-        setPermissionState("prompt");
-      }
+      safeSet(permissionStatus.state as MicrophonePermissionState);
+      permissionStatus.onchange = () => {
+        const nextState = permissionStatus?.state as MicrophonePermissionState;
+        safeSet(nextState, nextState === "granted" ? null : undefined);
+      };
     };
 
     void checkPermission();
 
     return () => {
       isMounted = false;
+      if (permissionStatus) {
+        permissionStatus.onchange = null;
+      }
     };
   }, []);
 
