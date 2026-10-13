@@ -1,0 +1,14 @@
+# Package Manager Lockfiles (managed by package managers, not Prettier)
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Build & Output
+.next/
+out/
+build/
+coverage/
+
+# Generated files
+next-env.d.ts
+*.tsbuildinfo
