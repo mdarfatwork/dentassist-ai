@@ -75,6 +75,7 @@ export class ReceptionistService {
       profiler.printSummary();
 
       return {
+        conversationId: conversation.id,
         reply: greetingReply,
         bookingState: currentBookingState,
         toolCalls: [],
@@ -92,6 +93,7 @@ export class ReceptionistService {
     if (!guardResult.isSafe) {
       profiler.printSummary();
       return {
+        conversationId: input.conversationId,
         reply:
           "I cannot fulfill this request. As the clinic receptionist, I can only assist with verified dental practice inquiries, clinic information, and appointment scheduling.",
         bookingState: {},
@@ -198,6 +200,7 @@ export class ReceptionistService {
     });
 
     return {
+      conversationId: conversation.id,
       reply: workflowResult.reply,
       bookingState: workflowResult.bookingState,
       toolCalls: workflowResult.toolCalls,

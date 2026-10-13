@@ -12,6 +12,7 @@ import { HolidayManager } from "./holiday-manager";
 import { ClinicSetupWizard } from "./clinic-setup-wizard";
 import { KnowledgeManager } from "@/components/knowledge/knowledge-manager";
 import { ReceptionistPlayground } from "@/components/receptionist/receptionist-playground";
+import { VoiceReceptionist } from "@/components/voice/voice-receptionist";
 import { AppointmentManager } from "@/components/appointment/appointment-manager";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,6 +30,7 @@ import {
   Calendar,
   BookOpen,
   Bot,
+  Mic,
   Sliders,
   CalendarCheck,
 } from "lucide-react";
@@ -263,6 +265,9 @@ export function ClinicSetupHub() {
           <TabsTrigger value="receptionist" className="gap-1.5">
             <Bot className="size-3.5 text-primary" /> AI Receptionist
           </TabsTrigger>
+          <TabsTrigger value="voice" className="gap-1.5">
+            <Mic className="size-3.5 text-primary" /> Voice Receptionist
+          </TabsTrigger>
           <TabsTrigger value="appointments" className="gap-1.5">
             <CalendarCheck className="size-3.5" /> Appointments
             {appointmentsCount > 0 && (
@@ -303,6 +308,10 @@ export function ClinicSetupHub() {
 
         <TabsContent value="receptionist">
           <ReceptionistPlayground />
+        </TabsContent>
+
+        <TabsContent value="voice">
+          <VoiceReceptionist />
         </TabsContent>
 
         <TabsContent value="appointments">

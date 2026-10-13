@@ -2,6 +2,7 @@ import { router, organizationProcedure } from "../trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { ReceptionistService } from "@/lib/receptionist/service";
+import { voiceTurnInputSchema } from "@/lib/voice/voice-turn.schema";
 import { db } from "@/lib/db";
 
 export const receptionistRouter = router({
@@ -108,5 +109,30 @@ export const receptionistRouter = router({
       });
 
       return response;
+    }),
+
+  /**
+   * Processes a spoken patient utterance for the active organization.
+   * Completely reuses the existing AI Core, tools, scheduling, and RAG pipelines.
+   */
+  voiceTurn: organizationProcedure
+    .input(voiceTurnInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const response = await ReceptionistService.processMessage({
+        organizationId: ctx.organizationId,
+        conversationId: input.conversationId,
+        message: input.transcript,
+      });
+
+      return {
+        conversationId: response.conversationId ?? input.conversationId ?? "",
+        responseText: response.reply,
+        bookingState: response.bookingState,
+        toolCalls: response.toolCalls,
+        sources: response.sources,
+        telemetry: response.telemetry,
+        isSecurityFlagged: response.isSecurityFlagged,
+        securityNotice: response.securityNotice,
+      };
     }),
 });

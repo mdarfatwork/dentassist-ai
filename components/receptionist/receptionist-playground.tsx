@@ -23,7 +23,9 @@ import {
   Building2,
   Clock,
   Calendar,
+  Mic,
 } from "lucide-react";
+import { VoiceReceptionist } from "@/components/voice/voice-receptionist";
 import { marked } from "marked";
 import sanitizeHtml from "sanitize-html";
 import {
@@ -282,6 +284,7 @@ export function ReceptionistPlayground() {
   >({});
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
 
   const messageCounterRef = useRef(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -441,402 +444,421 @@ export function ReceptionistPlayground() {
 
           <div className="flex items-center gap-2">
             <Button
-              variant="outline"
+              variant={isVoiceMode ? "default" : "outline"}
               size="sm"
-              onClick={handleReset}
-              className="gap-1.5 text-xs"
+              onClick={() => setIsVoiceMode(!isVoiceMode)}
+              className="gap-1.5 text-xs font-semibold"
             >
-              <RotateCcw className="size-3.5" /> Clear & New Session
+              <Mic className="size-3.5" />
+              <span>
+                {isVoiceMode ? "Text Chat Console" : "Voice Receptionist"}
+              </span>
             </Button>
+            {!isVoiceMode && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReset}
+                className="gap-1.5 text-xs"
+              >
+                <RotateCcw className="size-3.5" /> Clear & New Session
+              </Button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Main Workspace Split: Chat Thread + Structured State Inspector */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Chat Conversation Thread */}
-        <div className="lg:col-span-8 rounded-[4px] border border-border bg-card flex flex-col h-[640px]">
-          {/* Top Bar inside Chat */}
-          <div className="p-3 border-b border-border bg-muted/20 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Building2 className="size-3.5 text-primary" />
-              <span className="font-semibold text-foreground">
-                {activeOrganization?.name}
-              </span>
-            </div>
-          </div>
-
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center p-4 sm:p-6 space-y-4 my-auto">
-                <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-xs border border-primary/20">
-                  <Bot className="size-6" />
-                </div>
-                <div className="space-y-1 max-w-md">
-                  <h3 className="text-base font-semibold text-foreground tracking-tight">
-                    How can I help you today?
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    I&apos;m your AI dental receptionist for{" "}
-                    <span className="font-semibold text-foreground">
-                      {activeOrganization?.name || "the clinic"}
-                    </span>
-                    {". "}
-                    Choose a common question below or type your inquiry:
-                  </p>
-                </div>
-
-                {/* Starter Prompts shown one by one in empty state only */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-w-xl w-full pt-2">
-                  {STARTER_PROMPTS.map((item) => {
-                    const IconComp = item.icon;
-                    return (
-                      <button
-                        key={item.label}
-                        type="button"
-                        onClick={() => handleSend(item.prompt)}
-                        disabled={isGenerating}
-                        className="group text-left p-3 rounded-xl border border-border/80 bg-background/80 hover:bg-muted/60 hover:border-primary/50 transition-all duration-150 flex items-start gap-3 shadow-2xs cursor-pointer disabled:opacity-50"
-                      >
-                        <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                          <IconComp className="size-4" />
-                        </div>
-                        <div className="space-y-0.5 min-w-0">
-                          <div className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
-                            {item.label}
-                          </div>
-                          <div className="text-[11px] text-muted-foreground line-clamp-1">
-                            {item.prompt}
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+      {isVoiceMode ? (
+        <VoiceReceptionist onBackToChat={() => setIsVoiceMode(false)} />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Left Column: Chat Conversation Thread */}
+          <div className="lg:col-span-8 rounded-[4px] border border-border bg-card flex flex-col h-[640px]">
+            {/* Top Bar inside Chat */}
+            <div className="p-3 border-b border-border bg-muted/20 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Building2 className="size-3.5 text-primary" />
+                <span className="font-semibold text-foreground">
+                  {activeOrganization?.name}
+                </span>
               </div>
-            ) : (
-              messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                >
-                  {msg.role === "assistant" && (
-                    <div className="size-7 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
-                      <Bot className="size-4" />
-                    </div>
-                  )}
+            </div>
 
-                  {msg.role === "assistant" &&
-                  msg.content === "" &&
-                  (msg.isStreaming || isGenerating) ? (
-                    <div className="flex items-center gap-2 py-2 px-1 text-muted-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <span className="size-1.5 rounded-full bg-primary/70 animate-bounce [animation-delay:-0.32s]" />
-                        <span className="size-1.5 rounded-full bg-primary/70 animate-bounce [animation-delay:-0.16s]" />
-                        <span className="size-1.5 rounded-full bg-primary/70 animate-bounce" />
-                      </div>
-                      {activeStage && (
-                        <span className="text-[11px] text-muted-foreground font-mono ml-1">
-                          {activeStage === "searching_knowledge" &&
-                            "Searching clinic knowledge..."}
-                          {activeStage === "checking_availability" &&
-                            "Checking availability..."}
-                          {activeStage === "checking_calendar" &&
-                            "Verifying calendar..."}
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    <div
-                      className={`max-w-[85%] rounded-[4px] p-3 text-xs leading-relaxed ${
-                        msg.role === "user"
-                          ? "bg-primary text-primary-foreground font-medium"
-                          : "bg-muted/40 border border-border text-foreground space-y-2"
-                      }`}
-                    >
-                      {msg.role === "assistant" ? (
-                        <div>
-                          <MarkdownContent content={msg.content} />
-                          {msg.isStreaming && (
-                            <span className="inline-block w-1.5 h-3.5 bg-primary ml-1 animate-pulse align-middle" />
-                          )}
-                        </div>
-                      ) : (
-                        <div className="whitespace-pre-wrap">{msg.content}</div>
-                      )}
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {messages.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center p-4 sm:p-6 space-y-4 my-auto">
+                  <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-xs border border-primary/20">
+                    <Bot className="size-6" />
+                  </div>
+                  <div className="space-y-1 max-w-md">
+                    <h3 className="text-base font-semibold text-foreground tracking-tight">
+                      How can I help you today?
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      I&apos;m your AI dental receptionist for{" "}
+                      <span className="font-semibold text-foreground">
+                        {activeOrganization?.name || "the clinic"}
+                      </span>
+                      {". "}
+                      Choose a common question below or type your inquiry:
+                    </p>
+                  </div>
 
-                      {/* Sources section if knowledge retrieval was used */}
-                      {msg.sources && msg.sources.length > 0 && (
-                        <div className="pt-2 mt-2 border-t border-border/60">
-                          <button
-                            type="button"
-                            onClick={() => toggleSourceExpand(msg.id)}
-                            className="flex items-center gap-1.5 text-[11px] font-semibold text-primary hover:underline"
-                          >
-                            <FileText className="size-3" />
-                            <span>
-                              Official Clinic Knowledge Citations (
-                              {msg.sources.length})
-                            </span>
-                            {expandedSources[msg.id] ? (
-                              <ChevronUp className="size-3" />
-                            ) : (
-                              <ChevronDown className="size-3" />
-                            )}
-                          </button>
-
-                          {expandedSources[msg.id] && (
-                            <div className="mt-2 space-y-1 pl-1">
-                              {msg.sources.map((src) => (
-                                <div
-                                  key={`${src.documentId}-${src.pageNumber ?? ""}-${src.headingPath ?? ""}`}
-                                  className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground bg-muted/60 p-1.5 rounded-[2px] border border-border/40"
-                                >
-                                  <span className="font-semibold text-foreground">
-                                    {src.documentName}
-                                  </span>
-                                  {src.headingPath && (
-                                    <span>• {src.headingPath}</span>
-                                  )}
-                                  {src.pageNumber && (
-                                    <span>• p. {src.pageNumber}</span>
-                                  )}
-                                </div>
-                              ))}
+                  {/* Starter Prompts shown one by one in empty state only */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-w-xl w-full pt-2">
+                    {STARTER_PROMPTS.map((item) => {
+                      const IconComp = item.icon;
+                      return (
+                        <button
+                          key={item.label}
+                          type="button"
+                          onClick={() => handleSend(item.prompt)}
+                          disabled={isGenerating}
+                          className="group text-left p-3 rounded-xl border border-border/80 bg-background/80 hover:bg-muted/60 hover:border-primary/50 transition-all duration-150 flex items-start gap-3 shadow-2xs cursor-pointer disabled:opacity-50"
+                        >
+                          <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                            <IconComp className="size-4" />
+                          </div>
+                          <div className="space-y-0.5 min-w-0">
+                            <div className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
+                              {item.label}
                             </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {msg.role === "user" && (
-                    <div className="size-7 rounded-[3px] bg-muted text-muted-foreground border border-border flex items-center justify-center shrink-0 mt-0.5">
-                      <User className="size-4" />
-                    </div>
-                  )}
+                            <div className="text-[11px] text-muted-foreground line-clamp-1">
+                              {item.prompt}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              ))
-            )}
-
-            {/* Security Alert Banner */}
-            {isSecurityFlagged && (
-              <Alert variant="destructive" className="text-xs">
-                <ShieldAlert className="size-4" />
-                <AlertDescription>
-                  {securityNotice ||
-                    "Safety system flagged and contained this inquiry."}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Chat Input Bar (ChatGPT Style) */}
-          <div className="p-3 border-t border-border bg-card/60 backdrop-blur-xs">
-            <div className="relative flex items-end rounded-2xl border border-border/80 bg-background shadow-xs transition-all duration-200 focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/10 p-1.5 pl-3.5">
-              <textarea
-                ref={textareaRef}
-                rows={1}
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
-                  }
-                }}
-                placeholder="Ask about dental services, clinic hours, pricing, or request an appointment..."
-                className="flex-1 max-h-[160px] min-h-[38px] resize-none bg-transparent py-2 text-xs md:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none leading-relaxed"
-              />
-
-              <div className="flex items-center gap-1.5 shrink-0 pb-0.5 pr-0.5">
-                {/* Secondary Action Icon: Sparkles quick suggestion */}
-                <button
-                  type="button"
-                  title="Insert random inquiry suggestion"
-                  onClick={() => {
-                    // NOSONAR — Math.random() is used only to select a non-sensitive UI prompt.
-                    const randomPrompt =
-                      STARTER_PROMPTS[
-                        Math.floor(Math.random() * STARTER_PROMPTS.length)
-                      ].prompt;
-                    setInputMessage(randomPrompt);
-                    textareaRef.current?.focus();
-                  }}
-                  className="size-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors"
-                >
-                  <Sparkles className="size-4" />
-                </button>
-
-                {/* Primary Circular Send Button */}
-                <button
-                  type="button"
-                  onClick={() => handleSend()}
-                  disabled={!inputMessage.trim() || isGenerating}
-                  title="Send message (Enter)"
-                  className={`size-8 rounded-full flex items-center justify-center transition-all duration-150 ${
-                    inputMessage.trim() && !isGenerating
-                      ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs scale-100 active:scale-95"
-                      : "bg-muted text-muted-foreground/40 cursor-not-allowed"
-                  }`}
-                >
-                  {isGenerating ? (
-                    <div className="size-3.5 rounded-xs bg-current animate-pulse" />
-                  ) : (
-                    <ArrowUp className="size-4 stroke-[2.5]" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between px-2 pt-1.5 text-[10px] text-muted-foreground">
-              <span>
-                DentAssist AI can make mistakes. Verify important appointment
-                details.
-              </span>
-              <span className="hidden sm:inline font-mono text-[10px]">
-                <span className="font-semibold">Shift + Enter</span> for new
-                line
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Live Structured State & Tool Telemetry */}
-        <div className="lg:col-span-4 space-y-4">
-          {/* Live Structured Conversation State Card */}
-          <div className="rounded-[4px] border border-border bg-card p-4 space-y-3">
-            <div className="flex items-center justify-between border-b border-border pb-2">
-              <div className="flex items-center gap-1.5">
-                <Sliders className="size-3.5 text-primary" />
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                  Structured State
-                </h3>
-              </div>
-              <Badge variant="secondary" className="text-[10px] font-mono">
-                Real-Time
-              </Badge>
-            </div>
-
-            <div className="space-y-2 text-xs divide-y divide-border/60">
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-muted-foreground">Service:</span>
-                <span className="font-semibold text-foreground">
-                  {bookingState.serviceName || "None selected"}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-muted-foreground">Dentist:</span>
-                <span className="font-semibold text-foreground">
-                  {bookingState.dentistName || "Any available"}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-muted-foreground">Target Date:</span>
-                <span className="font-mono text-foreground font-medium">
-                  {bookingState.requestedDate || "—"}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-muted-foreground">Scheduled Time:</span>
-                <span className="font-mono text-foreground font-medium">
-                  {bookingState.selectedStartTime || "—"}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-muted-foreground">Patient:</span>
-                <span className="font-semibold text-foreground">
-                  {bookingState.patientName || "—"}
-                </span>
-              </div>
-
-              {bookingState.patientEmail && (
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-muted-foreground">Email:</span>
-                  <span className="font-mono text-[11px] text-foreground truncate max-w-[160px]">
-                    {bookingState.patientEmail}
-                  </span>
-                </div>
-              )}
-
-              {bookingState.appointmentReference && (
-                <div className="flex items-center justify-between pt-2">
-                  <span className="text-muted-foreground font-bold">
-                    Ref Code:
-                  </span>
-                  <span className="font-mono font-bold text-xs bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-[2px]">
-                    {bookingState.appointmentReference}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {bookingState.appointmentReference && (
-              <div className="p-2 rounded-[2px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-xs flex items-center gap-2">
-                <CheckCircle2 className="size-4 shrink-0" />
-                <span>Appointment confirmed & synced to calendar.</span>
-              </div>
-            )}
-          </div>
-
-          {/* Recent Tool Activity Logs */}
-          <div className="rounded-[4px] border border-border bg-card p-4 space-y-3">
-            <div className="flex items-center justify-between border-b border-border pb-2">
-              <div className="flex items-center gap-1.5">
-                <Sparkles className="size-3.5 text-primary" />
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                  Tool Telemetry
-                </h3>
-              </div>
-              <span className="text-[10px] font-mono text-muted-foreground">
-                Zod Authorized
-              </span>
-            </div>
-
-            {recentToolCalls.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic py-3 text-center">
-                No tool calls executed in current message cycle.
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {recentToolCalls.map((call) => (
+              ) : (
+                messages.map((msg) => (
                   <div
-                    key={call.id}
-                    className="p-2 rounded-[2px] border border-border/80 bg-muted/20 text-xs space-y-1 font-mono"
+                    key={msg.id}
+                    className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-foreground">
-                        {call.name}()
-                      </span>
-                      {call.executionTimeMs && (
-                        <span className="text-[10px] text-muted-foreground">
-                          {call.executionTimeMs}ms
-                        </span>
-                      )}
-                    </div>
-                    {call.error ? (
-                      <span className="text-destructive text-[11px]">
-                        Error: {call.error}
-                      </span>
+                    {msg.role === "assistant" && (
+                      <div className="size-7 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                        <Bot className="size-4" />
+                      </div>
+                    )}
+
+                    {msg.role === "assistant" &&
+                    msg.content === "" &&
+                    (msg.isStreaming || isGenerating) ? (
+                      <div className="flex items-center gap-2 py-2 px-1 text-muted-foreground">
+                        <div className="flex items-center gap-1.5">
+                          <span className="size-1.5 rounded-full bg-primary/70 animate-bounce [animation-delay:-0.32s]" />
+                          <span className="size-1.5 rounded-full bg-primary/70 animate-bounce [animation-delay:-0.16s]" />
+                          <span className="size-1.5 rounded-full bg-primary/70 animate-bounce" />
+                        </div>
+                        {activeStage && (
+                          <span className="text-[11px] text-muted-foreground font-mono ml-1">
+                            {activeStage === "searching_knowledge" &&
+                              "Searching clinic knowledge..."}
+                            {activeStage === "checking_availability" &&
+                              "Checking availability..."}
+                            {activeStage === "checking_calendar" &&
+                              "Verifying calendar..."}
+                          </span>
+                        )}
+                      </div>
                     ) : (
-                      <span className="text-emerald-600 text-[10px] flex items-center gap-1">
-                        <CheckCircle2 className="size-3" /> Validated & Executed
-                      </span>
+                      <div
+                        className={`max-w-[85%] rounded-[4px] p-3 text-xs leading-relaxed ${
+                          msg.role === "user"
+                            ? "bg-primary text-primary-foreground font-medium"
+                            : "bg-muted/40 border border-border text-foreground space-y-2"
+                        }`}
+                      >
+                        {msg.role === "assistant" ? (
+                          <div>
+                            <MarkdownContent content={msg.content} />
+                            {msg.isStreaming && (
+                              <span className="inline-block w-1.5 h-3.5 bg-primary ml-1 animate-pulse align-middle" />
+                            )}
+                          </div>
+                        ) : (
+                          <div className="whitespace-pre-wrap">
+                            {msg.content}
+                          </div>
+                        )}
+
+                        {/* Sources section if knowledge retrieval was used */}
+                        {msg.sources && msg.sources.length > 0 && (
+                          <div className="pt-2 mt-2 border-t border-border/60">
+                            <button
+                              type="button"
+                              onClick={() => toggleSourceExpand(msg.id)}
+                              className="flex items-center gap-1.5 text-[11px] font-semibold text-primary hover:underline"
+                            >
+                              <FileText className="size-3" />
+                              <span>
+                                Official Clinic Knowledge Citations (
+                                {msg.sources.length})
+                              </span>
+                              {expandedSources[msg.id] ? (
+                                <ChevronUp className="size-3" />
+                              ) : (
+                                <ChevronDown className="size-3" />
+                              )}
+                            </button>
+
+                            {expandedSources[msg.id] && (
+                              <div className="mt-2 space-y-1 pl-1">
+                                {msg.sources.map((src) => (
+                                  <div
+                                    key={`${src.documentId}-${src.pageNumber ?? ""}-${src.headingPath ?? ""}`}
+                                    className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground bg-muted/60 p-1.5 rounded-[2px] border border-border/40"
+                                  >
+                                    <span className="font-semibold text-foreground">
+                                      {src.documentName}
+                                    </span>
+                                    {src.headingPath && (
+                                      <span>• {src.headingPath}</span>
+                                    )}
+                                    {src.pageNumber && (
+                                      <span>• p. {src.pageNumber}</span>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {msg.role === "user" && (
+                      <div className="size-7 rounded-[3px] bg-muted text-muted-foreground border border-border flex items-center justify-center shrink-0 mt-0.5">
+                        <User className="size-4" />
+                      </div>
                     )}
                   </div>
-                ))}
+                ))
+              )}
+
+              {/* Security Alert Banner */}
+              {isSecurityFlagged && (
+                <Alert variant="destructive" className="text-xs">
+                  <ShieldAlert className="size-4" />
+                  <AlertDescription>
+                    {securityNotice ||
+                      "Safety system flagged and contained this inquiry."}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Chat Input Bar (ChatGPT Style) */}
+            <div className="p-3 border-t border-border bg-card/60 backdrop-blur-xs">
+              <div className="relative flex items-end rounded-2xl border border-border/80 bg-background shadow-xs transition-all duration-200 focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/10 p-1.5 pl-3.5">
+                <textarea
+                  ref={textareaRef}
+                  rows={1}
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                  placeholder="Ask about dental services, clinic hours, pricing, or request an appointment..."
+                  className="flex-1 max-h-[160px] min-h-[38px] resize-none bg-transparent py-2 text-xs md:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none leading-relaxed"
+                />
+
+                <div className="flex items-center gap-1.5 shrink-0 pb-0.5 pr-0.5">
+                  {/* Secondary Action Icon: Sparkles quick suggestion */}
+                  <button
+                    type="button"
+                    title="Insert random inquiry suggestion"
+                    onClick={() => {
+                      // NOSONAR — Math.random() is used only to select a non-sensitive UI prompt.
+                      const randomPrompt =
+                        STARTER_PROMPTS[
+                          Math.floor(Math.random() * STARTER_PROMPTS.length)
+                        ].prompt;
+                      setInputMessage(randomPrompt);
+                      textareaRef.current?.focus();
+                    }}
+                    className="size-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors"
+                  >
+                    <Sparkles className="size-4" />
+                  </button>
+
+                  {/* Primary Circular Send Button */}
+                  <button
+                    type="button"
+                    onClick={() => handleSend()}
+                    disabled={!inputMessage.trim() || isGenerating}
+                    title="Send message (Enter)"
+                    className={`size-8 rounded-full flex items-center justify-center transition-all duration-150 ${
+                      inputMessage.trim() && !isGenerating
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs scale-100 active:scale-95"
+                        : "bg-muted text-muted-foreground/40 cursor-not-allowed"
+                    }`}
+                  >
+                    {isGenerating ? (
+                      <div className="size-3.5 rounded-xs bg-current animate-pulse" />
+                    ) : (
+                      <ArrowUp className="size-4 stroke-[2.5]" />
+                    )}
+                  </button>
+                </div>
               </div>
-            )}
+
+              <div className="flex items-center justify-between px-2 pt-1.5 text-[10px] text-muted-foreground">
+                <span>
+                  DentAssist AI can make mistakes. Verify important appointment
+                  details.
+                </span>
+                <span className="hidden sm:inline font-mono text-[10px]">
+                  <span className="font-semibold">Shift + Enter</span> for new
+                  line
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Live Structured State & Tool Telemetry */}
+          <div className="lg:col-span-4 space-y-4">
+            {/* Live Structured Conversation State Card */}
+            <div className="rounded-[4px] border border-border bg-card p-4 space-y-3">
+              <div className="flex items-center justify-between border-b border-border pb-2">
+                <div className="flex items-center gap-1.5">
+                  <Sliders className="size-3.5 text-primary" />
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                    Structured State
+                  </h3>
+                </div>
+                <Badge variant="secondary" className="text-[10px] font-mono">
+                  Real-Time
+                </Badge>
+              </div>
+
+              <div className="space-y-2 text-xs divide-y divide-border/60">
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-muted-foreground">Service:</span>
+                  <span className="font-semibold text-foreground">
+                    {bookingState.serviceName || "None selected"}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-muted-foreground">Dentist:</span>
+                  <span className="font-semibold text-foreground">
+                    {bookingState.dentistName || "Any available"}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-muted-foreground">Target Date:</span>
+                  <span className="font-mono text-foreground font-medium">
+                    {bookingState.requestedDate || "—"}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-muted-foreground">Scheduled Time:</span>
+                  <span className="font-mono text-foreground font-medium">
+                    {bookingState.selectedStartTime || "—"}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-muted-foreground">Patient:</span>
+                  <span className="font-semibold text-foreground">
+                    {bookingState.patientName || "—"}
+                  </span>
+                </div>
+
+                {bookingState.patientEmail && (
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-muted-foreground">Email:</span>
+                    <span className="font-mono text-[11px] text-foreground truncate max-w-[160px]">
+                      {bookingState.patientEmail}
+                    </span>
+                  </div>
+                )}
+
+                {bookingState.appointmentReference && (
+                  <div className="flex items-center justify-between pt-2">
+                    <span className="text-muted-foreground font-bold">
+                      Ref Code:
+                    </span>
+                    <span className="font-mono font-bold text-xs bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-[2px]">
+                      {bookingState.appointmentReference}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {bookingState.appointmentReference && (
+                <div className="p-2 rounded-[2px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-xs flex items-center gap-2">
+                  <CheckCircle2 className="size-4 shrink-0" />
+                  <span>Appointment confirmed & synced to calendar.</span>
+                </div>
+              )}
+            </div>
+
+            {/* Recent Tool Activity Logs */}
+            <div className="rounded-[4px] border border-border bg-card p-4 space-y-3">
+              <div className="flex items-center justify-between border-b border-border pb-2">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="size-3.5 text-primary" />
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                    Tool Telemetry
+                  </h3>
+                </div>
+                <span className="text-[10px] font-mono text-muted-foreground">
+                  Zod Authorized
+                </span>
+              </div>
+
+              {recentToolCalls.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic py-3 text-center">
+                  No tool calls executed in current message cycle.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {recentToolCalls.map((call) => (
+                    <div
+                      key={call.id}
+                      className="p-2 rounded-[2px] border border-border/80 bg-muted/20 text-xs space-y-1 font-mono"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-foreground">
+                          {call.name}()
+                        </span>
+                        {call.executionTimeMs && (
+                          <span className="text-[10px] text-muted-foreground">
+                            {call.executionTimeMs}ms
+                          </span>
+                        )}
+                      </div>
+                      {call.error ? (
+                        <span className="text-destructive text-[11px]">
+                          Error: {call.error}
+                        </span>
+                      ) : (
+                        <span className="text-emerald-600 text-[10px] flex items-center gap-1">
+                          <CheckCircle2 className="size-3" /> Validated &
+                          Executed
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

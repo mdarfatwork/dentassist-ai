@@ -8,10 +8,11 @@ import { runReceptionistServiceTests } from "./receptionist/receptionist-service
 import { runCircuitBreakerTests } from "./ai/circuit-breaker.test";
 import { runFailoverIntegrationTests } from "./receptionist/failover-integration.test";
 import { runPhase6Tests } from "./calendar/phase6-google-calendar-scheduling.test";
+import { runVoiceReceptionistTests } from "./voice/voice-receptionist.test";
 
 async function main() {
   console.log("\n=======================================================");
-  console.log("   DentAssist AI - Phase 4, 5 & 6 Automated Test Suite");
+  console.log("   DentAssist AI - Phase 4, 5, 6 & 7 Automated Test Suite");
   console.log("=======================================================\n");
 
   try {
@@ -34,8 +35,10 @@ async function main() {
     await runReceptionistServiceTests();
     console.log("");
     await runPhase6Tests();
+    console.log("");
+    await runVoiceReceptionistTests();
     console.log("\n=======================================================");
-    console.log("   All Phase 4, Phase 5 & Phase 6 Automated Tests Passed! ✔");
+    console.log("   All Phase 4, 5, 6 & 7 Automated Tests Passed! ✔");
     console.log("=======================================================\n");
     process.exit(0);
   } catch (err: unknown) {

@@ -157,7 +157,11 @@ export default function SignupPage() {
           </span>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form
+          action="#"
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-4"
+        >
           <div className="flex flex-col gap-2">
             <Label htmlFor="name">Full Name</Label>
             <Input

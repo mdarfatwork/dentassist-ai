@@ -130,13 +130,18 @@ export abstract class BaseOpenAICompatibleProvider implements AIProvider {
 
     const msg = err instanceof Error ? err.message : String(err);
     const lowerMsg = msg.toLowerCase();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const status = (err as any)?.status || (err as any)?.statusCode;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rawError = (err as any)?.error || (err as any)?.response?.data?.error;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const errObj = err as Record<string, unknown> | null | undefined;
+    const rawErrorObj = errObj?.error as
+      Record<string, unknown> | null | undefined;
+    const responseDataObj = (
+      errObj?.response as Record<string, unknown> | undefined
+    )?.data as Record<string, unknown> | undefined;
+    const status = (errObj?.status ?? errObj?.statusCode) as number | undefined;
+    const rawError =
+      rawErrorObj ??
+      (responseDataObj?.error as Record<string, unknown> | undefined);
     const errorCode = String(
-      rawError?.code || (err as any)?.code || "",
+      rawError?.code ?? errObj?.code ?? "",
     ).toLowerCase();
 
     const retryAfterMs = this.parseRetryAfter(err);

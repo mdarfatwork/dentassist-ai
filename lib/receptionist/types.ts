@@ -180,6 +180,7 @@ export interface ReceptionistTelemetry {
 }
 
 export interface ReceptionistResponse {
+  conversationId?: string;
   reply: string;
   bookingState: BookingState;
   toolCalls: ReceptionistToolCall[];
