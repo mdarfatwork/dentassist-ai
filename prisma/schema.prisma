@@ -96,6 +96,7 @@ model Organization {
   appointments   Appointment[]
   googleCalendarConnection GoogleCalendarConnection?
   conversations  Conversation[]
+  websiteWidget  WebsiteWidget?
 
   @@index([slug])
   @@map("organization")
@@ -337,5 +338,48 @@ model ConversationMessage {
 
   @@index([conversationId])
   @@map("conversation_message")
+}
+
+model WebsiteWidget {
+  id                String          @id @default(cuid())
+  publicId          String          @unique
+  organizationId    String          @unique
+  name              String
+  isActive          Boolean         @default(true)
+
+  allowedDomains    String[]
+  primaryColor      String          @default("#1E40AF")
+  launcherPosition  String          @default("bottom-right")
+  welcomeMessage    String          @default("Hi! How can I help you today?")
+  assistantName     String          @default("DentAssist")
+  showBranding      Boolean         @default(true)
+  enableChat        Boolean         @default(true)
+  enableVoice       Boolean         @default(false)
+
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  organization      Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sessions          WidgetSession[]
+
+  @@index([organizationId])
+  @@index([publicId])
+  @@map("website_widget")
+}
+
+model WidgetSession {
+  id             String        @id @default(cuid())
+  widgetId       String
+  tokenHash      String        @unique
+  conversationId String?
+  expiresAt      DateTime
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  widget         WebsiteWidget @relation(fields: [widgetId], references: [id], onDelete: Cascade)
+
+  @@index([widgetId])
+  @@index([tokenHash])
+  @@map("widget_session")
 }
 

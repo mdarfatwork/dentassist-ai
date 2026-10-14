@@ -11,6 +11,7 @@ import { receptionistRouter } from "./receptionist";
 import { appointmentRouter } from "./appointment";
 import { googleCalendarRouter } from "./google-calendar";
 import { availabilityRouter } from "./availability";
+import { widgetRouter } from "./widget";
 
 export const appRouter = router({
   auth: authRouter,
@@ -25,6 +26,7 @@ export const appRouter = router({
   appointment: appointmentRouter,
   googleCalendar: googleCalendarRouter,
   availability: availabilityRouter,
+  widget: widgetRouter,
 });
 
 export type AppRouter = typeof appRouter;

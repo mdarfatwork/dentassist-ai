@@ -14,6 +14,7 @@ import { KnowledgeManager } from "@/components/knowledge/knowledge-manager";
 import { ReceptionistPlayground } from "@/components/receptionist/receptionist-playground";
 import { VoiceReceptionist } from "@/components/voice/voice-receptionist";
 import { AppointmentManager } from "@/components/appointment/appointment-manager";
+import { WebsiteWidgetManager } from "@/components/widget/website-widget-manager";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ import {
   Mic,
   Sliders,
   CalendarCheck,
+  Globe,
 } from "lucide-react";
 
 export function ClinicSetupHub() {
@@ -276,6 +278,9 @@ export function ClinicSetupHub() {
               </span>
             )}
           </TabsTrigger>
+          <TabsTrigger value="widget" className="gap-1.5">
+            <Globe className="size-3.5 text-primary" /> Website Widget
+          </TabsTrigger>
           <TabsTrigger value="roadmap" className="gap-1.5">
             <Compass className="size-3.5" /> Launchpad
           </TabsTrigger>
@@ -316,6 +321,10 @@ export function ClinicSetupHub() {
 
         <TabsContent value="appointments">
           <AppointmentManager />
+        </TabsContent>
+
+        <TabsContent value="widget">
+          <WebsiteWidgetManager />
         </TabsContent>
 
         <TabsContent value="roadmap">
