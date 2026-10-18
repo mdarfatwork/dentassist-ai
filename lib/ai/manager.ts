@@ -194,6 +194,10 @@ export class AIProviderManager implements AIProvider {
     };
   }
 
+  public resetCircuitBreaker(): void {
+    this.circuitBreaker.reset();
+  }
+
   /**
    * Generic execution harness that iterates over sorted providers with circuit breaker and failover
    */

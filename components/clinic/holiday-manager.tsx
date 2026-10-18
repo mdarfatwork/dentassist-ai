@@ -1,7 +1,6 @@
 "use client";
 
-import { SubmitEvent, useMemo, useState } from "react";
-import { format } from "date-fns";
+import { SubmitEvent, useState } from "react";
 import { trpc } from "@/lib/trpc/client";
 import {
   createHolidaySchema,
@@ -19,12 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Credenza,
   CredenzaContent,
@@ -41,7 +35,6 @@ import {
   AlertCircle,
   Calendar as CalendarIcon,
   CheckCircle2,
-  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -77,21 +70,8 @@ export function HolidayManager() {
   // Form state
   const [name, setName] = useState("");
   const [dateStr, setDateStr] = useState("");
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [actionError, setActionError] = useState<string | null>(null);
-
-  const selectedDate = useMemo(() => {
-    if (!dateStr) return undefined;
-    const [y, m, d] = dateStr.split("-").map(Number);
-    if (!y || !m || !d) return undefined;
-    return new Date(y, m - 1, d);
-  }, [dateStr]);
-
-  const formattedSelectedDate = useMemo(() => {
-    if (!selectedDate) return null;
-    return format(selectedDate, "EEEE, MMMM d, yyyy");
-  }, [selectedDate]);
 
   const createMutation = trpc.holiday.create.useMutation({
     onSuccess: async () => {
@@ -129,7 +109,6 @@ export function HolidayManager() {
     setDeletingHoliday(null);
     setName("");
     setDateStr("");
-    setIsCalendarOpen(false);
     setFieldErrors({});
     setActionError(null);
   };
@@ -371,48 +350,26 @@ export function HolidayManager() {
                 <Label className="text-sm font-medium">
                   Closure Date <span className="text-destructive">*</span>
                 </Label>
-                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                  <PopoverTrigger
-                    render={
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !dateStr && "text-muted-foreground",
-                          fieldErrors.date && "border-destructive",
-                        )}
-                        disabled={isSaving}
-                      />
+                <DatePicker
+                  value={dateStr}
+                  onChange={(val) => {
+                    setDateStr(val);
+                    if (fieldErrors.date) {
+                      setFieldErrors((prev) => {
+                        const next = { ...prev };
+                        delete next.date;
+                        return next;
+                      });
                     }
-                  >
-                    <CalendarIcon className="mr-2 size-4" />
-                    {formattedSelectedDate ?? "Select closure date..."}
-                    <ChevronDown className="ml-auto size-3 opacity-50" />
-                  </PopoverTrigger>
-                  <PopoverContent
-                    className="w-auto p-0 z-[60]"
-                    align="start"
-                    sideOffset={4}
-                  >
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={(d) => {
-                        if (d) {
-                          setDateStr(format(d, "yyyy-MM-dd"));
-                          if (fieldErrors.date) {
-                            setFieldErrors((prev) => {
-                              const next = { ...prev };
-                              delete next.date;
-                              return next;
-                            });
-                          }
-                          setIsCalendarOpen(false);
-                        }
-                      }}
-                    />
-                  </PopoverContent>
-                </Popover>
+                  }}
+                  formatString="EEEE, MMMM d, yyyy"
+                  placeholder="Select closure date..."
+                  disabled={isSaving}
+                  aria-invalid={Boolean(fieldErrors.date)}
+                  triggerClassName={cn(
+                    fieldErrors.date && "border-destructive",
+                  )}
+                />
                 {fieldErrors.date && (
                   <p className="text-xs text-destructive">{fieldErrors.date}</p>
                 )}

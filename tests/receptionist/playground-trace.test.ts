@@ -1,17 +1,17 @@
 import assert from "node:assert";
 import { db } from "@/lib/db";
 import { ReceptionistService } from "@/lib/receptionist/service";
-import {
-  TraceStore,
-  AITraceCollector,
-  redactSensitiveData,
-} from "@/lib/receptionist/trace";
+import { TraceStore, redactSensitiveData } from "@/lib/receptionist/trace";
 import { TEST_SCENARIOS } from "@/lib/receptionist/test-scenarios";
+import { getAIProviderManager } from "@/lib/ai/manager";
 
 export async function runPlaygroundTraceTests() {
   console.log("=======================================================");
   console.log("   DentAssist AI - Phase 9 Playground & Observability Tests");
   console.log("=======================================================\n");
+
+  getAIProviderManager().resetCircuitBreaker();
+  getAIProviderManager().resetMetrics();
 
   const orgAId = `test_p9_org_a_${Date.now()}`;
   const orgBId = `test_p9_org_b_${Date.now()}`;

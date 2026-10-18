@@ -14,7 +14,7 @@ export function WorkspacePanel({
   return (
     <div
       className={cn(
-        "rounded-[4px] border border-border transition-colors",
+        "rounded-xl border border-border transition-colors shadow-xs overflow-hidden",
         variant === "default" && "bg-card text-card-foreground",
         variant === "inset" && "bg-muted/40 text-foreground",
         variant === "bordered" && "bg-background border-dashed",

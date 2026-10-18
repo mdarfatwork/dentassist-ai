@@ -9,6 +9,13 @@ import { VoiceTranscript } from "./voice-transcript";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Stethoscope,
   Clock,
   Send,
@@ -109,19 +116,27 @@ export function VoiceReceptionist({
         <div className="flex items-center gap-3">
           {/* Language Selector */}
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Languages className="size-3.5 text-primary" />
-            <select
-              aria-label="Speech Recognition Language"
+            <Languages className="size-3.5 text-primary shrink-0" />
+            <Select
               value={speechRecognition.language}
-              onChange={(e) => handleLanguageChange(e.target.value)}
-              className="text-[11px] font-medium bg-card border border-border rounded-[2px] px-2 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              onValueChange={(val) => {
+                if (val) handleLanguageChange(val);
+              }}
             >
-              {SUPPORTED_LANGUAGES.map((lang) => (
-                <option key={lang.code} value={lang.code}>
-                  {lang.label}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger
+                aria-label="Speech Recognition Language"
+                className="h-7 text-[11px] font-medium bg-card border-border rounded-[2px] px-2 py-0.5 min-w-[130px]"
+              >
+                <SelectValue placeholder="Select language" />
+              </SelectTrigger>
+              <SelectContent>
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <SelectItem key={lang.code} value={lang.code}>
+                    {lang.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {onBackToChat && (

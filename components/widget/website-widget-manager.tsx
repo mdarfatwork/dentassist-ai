@@ -15,6 +15,13 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Globe,
   Copy,
   Check,
@@ -371,20 +378,26 @@ function WebsiteWidgetForm({
                   <label className="text-xs font-semibold text-foreground">
                     Launcher Position
                   </label>
-                  <select
+                  <Select
                     value={launcherPosition}
-                    onChange={(e) =>
-                      setLauncherPosition(
-                        e.target.value as "bottom-right" | "bottom-left",
-                      )
-                    }
-                    className="w-full h-8 px-2.5 rounded-[3px] border border-border bg-background text-xs font-medium focus:outline-none focus:ring-1 focus:ring-primary"
+                    onValueChange={(val) => {
+                      if (val) {
+                        setLauncherPosition(
+                          val as "bottom-right" | "bottom-left",
+                        );
+                      }
+                    }}
                   >
-                    <option value="bottom-right">
-                      Bottom Right (Standard)
-                    </option>
-                    <option value="bottom-left">Bottom Left</option>
-                  </select>
+                    <SelectTrigger className="w-full h-8 text-xs font-medium">
+                      <SelectValue placeholder="Select position" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bottom-right">
+                        Bottom Right (Standard)
+                      </SelectItem>
+                      <SelectItem value="bottom-left">Bottom Left</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

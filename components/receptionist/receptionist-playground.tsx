@@ -27,9 +27,6 @@ import {
   MessageSquare,
   FlaskConical,
   Activity,
-  Layers,
-  ChevronRight,
-  ExternalLink,
 } from "lucide-react";
 import { VoiceReceptionist } from "@/components/voice/voice-receptionist";
 import { DebugPanel } from "./debug-panel";
@@ -421,19 +418,19 @@ export function ReceptionistPlayground() {
       <div className="rounded-[4px] border border-border bg-card p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[2px] border border-primary/20 bg-primary/10 text-primary text-[11px] font-semibold tracking-tight uppercase">
-              <Bot className="size-3" /> Phase 9 AI Playground
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border border-primary/20 bg-primary/10 text-primary text-[11px] font-semibold tracking-tight uppercase">
+              <Bot className="size-3" /> Autonomous Engine
             </span>
             <Badge variant="success" className="text-[10px] font-mono">
-              <ShieldCheck className="size-3 mr-1" /> Real AI Core Instrumented
+              <ShieldCheck className="size-3 mr-1" /> Operational
             </Badge>
           </div>
           <h2 className="text-lg font-bold tracking-tight text-foreground">
-            AI Receptionist Playground & Trace Console
+            AI Receptionist Console
           </h2>
           <p className="text-xs text-muted-foreground">
-            Test multi-turn patient conversations, inspect retrieval sources,
-            and debug factual execution traces for{" "}
+            Monitor autonomous patient conversations, verified treatment
+            knowledge, and live tool executions for{" "}
             <span className="font-semibold text-foreground">
               {activeOrganization?.name}
             </span>

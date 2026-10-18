@@ -73,6 +73,7 @@ export class ReceptionistService {
         organizationId,
         input.conversationId,
       );
+      traceCollector.setConversationId(conversation.id);
 
       await db.conversationMessage.create({
         data: {
@@ -181,6 +182,7 @@ export class ReceptionistService {
       organizationId,
       input.conversationId,
     );
+    traceCollector.setConversationId(conversation.id);
     const convDuration = Number((performance.now() - convStart).toFixed(1));
     profiler.endStage("DB Get/Create Conversation");
 

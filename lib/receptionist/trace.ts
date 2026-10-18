@@ -168,7 +168,7 @@ export function redactSensitiveData(obj: unknown, depth = 0): unknown {
 export class AITraceCollector {
   public readonly traceId: string;
   public readonly turnId: string;
-  public readonly conversationId: string;
+  public conversationId: string;
   public readonly organizationId: string;
   public readonly channel: "chat" | "voice";
 
@@ -207,6 +207,10 @@ export class AITraceCollector {
     this.turnId =
       params.turnId ||
       `turn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  }
+
+  public setConversationId(conversationId: string): void {
+    this.conversationId = conversationId;
   }
 
   /**

@@ -1,385 +1,228 @@
-# DentAssist AI Design System
+# DentAssist AI Design System Specification
 
-The definitive specification for the DentAssist AI clinical operations platform. This design system establishes a flat, precise, high-density workspace aesthetic engineered specifically for dental practice receptionists, clinic directors, and medical office managers.
-
----
-
-## Design Philosophy
-
-DentAssist AI is clinical operations infrastructure. It is not an experimental AI toy, a casual consumer mobile app, a marketing showcase, or a generic developer admin template.
-
-1. **Precision Over Decoration**: Every pixel, divider, hairline rule, and label exists to convey real clinical status. Visual flair that does not inform an operational action is noise and must be eliminated.
-2. **Structure Over Elevation**: Hierarchy is communicated through geometric alignment, contrast, dividers, and typography—never through floating cards, diffuse drop shadows, or decorative blur orbs.
-3. **Calm Authority**: Dental reception desks are fast-paced, high-stress environments dealing with urgent patient calls, emergency toothaches, and complex dentist availability. The UI must project unwavering stability and quiet clarity.
-4. **Purposeful Density**: Clinic staff need high information density to scan appointments, doctor schedules, and patient intake states without endless scrolling or oversized padded containers.
+The definitive design system and UI/UX specification for the **DentAssist AI** dental practice management and autonomous clinical operations platform. Inspired by modern shadcn/ui conventions, this system establishes a warm, trustworthy, product-focused workspace tailored specifically for dental clinic staff, practice owners, and healthcare administrators.
 
 ---
 
-## Product Personality
+## 1. Design Philosophy & Brand Direction
 
-The clinical staff’s immediate impression upon logging in should be:
+DentAssist AI is mission-critical clinical operations infrastructure. It manages doctor availability, operatory capacity, patient records, and real-time autonomous voice and chat receptionist workflows.
 
-> _"This is a high-grade medical operations console built for my clinic’s front desk."_
+### Brand Character
 
-Not:
-
-> _"This is another generic green SaaS template with soft floating cards and AI sparkles."_
-
-| Dimension        | Trait                                | Expression in Interface                                                 |
-| :--------------- | :----------------------------------- | :---------------------------------------------------------------------- |
-| **Tone**         | Clinical, authoritative, disciplined | Clean monochrome typography, tabular numbers, precise labels            |
-| **Demeanor**     | Calm, unobtrusive, responsive        | Micro-transitions (<150ms), silent status confirmations                 |
-| **Intelligence** | Autonomous, contextual, grounded     | Transparent stage updates ("Reading clinic policy", "Checking chair 2") |
-| **Trust**        | High fidelity, transparent           | Visible tenant isolation indicators, audit logging, zero fake metrics   |
+- **Professional & Trustworthy:** Communicates clinical rigor, HIPAA-conscious data handling, and reliability during high-pressure front-desk workflows.
+- **Modern & Product-Focused:** Clean, structured, and intentional layouts without generic SaaS tropes or marketing clutter.
+- **Calm & Welcoming:** Warm earthy tones replace cold sterile blues and neon startup gradients, projecting warmth for patients and staff.
+- **Purposeful Density & Scannability:** Dental front desks handle inbound calls, emergency walk-ins, and complex doctor schedules simultaneously. Key clinical operational status must be legible at a glance.
 
 ---
 
-## Visual Identity
+## 2. Color System & Semantic Tokens
 
-DentAssist AI achieves instant recognizability through:
+The color architecture is centralized in `app/globals.css` using semantic CSS custom properties with Tailwind CSS v4 `@theme inline` variables.
 
-- **Hairline Structural Rules**: Crisp 1px borders dividing workspaces into structured zones.
-- **Deep Cobalt & Ink Slate Accent System**: An authoritative, medical-grade indigo-cobalt brand color that distinguishes DentAssist from predictable green/teal healthcare SaaS.
-- **Restrained Geometry**: Sharp 2px to 4px border radii across controls and panels.
-- **Micro-Badging & Tabular Data**: High-density metadata tags and tabular numerals for rapid scanning.
+### Core Palette Tokens
 
----
+| Token                  | Hex Value | Semantic Purpose                                                                   |
+| :--------------------- | :-------- | :--------------------------------------------------------------------------------- |
+| `--primary`            | `#A65335` | **Warm Terracotta** — Primary actions, active navigation items, brand focal points |
+| `--primary-foreground` | `#FFFFFF` | Text and icons on primary interactive buttons                                      |
+| `--deep-brown`         | `#713F2D` | **Deep Brown** — Secondary brand emphasis, active badges, clinic profile accents   |
+| `--background`         | `#F8F5F0` | **Warm Canvas** — Welcoming, soft off-white background replacing harsh cold white  |
+| `--foreground`         | `#292524` | **Deep Stone** — Primary typography offering high legibility and contrast          |
+| `--card` / `--surface` | `#FFFFFF` | **Crisp White** — Main content surfaces, data tables, and interactive panels       |
+| `--card-foreground`    | `#292524` | Text inside card and surface containers                                            |
+| `--muted`              | `#F0EBE4` | **Warm Muted** — Secondary surfaces, table header rows, and hover states           |
+| `--muted-foreground`   | `#78716C` | **Medium Stone** — Helper labels, timestamps, secondary metadata, and hints        |
+| `--border`             | `#E7E0D7` | **Warm Border** — Structural dividers, panel outlines, and table borders           |
+| `--input`              | `#E7E0D7` | Text inputs, select controls, and form borders                                     |
+| `--ring`               | `#A65335` | Keyboard focus indicator ring with accessible contrast                             |
 
-## Flat UI Direction
+### Semantic Functional Accents
 
-Flat does not mean plain, lifeless, or unstyled. Flat means:
+Color is applied with strict intentionality to communicate real clinical state:
 
-- **No Floating Cards**: Content sits directly within structured workspace panels bounded by 1px rules.
-- **No Drop Shadows for Hierarchy**: Shadows are restricted strictly to temporary overlays (dialog popups, dropdown menus).
-- **Surface Depth through Inset Tinting**: Subtle background contrast (`bg-background` vs `bg-muted/30`) replaces layered elevation.
-- **Dividers as Structural Pillars**: Clean vertical and horizontal rules segment data columns and information groups.
+| Semantic State  | Light Value              | Semantic Application                                                                 |
+| :-------------- | :----------------------- | :----------------------------------------------------------------------------------- |
+| **Success**     | `#15803D` / bg `#DCFCE7` | Confirmed appointments, connected Google Calendar, verified email, operational AI    |
+| **Warning**     | `#B45309` / bg `#FEF3C7` | Incomplete setup steps, unassigned practitioners, pending intake confirmation        |
+| **Destructive** | `#DC2626` / bg `#FEE2E2` | Cancelled appointments, deletion confirmations, connection failures, security blocks |
+| **Info**        | `#0284C7` / bg `#E0F2FE` | Scheduled appointments, active RAG queries, front-desk intake metadata               |
 
----
+### Future Dark Mode Architecture
 
-## Color Direction
-
-### Strict Prohibition of Green & Teal Branding
-
-The previous brand identity used `#0F766E` (teal / cyan-green). **This is permanently deprecated and strictly prohibited.**
-
-Do NOT use:
-
-- `#0F766E`, emerald, mint, seafoam, turquoise, aqua, or teal as the primary brand color, navigation accent, action button, or AI indicator.
-- Purple or violet gradients to represent artificial intelligence.
-- Green or teal glows, decorative accents, or badges without explicit semantic meaning.
-
-### The New Brand Direction: Deep Clinical Cobalt & Ink Slate
-
-DentAssist AI standardizes on **Deep Cobalt (`oklch(0.42 0.165 264)` / `#1E40AF`)** paired with a cold slate neutral foundation:
-
-- **Cognitive Association**: Deep cobalt conveys diagnostic rigor, institutional stability, and technological capability without the cliché look of green wellness apps.
-- **Accessibility**: Provides an AAA contrast ratio (>7:1) against light backgrounds and pure white foregrounds.
+All color tokens rely on centralized CSS custom properties (`var(--primary)`, `var(--card)`, etc.). Dark mode uses the same token names, adapting the canvas to deep charcoal/brown surfaces with warm terracotta accents without requiring individual component overrides.
 
 ---
 
-## Color System
+## 3. Typography & Hierarchy
 
-The color system operates via semantic OKLCH CSS variables declared in `app/globals.css`, supporting both high-clarity light mode and deep ink navy dark mode.
+The interface employs a clean, modern sans-serif typography stack backed by tabular monospace for clinical identifiers, dates, and times.
 
-### Light Mode Workspace
+### Hierarchy Scale
 
-- **Application Background (`--background`)**: `oklch(0.985 0.004 250)` (`#F8FAFC`) — Crisp clinical cold slate.
-- **Panel Surface (`--card`, `--popover`)**: `oklch(1 0 0)` (`#FFFFFF`) — High-contrast clinical surface.
-- **Inset Surface**: `oklch(0.96 0.004 250)` — Used for data row headers, code tags, and secondary containers.
-- **Primary Brand Accent (`--primary`)**: `oklch(0.42 0.165 264)` (`#1E40AF`) — Authoritative Deep Cobalt.
-- **Primary Foreground (`--primary-foreground`)**: `oklch(0.99 0 0)` — Crisp white text.
-- **Workspace Border (`--border`, `--input`)**: `oklch(0.89 0.006 250)` — Hairline slate rule.
-- **Text Primary (`--foreground`)**: `oklch(0.14 0.01 250)` — Deep ink navy text.
-- **Text Muted (`--muted-foreground`)**: `oklch(0.48 0.01 250)` — Secondary metadata slate.
+| Level                | Size & Weight      | Tailwind Class                                  | Application                                 |
+| :------------------- | :----------------- | :---------------------------------------------- | :------------------------------------------ |
+| **Page Heading**     | 24–30px, Bold      | `text-2xl sm:text-3xl font-bold tracking-tight` | Main page title, welcome banners            |
+| **Section Heading**  | 18–20px, Bold      | `text-lg font-bold tracking-tight`              | Major section titles, table group headers   |
+| **Card Heading**     | 15–17px, Semibold  | `text-sm sm:text-base font-semibold`            | Panel and card headers                      |
+| **Body Content**     | 13–14px, Regular   | `text-xs sm:text-sm text-foreground`            | Standard explanatory copy, table data       |
+| **Supporting Text**  | 12–13px, Regular   | `text-xs text-muted-foreground`                 | Helper labels, field descriptions           |
+| **Compact Metadata** | 10–11px, Monospace | `text-[10px] sm:text-[11px] font-mono`          | Timestamps, durations, tenant slugs, badges |
 
-### Dark Mode Workspace
+### Monospace Restraint
 
-- **Application Background (`--background`)**: `oklch(0.12 0.015 255)` (`#0B0E14`) — Deep ink slate background.
-- **Panel Surface (`--card`, `--popover`)**: `oklch(0.15 0.015 255)` — Low-reflection clinical panel.
-- **Primary Brand Accent (`--primary`)**: `oklch(0.66 0.16 260)` — Luminous periwinkle-cobalt.
-- **Primary Foreground (`--primary-foreground`)**: `oklch(0.11 0.02 260)` — Dark ink contrast text.
-- **Workspace Border (`--border`, `--input`)**: `oklch(0.24 0.01 255)` — Crisp dark slate border.
+Monospace (`font-mono`) is reserved strictly for tabular numbers, appointment times (`09:30 AM`), chair durations (`45 mins`), tenant IDs, and machine traces. Standard narrative text always uses sans-serif.
 
 ---
 
-## Semantic Color Tokens
+## 4. Geometry, Radius & Elevation
 
-Color is reserved strictly for meaningful semantic states. Never apply color decoratively.
+DentAssist AI utilizes a **moderately soft rounding scale** inspired by modern shadcn/ui design, avoiding both brutalist sharp corners and overly playful consumer pill shapes:
 
-| Semantic Token      | Light Mode Value            | Dark Mode Value             | Usage                                                                 |
-| :------------------ | :-------------------------- | :-------------------------- | :-------------------------------------------------------------------- |
-| **Primary / Brand** | `oklch(0.42 0.165 264)`     | `oklch(0.66 0.16 260)`      | Primary buttons, active tabs, focus rings, brand badges               |
-| **Success**         | `oklch(0.55 0.15 150)`      | `oklch(0.68 0.14 150)`      | Strictly semantic: Verified email, Open clinic, Confirmed appointment |
-| **Warning**         | `oklch(0.68 0.16 75)`       | `oklch(0.75 0.14 75)`       | Pending intake, Unverified email, Missing credentials                 |
-| **Destructive**     | `oklch(0.577 0.245 27.325)` | `oklch(0.704 0.191 22.216)` | Errors, cancellations, delete actions                                 |
-| **AI Activity**     | `oklch(0.42 0.165 264)`     | `oklch(0.66 0.16 260)`      | Autonomous receptionist processing, RAG lookup, calendar query        |
+### Radius Scale
 
----
+| Component Group                 | Token                        | Value                          | Rationale                                                |
+| :------------------------------ | :--------------------------- | :----------------------------- | :------------------------------------------------------- |
+| **Main Cards & Panels**         | `rounded-xl`                 | 12–16px (`--radius: 0.875rem`) | Soft, contemporary content framing against warm canvas   |
+| **Dialogs & Drawers**           | `rounded-xl` / `rounded-2xl` | 14–16px                        | Elevated modal surfaces                                  |
+| **Buttons & Form Inputs**       | `rounded-lg`                 | 8–10px                         | Comfortable, tactile click and touch targets             |
+| **Sidebar Navigation Items**    | `rounded-lg`                 | 8–10px                         | Consistent active state indicator pills                  |
+| **Dropdown Menus & Popovers**   | `rounded-lg`                 | 10–12px                        | Crisp overlay containment                                |
+| **Badges & Chips**              | `rounded-md`                 | 6px                            | High-density rectangular metadata chips                  |
+| **Avatars & Status Indicators** | `rounded-full`               | Circular                       | Reserved strictly for user avatars and pulse status dots |
 
-## Typography
+### Elevation & Borders
 
-The interface employs **Manrope** (backed by **Geist Mono** for numeric and machine identifiers).
-
-### Typographic Principles
-
-1. **No Oversized SaaS Titles**: Page headings top out at 20–24px. Hero titles never exceed 48px.
-2. **Tabular Numerals**: All timestamps, durations, phone numbers, and chair slot counts use `font-mono tabular-nums` to ensure exact column alignment.
-3. **Weight Over Size**: Distinguish visual hierarchy using font weight (`font-semibold`, `font-bold`) and color contrast rather than blowing up font sizes.
-4. **Uppercase Restraint**: Uppercase is reserved strictly for compact metadata labels (`01 • INBOUND`, `ID: DOWNTOWN-CLINIC`, `STEP 1 OF 6`) with tracking (`tracking-wider`).
-
-### Typographic Hierarchy Scale
-
-- **Display (Hero)**: `text-3xl` to `text-5xl font-extrabold tracking-tight` (36–48px)
-- **Page Title**: `text-xl` to `text-2xl font-bold tracking-tight` (20–24px)
-- **Section Title**: `text-base` to `text-lg font-bold tracking-tight` (16–18px)
-- **Panel Header / Group Title**: `text-sm font-semibold tracking-tight` (14px)
-- **Body Content**: `text-xs` to `text-sm text-muted-foreground` (12–14px)
-- **Compact Metadata / Badges**: `text-[10px]` to `text-[11px] font-mono` (10–11px)
+- **Standard Surfaces:** Crisp white cards against the warm `#F8F5F0` background framed by a subtle 1px border (`border border-border`).
+- **Shadows:** Minimal, subtle elevation (`shadow-xs` / `shadow-sm`) for content panels; stronger elevation (`shadow-xl`) reserved for dialogs and popover menus.
+- **No Floating Card Stacking:** Avoid wrapping every small text row in nested bordered cards. Use divider rules (`divide-y divide-border`) inside a single panel instead.
 
 ---
 
-## Surface System
+## 5. Application Shell & Navigation Architecture
 
-Surfaces are flat planes defined by thin 1px perimeter rules and subtle background tinting:
+The legacy horizontal scrolling menu is permanently replaced by a responsive left sidebar and compact top header.
 
-- **Base Workspace Canvas (`bg-background`)**: The global surface on which panels sit.
-- **Structured Panel (`bg-card border border-border`)**: The primary workspace region for data lists, forms, and editors.
-- **Subtle Inset (`bg-muted/30 border border-border`)**: Inset containers for configuration summaries, code snippets, and filters.
-- **Overlay Surface (`bg-popover border border-border shadow-xl`)**: Temporary elevated surfaces for dialogs and menus.
+```
+┌──────────────────┬────────────────────────────────────────────────────────┐
+│  DentAssist AI   │  Practice / Workspace / Clinical Appointments          │
+│  [Org Switcher]  │                                       [User • Log out] │
+├──────────────────┼────────────────────────────────────────────────────────┤
+│  WORKSPACE       │                                                        │
+│  • Overview      │  [ Practice Welcome Banner & Date Context ]            │
+│  • Appointments  │                                                        │
+│  • Practitioners │  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌─────────┐ │
+│  • Dental Service│  │ Today's   │ │ Upcoming  │ │ Google    │ │ AI Core │ │
+│  • Working Hours │  │ Appts (8) │ │ Books(24) │ │ Calendar  │ │ Ready   │ │
+│  • Closures      │  └───────────┘ └───────────┘ └───────────┘ └─────────┘ │
+│                  │                                                        │
+│  AI & INTEGRATION│  ┌─────────────────────────┐ ┌───────────────────────┐ │
+│  • Knowledge Base│  │ Daily Schedule & Bookings│ │ Clinic Readiness 85%  │ │
+│  • Receptionist  │  │ [Today] [Upcoming] [All]│ │ [■■■■■■■■■□]          │ │
+│  • Voice         │  │                         │ │                       │ │
+│  • Website Widget│  │ • 09:00 Sarah J. Clean  │ │ ✓ Practice Profile    │ │
+│  • Google Cal    │  │ • 10:30 Mike R. Crown   │ │ ✓ Doctors Assigned    │ │
+│                  │  │ • 11:15 Emma T. X-Ray   │ │ ⚠ Google Calendar     │ │
+│  SETTINGS        │  │                         │ │                       │ │
+│  • Practice Prof.│  └─────────────────────────┘ └───────────────────────┘ │
+├──────────────────┤                                                        │
+│  User Profile    │                                                        │
+│  [Sign out]      │                                                        │
+└──────────────────┴────────────────────────────────────────────────────────┘
+```
 
----
+### Desktop Sidebar (`components/dashboard/dashboard-sidebar.tsx`)
 
-## Borders and Dividers
+- **Width:** 260px expanded; collapsible to 72px icon-only mode with tooltips.
+- **Header:** Clinic branding, product descriptor, and collapse toggle button.
+- **Practice Switcher:** Dropdown displaying the active clinic name and tenant slug, with switching and new practice creation controls.
+- **Groupings:**
+  - **Workspace:** Practice Overview, Appointments, Practitioners, Dental Services, Working Hours, Closures & Holidays.
+  - **AI & Integrations:** Knowledge Base, AI Receptionist, Voice Receptionist, Website Widget, Google Calendar.
+  - **Settings:** Practice Profile.
+- **Footer:** Active user initials/avatar, display name, email, and sign-out action (clean, with no technical tenant slugs).
 
-Borders are the primary structural mechanism of DentAssist AI:
+### Mobile Navigation (`components/dashboard/dashboard-shell.tsx`)
 
-- **Standard Border**: `1px solid var(--border)` (`border border-border`).
-- **Subtle Divider**: `1px solid var(--border/60)` (`divide-y divide-border/60`).
-- **Left Rule Indicator**: `border-l-2` or `border-l-3 border-primary` for active list selection or status notice banners.
-- **Rule of Restraint**: Never double-border nested containers. If a panel has an outer border, internal sections should separate via `divide-y` or `border-t` rather than nested bordered boxes.
+- On screens `< 1024px`, the persistent sidebar is hidden.
+- The top header renders a hamburger menu button that opens the sidebar as an accessible slide-over sheet.
+- Automatically dismisses upon link navigation, backdrop click, or pressing the `Escape` key.
+- Horizontal page overflow is strictly prohibited across all viewports down to 375px.
 
----
+### Compact Header (`components/dashboard/dashboard-header.tsx`)
 
-## Radius System
-
-Large rounded containers (`rounded-2xl`, `rounded-3xl`, soft pills) are abolished. Geometry must feel clinical and engineered.
-
-| Component Group             | Allowed Radius    | Tailwind Token  | Rationale                                                               |
-| :-------------------------- | :---------------- | :-------------- | :---------------------------------------------------------------------- |
-| **Page Containers**         | 0px to 4px        | `rounded-[4px]` | Clean perimeter framing                                                 |
-| **Workspace Panels**        | 2px to 4px        | `rounded-[4px]` | Tight architectural geometry                                            |
-| **Buttons & Controls**      | 2px to 4px        | `rounded-[3px]` | Compact, precise touch target                                           |
-| **Text Inputs & Textareas** | 2px to 3px        | `rounded-[3px]` | Flat clinical form element                                              |
-| **Badges & Tags**           | 2px to 3px        | `rounded-[2px]` | High-density rectangular chip                                           |
-| **Dialog Modals**           | 4px to 6px        | `rounded-[4px]` | Minimal rounding for overlays                                           |
-| **Dropdown Menus**          | 3px to 4px        | `rounded-[4px]` | Crisp popover containment                                               |
-| **Status Dots**             | 9999px (Circular) | `rounded-full`  | Circular geometry is reserved strictly for status dots & person avatars |
-
----
-
-## Shadows
-
-Shadows must never be used as a substitute for borders or layout structure.
-
-- **Card Shadows**: `shadow-none` by default. Cards never float with diffuse drop shadows.
-- **Buttons**: `shadow-none`.
-- **Dialogs & Menus**: `shadow-md` or `shadow-xl` to detach temporary modal overlays from the base workspace canvas.
-- **No Glowing Effects**: Ambient background glow, blurred radial gradients, and neon colored box-shadows are strictly prohibited.
-
----
-
-## Spacing and Density
-
-- **Vertical Grid**: Spaced in deliberate 4px increments (`gap-1` = 4px, `gap-2` = 8px, `gap-3` = 12px, `gap-4` = 16px).
-- **Control Sizing**: Standard input and button heights are `h-8` (32px) to `h-9` (36px). Compact controls are `h-7` (28px).
-- **Whitespace Purpose**: Whitespace isolates independent operational domains, not empty decoration.
-
----
-
-## Layout Philosophy
-
-DentAssist AI avoids the generic "three floating rounded cards above a table" template. Every page composition reflects its actual operational job:
-
-- **Operational Dashboard**: Attention-first summary header, real-time practitioner readiness indicators, and immediate action items.
-- **Scheduling Workspace**: Split-pane timeline or tabular hours grid with chronological ordering and doctor column rules.
-- **Configuration Hub**: Clean horizontal or vertical tab navigation with progressive checklist verification.
+- Mobile navigation toggle for small viewports.
+- Breadcrumbs representing the active workspace group and view title.
+- User profile info and sign out button.
+- Stripped of redundant tenant ID pills and duplicate global action buttons.
 
 ---
 
-## Grid and Composition
+## 6. Operations-First Overview Dashboard
 
-- **Max Layout Boundary**: `max-w-7xl mx-auto px-4 sm:px-6` ensures wide-screen legibility without excessive line length.
-- **Two-Column Asymmetry**: 2/3 workspace surface for core data; 1/3 sidebar panel for contextual controls, quick actions, or AI monitor.
-- **Data Density**: Tables and schedule rows maintain row heights between 36px and 44px for maximum vertical efficiency.
+The primary landing dashboard (`components/dashboard/dashboard-overview.tsx`) focuses on real-time clinic operations rather than developer configuration phases.
 
----
+### Core Sections
 
-## Navigation
-
-- **Top App Bar**: Sticky `h-14` clinical navigation bar with brand mark, practice switcher, tenant scope indicator, and practitioner profile.
-- **Active Navigation States**: Indicated via a bottom rule (`border-b-2 border-primary`), deep cobalt text, or subtle tint (`bg-primary/10`). Never use oversized rounded pill tabs.
-- **Practice Switcher**: Compact `h-8` control displaying active practice name, tenant slug, and quick creation trigger.
-
----
-
-## Buttons
-
-Buttons feature a `rounded-[3px]` radius, clear typographic hierarchy, and immediate focus outlines:
-
-- **Primary Action (`variant="default"`)**: Deep cobalt background (`bg-primary text-primary-foreground hover:bg-primary/90`). Reserved for the single primary operational action per view.
-- **Secondary / Outline (`variant="outline"`)**: Crisp hairline border (`border-border bg-background hover:bg-muted/70`). Used for supporting actions.
-- **Quiet Action (`variant="ghost"`)**: Flat text button with light hover wash (`hover:bg-muted/70 text-muted-foreground`).
-- **Destructive Action (`variant="destructive"`)**: Crimson tint (`bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/15`).
-
----
-
-## Inputs and Forms
-
-- **Label Placement**: Explicit labels positioned directly above inputs (`text-xs font-semibold text-foreground`).
-- **Geometry**: Compact `h-8.5` height, `rounded-[3px]`, `px-3 py-1.5`.
-- **Focus Rings**: Precise 1px hairline ring (`focus-visible:ring-1 focus-visible:ring-ring/40`).
-- **Validation**: `aria-invalid` triggers a crisp crimson border (`border-destructive`) and concise `text-xs text-destructive` feedback.
+1. **Welcome & Context Banner:** Time-aware greeting ("Good morning / afternoon / evening"), current localized date, active practice name, and timezone indicator.
+2. **Four Operational KPI Cards:**
+   - **Today's Appointments:** Active count for the day, scheduled/confirmed count, completed count, and schedule shortcut.
+   - **Upcoming Bookings:** Future bookings on record with total count.
+   - **Google Calendar Sync:** Live status indicator (Active / Connected vs. Attention Required), connected calendar ID, and quick settings trigger.
+   - **AI Receptionist Readiness:** Operational readiness status computed from indexed clinic knowledge documents and procedure definitions.
+3. **Daily Schedule & Bookings Table:**
+   - Tab toggles: "Today", "Upcoming", and "All Records".
+   - Columns: Time, Patient Name & Phone, Procedure Name & Duration, Doctor Assignment, Status Badge, and Booking Origin (`Voice`, `Widget`, `Front Desk`).
+   - Clean empty state with a "Book an Appointment" primary action if no appointments exist.
+4. **Integration Diagnostics:**
+   - Google Calendar two-way operatory scheduling status.
+   - AI Receptionist multi-turn conversation engine status.
+5. **Clinic Readiness & Setup Checklist:**
+   - Progress bar with dynamic percentage completed.
+   - Interactive step items linking directly to the respective management page: Practice Profile, Practitioners, Services, Hours, Closures, Knowledge Documents, and Calendar Sync.
+6. **Quick Operations Panel:** Instant triggers to test the Voice Receptionist in the browser, copy the Website Booking Widget embed snippet, or ingest Knowledge Base documents.
 
 ---
 
-## Tables and Data Grids
+## 7. Component Architecture & Guidelines
 
-- **Perimeter**: Bounded by crisp top and bottom borders (`border-y border-border`), with zero outer rounding.
-- **Headers**: Compact `h-8` row with uppercase tracking (`text-[11px] uppercase font-semibold text-muted-foreground bg-muted/40`).
-- **Rows**: Dense `py-2.5 px-3.5` cells with tabular numerals (`tabular-nums`) and subtle hover highlight (`hover:bg-muted/30`).
+All UI components are built around reusable primitives in `@/components/ui/` and clinical workspace wrappers in `@/components/workspace/`.
 
----
+### Component Directory
 
-## Cards and Panels
-
-Cards should only be used when grouping an independent operational entity. Generic sections should use open headers with horizontal dividers rather than wrapping everything in an enclosed card.
-
-When a container is needed, use `WorkspacePanel` with `rounded-[4px] border border-border bg-card shadow-none`.
-
----
-
-## Dialogs and Modals
-
-- **Overlay**: Clean `bg-black/40` without heavy blur.
-- **Popup Container**: `rounded-[4px] border border-border bg-popover p-6 shadow-xl max-w-md`.
-- **Header & Footer**: Separated from body content with crisp hairline dividers (`border-b border-border/50` and `border-t border-border/50`).
+- `components/dashboard/dashboard-shell.tsx` — Master layout shell, active tab state, URL query synchronization (`?tab=...`), and mobile drawer state.
+- `components/dashboard/dashboard-sidebar.tsx` — Responsive left navigation sidebar with desktop collapse and mobile drawer support.
+- `components/dashboard/dashboard-header.tsx` — Compact top header with breadcrumbs and actions.
+- `components/dashboard/dashboard-overview.tsx` — Operations-first dashboard with KPIs, daily schedule, and checklist.
+- `components/workspace/workspace-panel.tsx` — Standard panel wrapper for headers, badges, and action toolbars.
+- `components/workspace/empty-state.tsx` — Accessible empty states with guidance and primary CTA.
+- `components/ui/button.tsx` — Primary terracotta, outline, ghost, secondary, and destructive button variants.
+- `components/ui/badge.tsx` — Status pills with semantic variants (`default`, `secondary`, `success`, `warning`, `destructive`, `info`).
+- `components/ui/card.tsx` — Rounded-xl content surfaces with warm borders.
+- `components/ui/dialog.tsx` — Modal overlays with backdrop blur and accessible focus trapping.
 
 ---
 
-## Tabs
+## 8. Anti-Slop Rules
 
-- **Clinical Tab Bar**: Flat horizontal tab track with a bottom border (`border-b border-border bg-transparent`).
-- **Tab Triggers**: Crisp text buttons with `border-b-2` active indicators (`border-primary text-foreground font-semibold`). Soft pill tabs with rounded backgrounds are forbidden.
+Every interface element in DentAssist AI must conform to these anti-slop rules:
 
----
-
-## Badges and Status Indicators
-
-- **Badge Format**: Compact rectangular chip with `rounded-[2px] border px-1.5 py-0.5 text-[11px] font-medium`.
-- **StatusIndicator Format**: Pair a circular dot (`size-1.5 rounded-full`) with an explicit textual label to ensure full accessibility.
-
----
-
-## Empty States
-
-Empty states are operational guidance moments:
-
-1. State clearly what is missing (e.g., "No practitioners registered").
-2. Explain why it matters ("Add your clinic's dentists to configure chair availability and automated booking").
-3. Provide an immediate primary action button ("Add First Dentist").
+1. **No Cold Blues or Purples for AI:** Purple gradients, glowing AI sparkles (`✨`), and pulsing neon orbs are strictly banned. AI operations are clinical tools, not consumer novelties.
+2. **No Horizontal Scrolling Navigation:** The dashboard shell must never use horizontal scroll bars for navigation. All destinations must be organized in the responsive sidebar.
+3. **No Fake Metrics or Placeholder Charts:** Never render fabricated analytics, vanity graph lines, or mock counts. Every metric must derive from real database records.
+4. **No Giant Empty Hero Areas:** Workspaces must prioritize high-density clinical tools and immediate patient workflows over oversized empty marketing cards.
+5. **No Client-Side Availability Authority:** The UI must never calculate doctor chair availability on the client side; backend scheduling services remain the sole source of truth.
+6. **No Arbitrary Hardcoded Colors:** All visual styling must use CSS custom properties from the design system tokens.
+7. **No Broken Mobile Layouts:** Every table, dialog, and form must be fully usable down to 375px without horizontal window scrolling.
+8. **No Monospace for Ordinary Prose:** Monospace is reserved exclusively for tabular numbers, dates, times, and IDs.
 
 ---
 
-## Loading and Error States
+## 9. Accessibility (WCAG 2.1 AA)
 
-- **Loading**: Skeletons that match the target data table or panel layout, with subtle `bg-muted/60` pulse animation.
-- **Error**: High-visibility clinical banner with alert icon, clear technical cause, and a "Retry Operation" trigger.
-
----
-
-## AI Interaction Design
-
-The autonomous AI receptionist engine operates transparently:
-
-- **Activity Rows**: Display exact machine stages:
-  - `Searching clinic knowledge base`
-  - `Checking dentist availability`
-  - `Reading clinic scheduling policy`
-  - `Verifying calendar slot conflicts`
-  - `Action completed`
-- **Visual Styling**: Subtle periwinkle/cobalt badge or spinning loader.
-- **Prohibited AI Tells**: Sparkle emojis (`✨`), purple/magenta gradients, glowing pulses, and theatrical conversational chat bubbles are banned.
-
----
-
-## Appointment & Scheduling UI
-
-- **Timeline Layout**: Chronological vertical schedule rules with tabular time display (`09:00 AM`, `10:30 AM`).
-- **Chair & Practitioner Scoping**: Explicit doctor attribution (`Dr. Vance • Chair 1`).
-- **Status Coloring**: Confirmed (Cobalt / Active), Pending Intake (Amber), Completed (Pine Green), Cancelled (Crimson).
-
----
-
-## Knowledge Base (RAG) UI
-
-- **Document Registry**: High-density table listing clinic brochures, FAQ sheets, and PDF policies.
-- **Indexing Status**: Real-time tabular tokens (`INDEXED`, `PROCESSING`, `FAILED`).
-- **Source Citation**: Precise document and page references (`[Policy.pdf • §4.2]`).
-
----
-
-## Dashboard UI
-
-The main operations console answers: _What requires attention right now?_
-
-- Top: Active practice identifier, tenant isolation status, practitioner count.
-- Center: Clinical setup progress and configuration hubs.
-- Lower: Autonomous engine launchpad and integration previews.
-
----
-
-## Accessibility
-
-- **Contrast Floor**: All text elements meet or exceed WCAG 2.1 AA standards (>4.5:1 for body text, >3:1 for large text).
-- **Color Independence**: Status information is never conveyed by color alone; every indicator includes explicit text or an icon.
-- **Keyboard Navigation**: Clear visible focus rings (`focus-visible:ring-1 focus-visible:ring-ring/40`) on all interactive buttons, switches, and inputs.
-- **Reduced Motion**: Respects `prefers-reduced-motion: reduce` with instantaneous state transitions.
-
----
-
-## Anti-Slop Rules
-
-Every interface element is audited against these anti-slop rules:
-
-1. **Never use green/teal (`#0F766E`) for primary branding, buttons, navigation, or AI indicators.**
-2. **Never use `rounded-xl`, `rounded-2xl`, or `rounded-3xl` containers.**
-3. **Never wrap every section in a floating card.**
-4. **Never use drop shadows as a substitute for borders.**
-5. **Never use decorative gradients or glowing background orbs.**
-6. **Never use AI sparkles (`✨`) or purple gradients.**
-7. **Never display fake metrics or meaningless analytics charts.**
-8. **Never use circular pills for button or input controls.**
-9. **Never rely on color alone to communicate appointment or clinic status.**
-10. **If a screen looks like a generic AI-generated SaaS dashboard or template, refactor it immediately.**
-
----
-
-## Component Guidelines
-
-When creating new components for DentAssist AI:
-
-- Import primitives from `@/components/ui/` or `@/components/workspace/`.
-- Use `rounded-[2px]` to `rounded-[4px]`.
-- Rely on `border border-border` and `divide-y divide-border/60` for separation.
-- Keep control heights compact (`h-7` to `h-9`).
-- Use monospace numbers for times, dates, and identifiers.
-
----
-
-## Page Composition Guidelines
-
-1. **Header**: Use `PageHeader` with title, optional metadata tag, and contextual action group.
-2. **Body**: Use `WorkspacePanel` or open divider-separated sections.
-3. **Data**: Render collections with `DataTable` or `AppointmentTimeline`.
-4. **Empty State**: Use `EmptyState` with actionable CTAs.
-5. **Verification**: Confirm that no green/teal branding or soft rounded cards are introduced.
+- **Contrast Ratios:** All body text maintains a contrast ratio of at least 4.5:1 against the background; large headings maintain at least 3:1.
+- **Focus Indicators:** High-visibility terracotta keyboard focus rings (`focus-visible:ring-2 focus-visible:ring-primary/40`) with focus offset.
+- **Non-Color State Indicators:** Statuses are never conveyed by color alone; every indicator combines color with text or an icon.
+- **Accessible Landmarks:** Semantic `<header>`, `<nav>`, `<main>`, `<aside>`, and `aria-label` landmarks throughout the dashboard shell.
+- **Keyboard Navigation:** Escape closes all dialogs and mobile navigation drawers; focus returns gracefully to trigger buttons.

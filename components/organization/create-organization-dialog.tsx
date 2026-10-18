@@ -96,11 +96,7 @@ export function CreateOrganizationDialog({
     <Credenza open={isOpen} onOpenChange={setIsOpen}>
       {trigger ? (
         <CredenzaTrigger render={trigger as React.ReactElement} />
-      ) : (
-        <CredenzaTrigger render={<Button size="sm" className="gap-1.5" />}>
-          <Plus className="size-3.5" /> Create Practice Organization
-        </CredenzaTrigger>
-      )}
+      ) : null}
 
       <CredenzaContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>

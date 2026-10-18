@@ -38,6 +38,14 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "@/server/trpc/routers/_app";
@@ -338,20 +346,21 @@ export function AppointmentDashboard() {
             </div>
 
             <div className="flex items-center gap-1.5">
-              <input
-                type="date"
-                value={selectedDate === "ALL" ? "" : selectedDate}
-                onChange={(e) =>
-                  setSelectedDate(
-                    e.target.value || getLocalDateString(new Date()),
-                  )
-                }
-                className="h-8 text-xs px-2.5 rounded-[3px] border border-border bg-background text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary"
-              />
+              <div className="w-38">
+                <DatePicker
+                  value={selectedDate === "ALL" ? "" : selectedDate}
+                  onChange={(val) =>
+                    setSelectedDate(val || getLocalDateString(new Date()))
+                  }
+                  placeholder="Filter date..."
+                  triggerClassName="h-8 text-xs"
+                  aria-label="Filter appointments by date"
+                />
+              </div>
               <Button
                 variant={selectedDate === "ALL" ? "secondary" : "ghost"}
                 size="sm"
-                className="h-8 text-xs"
+                className="h-8 text-xs shrink-0"
                 onClick={() =>
                   setSelectedDate(
                     selectedDate === "ALL"
@@ -368,42 +377,60 @@ export function AppointmentDashboard() {
           {/* Center / Right: Filter dropdowns & View Mode Toggle */}
           <div className="flex flex-wrap items-center gap-2.5">
             {/* Dentist Filter */}
-            <select
+            <Select
               value={dentistFilter}
-              onChange={(e) => setDentistFilter(e.target.value)}
-              className="h-8 text-xs px-2 rounded-[3px] border border-border bg-background text-foreground focus:outline-none"
+              onValueChange={(val) => {
+                if (val) setDentistFilter(val);
+              }}
             >
-              <option value="ALL">All Practitioners</option>
-              {(dentistsQuery.data || []).map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="h-8 text-xs min-w-[140px]">
+                <SelectValue placeholder="All Practitioners" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All Practitioners</SelectItem>
+                {(dentistsQuery.data || []).map((d) => (
+                  <SelectItem key={d.id} value={d.id}>
+                    {d.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
             {/* Status Filter */}
-            <select
+            <Select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-8 text-xs px-2 rounded-[3px] border border-border bg-background text-foreground focus:outline-none"
+              onValueChange={(val) => {
+                if (val) setStatusFilter(val);
+              }}
             >
-              <option value="ALL">All Statuses</option>
-              <option value="CONFIRMED">Scheduled</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="CANCELLED">Cancelled</option>
-            </select>
+              <SelectTrigger className="h-8 text-xs min-w-[115px]">
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All Statuses</SelectItem>
+                <SelectItem value="CONFIRMED">Scheduled</SelectItem>
+                <SelectItem value="COMPLETED">Completed</SelectItem>
+                <SelectItem value="CANCELLED">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
 
             {/* Source Filter */}
-            <select
+            <Select
               value={sourceFilter}
-              onChange={(e) => setSourceFilter(e.target.value)}
-              className="h-8 text-xs px-2 rounded-[3px] border border-border bg-background text-foreground focus:outline-none"
+              onValueChange={(val) => {
+                if (val) setSourceFilter(val);
+              }}
             >
-              <option value="ALL">All Channels</option>
-              <option value="AI_CHAT">AI Chat</option>
-              <option value="AI_VOICE">AI Voice</option>
-              <option value="MANUAL">Manual / Front Desk</option>
-            </select>
+              <SelectTrigger className="h-8 text-xs min-w-[125px]">
+                <SelectValue placeholder="All Channels" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All Channels</SelectItem>
+                <SelectItem value="AI_CHAT">AI Chat</SelectItem>
+                <SelectItem value="AI_VOICE">AI Voice</SelectItem>
+                <SelectItem value="MANUAL">Manual / Front Desk</SelectItem>
+              </SelectContent>
+            </Select>
 
             {/* View Mode Toggle */}
             <div className="flex items-center rounded-[3px] border border-border bg-muted/40 p-0.5 ml-1">
@@ -760,11 +787,12 @@ export function AppointmentDashboard() {
                     <Label className="text-[11px]">
                       Target Reschedule Date
                     </Label>
-                    <input
-                      type="date"
+                    <DatePicker
                       value={rescheduleDate}
-                      onChange={(e) => setRescheduleDate(e.target.value)}
-                      className="w-full h-8 text-xs px-2.5 rounded-[3px] border border-border bg-background text-foreground font-mono"
+                      onChange={(val) => setRescheduleDate(val)}
+                      placeholder="Select reschedule date..."
+                      triggerClassName="w-full h-8 text-xs font-mono"
+                      aria-label="Target Reschedule Date"
                     />
                   </div>
 
@@ -956,41 +984,47 @@ export function AppointmentDashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-[11px]">Dental Procedure *</Label>
-                <select
-                  value={manualServiceId}
-                  onChange={(e) => {
-                    setManualServiceId(e.target.value);
+                <Select
+                  value={manualServiceId || null}
+                  onValueChange={(val) => {
+                    setManualServiceId(val || "");
                     setManualSelectedSlot("");
                   }}
-                  required
-                  className="w-full h-8 text-xs px-2 rounded-[3px] border border-border bg-background text-foreground focus:outline-none"
                 >
-                  <option value="">Select Service</option>
-                  {(servicesQuery.data || []).map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({s.durationMinutes}m)
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full h-8 text-xs">
+                    <SelectValue placeholder="Select Service" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(servicesQuery.data || []).map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.name} ({s.durationMinutes}m)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-1">
                 <Label className="text-[11px]">Practitioner (Optional)</Label>
-                <select
-                  value={manualDentistId}
-                  onChange={(e) => {
-                    setManualDentistId(e.target.value);
+                <Select
+                  value={manualDentistId || "ANY"}
+                  onValueChange={(val) => {
+                    setManualDentistId(val === "ANY" || !val ? "" : val);
                     setManualSelectedSlot("");
                   }}
-                  className="w-full h-8 text-xs px-2 rounded-[3px] border border-border bg-background text-foreground focus:outline-none"
                 >
-                  <option value="">Any Available Dentist</option>
-                  {(dentistsQuery.data || []).map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full h-8 text-xs">
+                    <SelectValue placeholder="Any Available Dentist" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ANY">Any Available Dentist</SelectItem>
+                    {(dentistsQuery.data || []).map((d) => (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -998,15 +1032,15 @@ export function AppointmentDashboard() {
             <div className="space-y-2 border-t border-border pt-3">
               <div className="space-y-1">
                 <Label className="text-[11px]">Appointment Date *</Label>
-                <input
-                  type="date"
+                <DatePicker
                   value={manualDate}
-                  onChange={(e) => {
-                    setManualDate(e.target.value);
+                  onChange={(val) => {
+                    setManualDate(val);
                     setManualSelectedSlot("");
                   }}
-                  required
-                  className="w-full h-8 text-xs px-2.5 rounded-[3px] border border-border bg-background text-foreground font-mono"
+                  placeholder="Select appointment date..."
+                  triggerClassName="w-full h-8 text-xs font-mono"
+                  aria-label="Appointment Date"
                 />
               </div>
 

@@ -20,7 +20,6 @@ import {
   BookOpen,
   Sparkles,
   Calendar,
-  AlertTriangle,
   ArrowRight,
   ShieldCheck,
 } from "lucide-react";
