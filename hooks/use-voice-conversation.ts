@@ -159,6 +159,8 @@ export function useVoiceConversation(
           content: response.responseText,
           timestamp: new Date(),
           isSpoken: true,
+          traceId: response.traceId,
+          turnId: response.turnId,
         };
         setMessages((prev) => [...prev, assistantMessage]);
 

@@ -10,6 +10,7 @@ import {
 import { isPureGreeting, getClinicGreetingResponse } from "./greetings";
 import { ReceptionistProfiler } from "./profiler";
 import { ReceptionistWorkflowCoordinator } from "./workflow";
+import { AITraceCollector } from "./trace";
 
 export type { ReceptionistStreamEvent };
 
@@ -17,6 +18,8 @@ export interface StreamReceptionistInput {
   organizationId: string;
   conversationId?: string;
   message: string;
+  traceId?: string;
+  turnId?: string;
 }
 
 async function getOrCreateConversation(
@@ -72,6 +75,26 @@ export async function* streamReceptionistResponse(
   const { organizationId, message } = input;
   const trimmedMessage = message.trim();
 
+  const traceCollector = new AITraceCollector({
+    conversationId: input.conversationId || "new",
+    organizationId,
+    channel: "chat",
+    traceId: input.traceId,
+    turnId: input.turnId,
+  });
+
+  traceCollector.recordEvent({
+    stage: "Request Received",
+    status: "completed",
+    metadata: { channel: "chat" },
+  });
+
+  traceCollector.recordEvent({
+    stage: "Input Validation",
+    status: "completed",
+    metadata: { messageLength: trimmedMessage.length },
+  });
+
   const profiler = new ReceptionistProfiler(
     trimmedMessage,
     organizationId,
@@ -119,6 +142,18 @@ export async function* streamReceptionistResponse(
     profiler.endStage("Fast-Path Greeting Response", { clinicName });
     profiler.printSummary();
 
+    traceCollector.recordEvent({
+      stage: "Fast-Path Greeting Response",
+      status: "completed",
+      metadata: { clinicName },
+    });
+    traceCollector.setIntentAndEntities({
+      intent: "GENERAL_GREETING",
+      provider: "deterministic",
+      model: "greeting-fastpath",
+    });
+    const trace = traceCollector.complete("success");
+
     yield {
       type: "done",
       reply: greetingReply,
@@ -126,13 +161,18 @@ export async function* streamReceptionistResponse(
       toolCalls: [],
       conversationId: conversation.id,
       telemetry: profiler.getTelemetry({ promptGuardCalls: 0, dbCalls: 3 }),
+      traceId: trace.id,
+      turnId: trace.turnId,
+      trace,
     };
     return;
   }
 
   // 2. Prompt Guard Security Layer
   profiler.startStage("Prompt Guard Security Check");
+  const guardStart = performance.now();
   const guardResult = await PromptGuardService.checkPrompt(trimmedMessage);
+  const guardDuration = Number((performance.now() - guardStart).toFixed(1));
   profiler.endStage("Prompt Guard Security Check", {
     isSafe: guardResult.isSafe,
   });
@@ -140,6 +180,22 @@ export async function* streamReceptionistResponse(
   if (!guardResult.isSafe) {
     const refusal =
       "I cannot fulfill this request. As the clinic receptionist, I can only assist with verified dental practice inquiries, clinic information, and appointment scheduling.";
+
+    traceCollector.recordEvent({
+      stage: "Prompt Guard Security Check",
+      status: "blocked",
+      durationMs: guardDuration,
+      metadata: { isSafe: false, reason: guardResult.reason },
+    });
+    traceCollector.setIntentAndEntities({
+      intent: "PROMPT_GUARD_BLOCKED",
+    });
+    traceCollector.recordError({
+      stage: "Prompt Guard Security Check",
+      code: "PROMPT_GUARD_VIOLATION",
+      message: guardResult.reason || "Security policy violation.",
+    });
+    const trace = traceCollector.complete("blocked");
 
     yield {
       type: "done",
@@ -150,21 +206,41 @@ export async function* streamReceptionistResponse(
       isSecurityFlagged: true,
       securityNotice: guardResult.reason || "Security policy violation.",
       telemetry: profiler.getTelemetry({ promptGuardCalls: 1, dbCalls: 0 }),
+      traceId: trace.id,
+      turnId: trace.turnId,
+      trace,
     };
     profiler.printSummary();
     return;
   }
 
+  traceCollector.recordEvent({
+    stage: "Prompt Guard Security Check",
+    status: "completed",
+    durationMs: guardDuration,
+    metadata: { isSafe: true },
+  });
+
   // 3. Fetch or create conversation in database
   profiler.startStage("DB Get/Create Conversation");
+  const convStart = performance.now();
   const conversation = await getOrCreateConversation(
     organizationId,
     input.conversationId,
   );
+  const convDuration = Number((performance.now() - convStart).toFixed(1));
   profiler.endStage("DB Get/Create Conversation");
+
+  traceCollector.recordEvent({
+    stage: "DB Get/Create Conversation",
+    status: "completed",
+    durationMs: convDuration,
+    metadata: { conversationId: conversation.id },
+  });
 
   // 4. Persist incoming user message
   profiler.startStage("DB Save User Message");
+  const userSaveStart = performance.now();
   await db.conversationMessage.create({
     data: {
       conversationId: conversation.id,
@@ -172,7 +248,16 @@ export async function* streamReceptionistResponse(
       content: trimmedMessage,
     },
   });
+  const userSaveDuration = Number(
+    (performance.now() - userSaveStart).toFixed(1),
+  );
   profiler.endStage("DB Save User Message");
+
+  traceCollector.recordEvent({
+    stage: "DB Save User Message",
+    status: "completed",
+    durationMs: userSaveDuration,
+  });
 
   const currentBookingState: BookingState =
     (conversation.bookingState as BookingState) || {};
@@ -185,6 +270,7 @@ export async function* streamReceptionistResponse(
     bookingState: currentBookingState,
     historyMessages: conversation.messages,
     profiler,
+    traceCollector,
   });
 
   // 6. Emit tool events and persist tool messages
@@ -204,6 +290,15 @@ export async function* streamReceptionistResponse(
       executionTimeMs: tc.executionTimeMs || 10,
       result: tc.result,
     };
+
+    traceCollector.recordToolCall({
+      id: tc.id,
+      name: tc.name,
+      input: tc.args,
+      output: tc.result,
+      error: tc.error,
+      durationMs: tc.executionTimeMs,
+    });
 
     await db.conversationMessage.create({
       data: {
@@ -227,6 +322,7 @@ export async function* streamReceptionistResponse(
 
   // 8. Persist assistant final response and updated booking state
   profiler.startStage("DB Save Assistant Response");
+  const asstStart = performance.now();
   await db.conversationMessage.create({
     data: {
       conversationId: conversation.id,
@@ -242,9 +338,26 @@ export async function* streamReceptionistResponse(
         workflowResult.bookingState as unknown as Prisma.InputJsonValue,
     },
   });
+  const asstDuration = Number((performance.now() - asstStart).toFixed(1));
   profiler.endStage("DB Save Assistant Response");
 
+  traceCollector.recordEvent({
+    stage: "DB Save Assistant Response",
+    status: "completed",
+    durationMs: asstDuration,
+  });
+
   const uniqueSources = deduplicateSources(workflowResult.sources || []);
+  if (uniqueSources.length > 0) {
+    traceCollector.recordSources(
+      uniqueSources.map((s) => ({
+        documentId: s.documentId,
+        documentName: s.documentName,
+        headingPath: s.headingPath,
+        pageNumber: s.pageNumber,
+      })),
+    );
+  }
 
   profiler.printSummary();
 
@@ -263,6 +376,8 @@ export async function* streamReceptionistResponse(
     dbCalls: 3 + workflowResult.toolCalls.length,
   });
 
+  const trace = traceCollector.complete("success");
+
   yield {
     type: "done",
     reply: workflowResult.reply,
@@ -271,5 +386,8 @@ export async function* streamReceptionistResponse(
     sources: uniqueSources.length > 0 ? uniqueSources : undefined,
     conversationId: conversation.id,
     telemetry,
+    traceId: trace.id,
+    turnId: trace.turnId,
+    trace,
   };
 }

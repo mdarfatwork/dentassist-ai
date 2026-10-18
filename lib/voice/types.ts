@@ -64,6 +64,8 @@ export interface VoiceTurnInput {
   language?: string;
 }
 
+import { type AITrace } from "@/lib/receptionist/trace";
+
 export interface VoiceTurnResponse {
   conversationId: string;
   responseText: string;
@@ -73,6 +75,9 @@ export interface VoiceTurnResponse {
   telemetry?: ReceptionistTelemetry;
   isSecurityFlagged?: boolean;
   securityNotice?: string;
+  traceId?: string;
+  turnId?: string;
+  trace?: AITrace;
 }
 
 export interface VoiceMessage {
@@ -81,4 +86,6 @@ export interface VoiceMessage {
   content: string;
   timestamp: Date;
   isSpoken?: boolean;
+  traceId?: string;
+  turnId?: string;
 }

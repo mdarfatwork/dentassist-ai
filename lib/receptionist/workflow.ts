@@ -16,6 +16,8 @@ import {
 } from "./types";
 import { ReceptionistProfiler } from "./profiler";
 
+import { type AITraceCollector } from "./trace";
+
 export interface WorkflowInput {
   organizationId: string;
   conversationId: string;
@@ -23,6 +25,7 @@ export interface WorkflowInput {
   bookingState: BookingState;
   historyMessages: Array<{ role: string; content: string }>;
   profiler?: ReceptionistProfiler;
+  traceCollector?: AITraceCollector;
 }
 
 export interface WorkflowResult {
@@ -186,7 +189,13 @@ function extractContactDetails(text: string): {
  */
 export class ReceptionistWorkflowCoordinator {
   public static async execute(input: WorkflowInput): Promise<WorkflowResult> {
-    const { organizationId, message, historyMessages, profiler } = input;
+    const {
+      organizationId,
+      message,
+      historyMessages,
+      profiler,
+      traceCollector,
+    } = input;
     const trimmedMessage = message.trim();
     const bookingState: BookingState = { ...input.bookingState };
     const toolCalls: ReceptionistToolCall[] = [];
@@ -194,10 +203,19 @@ export class ReceptionistWorkflowCoordinator {
 
     // 1. Resolve clinic metadata (direct DB, cached or indexed)
     profiler?.startStage("Clinic Info Lookup");
+    const clinicStart = performance.now();
     const clinic = await ClinicService.getClinicInfo(organizationId);
     const clinicName = clinic?.name || "the clinic";
     const clinicTimezone = clinic?.timezone || "UTC";
+    const clinicDuration = Number((performance.now() - clinicStart).toFixed(1));
     profiler?.endStage("Clinic Info Lookup", { clinicName, clinicTimezone });
+
+    traceCollector?.recordEvent({
+      stage: "Clinic Info Lookup",
+      status: "completed",
+      durationMs: clinicDuration,
+      metadata: { clinicName, clinicTimezone },
+    });
 
     // -------------------------------------------------------------------------
     // FAST-PATH 1: Awaiting Confirmation + Affirmation/Negation
@@ -207,6 +225,11 @@ export class ReceptionistWorkflowCoordinator {
       bookingState.confirmationPending
     ) {
       if (AFFIRMATION_REGEX.test(trimmedMessage)) {
+        traceCollector?.setIntentAndEntities({
+          intent: "CONFIRM_BOOKING",
+          provider: "deterministic",
+          model: "fast-path-affirmation",
+        });
         return await this.executeConfirmedBooking(
           organizationId,
           clinicName,
@@ -218,6 +241,11 @@ export class ReceptionistWorkflowCoordinator {
       }
 
       if (isNegationPhrase(trimmedMessage)) {
+        traceCollector?.setIntentAndEntities({
+          intent: "CANCEL_APPOINTMENT",
+          provider: "deterministic",
+          model: "fast-path-negation",
+        });
         bookingState.status = "collecting";
         bookingState.confirmationPending = false;
         return {
@@ -228,6 +256,7 @@ export class ReceptionistWorkflowCoordinator {
       }
     }
 
+    // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
     // FAST-PATH 2: Slot Selection from Offered Slots
     // -------------------------------------------------------------------------
@@ -244,6 +273,13 @@ export class ReceptionistWorkflowCoordinator {
       bookingState.selectedStartTime = matchedSlot.startTime;
       bookingState.selectedEndTime = matchedSlot.endTime;
       bookingState.selectedTimeDisplay = matchedSlot.timeString;
+
+      traceCollector?.setIntentAndEntities({
+        intent: "SELECT_SLOT",
+        provider: "deterministic",
+        model: "fast-path-slot-match",
+        entities: { selectedSlot: matchedSlot.timeString },
+      });
 
       // Also check if patient provided contact details in the same message
       const contact = extractContactDetails(trimmedMessage);
@@ -303,6 +339,13 @@ export class ReceptionistWorkflowCoordinator {
           bookingState.patientEmail &&
           bookingState.patientPhone)
       ) {
+        traceCollector?.setIntentAndEntities({
+          intent: "PROVIDE_PATIENT_DETAILS",
+          provider: "deterministic",
+          model: "fast-path-contact-intake",
+          entities: { patient: contact },
+        });
+
         return this.handleSlotSelectionContinuation(
           clinicName,
           clinicTimezone,
@@ -319,6 +362,11 @@ export class ReceptionistWorkflowCoordinator {
       if (isNegationPhrase(trimmedMessage)) {
         bookingState.status = "cancelled";
         bookingState.isCancelled = true;
+        traceCollector?.setIntentAndEntities({
+          intent: "CANCEL_APPOINTMENT",
+          provider: "deterministic",
+          model: "fast-path-negation",
+        });
         return {
           reply: `No problem! I have cancelled this booking request. Please let me know whenever you'd like to explore alternative dates or services.`,
           bookingState,
@@ -333,6 +381,11 @@ export class ReceptionistWorkflowCoordinator {
         bookingState.patientEmail &&
         bookingState.patientPhone
       ) {
+        traceCollector?.setIntentAndEntities({
+          intent: "CONFIRM_BOOKING",
+          provider: "deterministic",
+          model: "fast-path-affirmation",
+        });
         return await this.executeConfirmedBooking(
           organizationId,
           clinicName,
@@ -348,6 +401,7 @@ export class ReceptionistWorkflowCoordinator {
     // STAGE 3: Intent & Entity Extraction (Single structured LLM call)
     // -------------------------------------------------------------------------
     profiler?.startStage("Intent & Entity Extraction");
+    const extractionStart = performance.now();
     const aiProvider = getAIProvider();
 
     const extractionSystemPrompt = `You are the intent and entity extraction parser for ${clinicName}, a dental practice operating in timezone ${clinicTimezone}.
@@ -402,10 +456,55 @@ Rules:
         err,
       );
     }
+    const extractionDuration = Number(
+      (performance.now() - extractionStart).toFixed(1),
+    );
     profiler?.endStage("Intent & Entity Extraction", {
       intent: extraction?.intent || (extractionError ? "AI_FAILED" : "UNKNOWN"),
       serviceName: extraction?.serviceName,
     });
+
+    if (extraction) {
+      traceCollector?.recordEvent({
+        stage: "Intent & Entity Extraction",
+        status: "completed",
+        durationMs: extractionDuration,
+        metadata: {
+          intent: extraction.intent,
+          serviceName: extraction.serviceName,
+          dateReference: extraction.dateReference,
+        },
+      });
+      traceCollector?.setIntentAndEntities({
+        intent: extraction.intent,
+        entities: {
+          serviceName: extraction.serviceName,
+          dateReference: extraction.dateReference,
+          timePreference: extraction.timePreference,
+          dentistName: extraction.dentistName,
+          patient: extraction.patient,
+          selectedSlot: extraction.selectedSlot,
+          unstructuredQuery: extraction.unstructuredQuery,
+        },
+        provider: "AI Core Manager",
+        model: "Primary Active Model",
+      });
+    } else if (extractionError) {
+      traceCollector?.recordEvent({
+        stage: "Intent & Entity Extraction",
+        status: "failed",
+        durationMs: extractionDuration,
+        metadata: { error: String(extractionError) },
+      });
+      traceCollector?.recordError({
+        stage: "Intent & Entity Extraction",
+        code: "EXTRACTION_FAILURE",
+        message:
+          extractionError instanceof Error
+            ? extractionError.message
+            : String(extractionError),
+      });
+    }
 
     if (!extraction) {
       // If structured extraction failed, first check if deterministic service or info resolution can handle it
@@ -424,6 +523,12 @@ Rules:
             ? "tomorrow"
             : undefined,
         };
+        traceCollector?.setIntentAndEntities({
+          intent: "CHECK_AVAILABILITY",
+          entities: { serviceName: serviceMatch.service.name },
+          provider: "deterministic",
+          model: "service-fallback",
+        });
       } else {
         const lowerMsg = trimmedMessage.toLowerCase();
         if (
@@ -432,6 +537,11 @@ Rules:
           lowerMsg.includes("close")
         ) {
           extraction = { intent: "CLINIC_HOURS" };
+          traceCollector?.setIntentAndEntities({
+            intent: "CLINIC_HOURS",
+            provider: "deterministic",
+            model: "keyword-fallback",
+          });
         } else if (
           lowerMsg.includes("where") ||
           lowerMsg.includes("address") ||
@@ -439,7 +549,13 @@ Rules:
           lowerMsg.includes("phone")
         ) {
           extraction = { intent: "CLINIC_INFO" };
+          traceCollector?.setIntentAndEntities({
+            intent: "CLINIC_INFO",
+            provider: "deterministic",
+            model: "keyword-fallback",
+          });
         } else {
+          traceCollector?.setStatus("failed");
           // Never silently fallback to GENERAL_QUESTION on provider failure!
           return {
             reply: `I'm temporarily unable to process that request. Please try again in a moment or reach our front desk directly at ${clinic?.phone || "our main number"}.`,
@@ -472,13 +588,24 @@ Rules:
     // Service Resolution (DB + Aliases, strictly without RAG)
     if (extraction.serviceName) {
       profiler?.startStage("Service Resolution");
+      const srvStart = performance.now();
       const serviceMatch = await ClinicService.resolveServiceByName({
         organizationId,
         name: extraction.serviceName,
       });
+      const srvDuration = Number((performance.now() - srvStart).toFixed(1));
       profiler?.endStage("Service Resolution", {
         matchType: serviceMatch.matchType,
         matchedService: serviceMatch.service?.name,
+      });
+      traceCollector?.recordEvent({
+        stage: "Service Resolution",
+        status: "completed",
+        durationMs: srvDuration,
+        metadata: {
+          matchType: serviceMatch.matchType,
+          matchedService: serviceMatch.service?.name,
+        },
       });
 
       if (serviceMatch.service) {
@@ -490,15 +617,26 @@ Rules:
     // Relative Date Resolution (Server-side with clinic timezone)
     if (extraction.dateReference) {
       profiler?.startStage("Date Resolution");
+      const dateStart = performance.now();
       const resolvedDate = resolveDateReference(
         extraction.dateReference,
         clinicTimezone,
       );
       bookingState.requestedDate = resolvedDate.dateStr;
       bookingState.dateDisplay = resolvedDate.displayDate;
+      const dateDuration = Number((performance.now() - dateStart).toFixed(1));
       profiler?.endStage("Date Resolution", {
         resolvedDate: resolvedDate.dateStr,
         displayDate: resolvedDate.displayDate,
+      });
+      traceCollector?.recordEvent({
+        stage: "Date Resolution",
+        status: "completed",
+        durationMs: dateDuration,
+        metadata: {
+          resolvedDate: resolvedDate.dateStr,
+          displayDate: resolvedDate.displayDate,
+        },
       });
     }
 

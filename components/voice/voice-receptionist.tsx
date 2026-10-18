@@ -17,8 +17,13 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import { type VoiceTurnResponse } from "@/lib/voice/types";
+
 interface VoiceReceptionistProps {
   onBackToChat?: () => void;
+  onTurnComplete?: (response: VoiceTurnResponse) => void;
+  onSelectTurnTrace?: (turnId?: string, traceId?: string) => void;
+  selectedTurnId?: string;
 }
 
 const SUPPORTED_LANGUAGES = [
@@ -28,7 +33,12 @@ const SUPPORTED_LANGUAGES = [
   { code: "hi-IN", label: "Hindi (हिन्दी)" },
 ];
 
-export function VoiceReceptionist({ onBackToChat }: VoiceReceptionistProps) {
+export function VoiceReceptionist({
+  onBackToChat,
+  onTurnComplete,
+  onSelectTurnTrace,
+  selectedTurnId,
+}: VoiceReceptionistProps) {
   const { activeOrganization } = useOrganization();
   const [showTextFallback, setShowTextFallback] = useState<boolean>(false);
   const [fallbackText, setFallbackText] = useState<string>("");
@@ -55,6 +65,7 @@ export function VoiceReceptionist({ onBackToChat }: VoiceReceptionistProps) {
     speechRecognition,
   } = useVoiceConversation({
     autoListenAfterSpeech: true,
+    onTurnComplete,
   });
 
   const handleSendText = async (e: React.FormEvent) => {
@@ -146,7 +157,9 @@ export function VoiceReceptionist({ onBackToChat }: VoiceReceptionistProps) {
           interimTranscript={interimTranscript}
           finalTranscript={finalTranscript}
           bookingState={bookingState}
+          selectedTurnId={selectedTurnId}
           onSelectPrompt={handleSelectSamplePrompt}
+          onSelectTurnTrace={onSelectTurnTrace}
         />
 
         {/* Interactive Controls (Start / Stop / Interrupt / End Call) */}

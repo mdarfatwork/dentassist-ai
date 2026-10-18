@@ -178,6 +178,7 @@ export interface ReceptionistTelemetry {
   model: string;
   latencies: Record<string, number>;
 }
+import { type AITrace } from "./trace";
 
 export interface ReceptionistResponse {
   conversationId?: string;
@@ -188,6 +189,9 @@ export interface ReceptionistResponse {
   isSecurityFlagged?: boolean;
   securityNotice?: string;
   telemetry?: ReceptionistTelemetry;
+  traceId?: string;
+  turnId?: string;
+  trace?: AITrace;
 }
 
 export type ReceptionistStreamEvent =
@@ -213,5 +217,8 @@ export type ReceptionistStreamEvent =
       isSecurityFlagged?: boolean;
       securityNotice?: string;
       telemetry?: ReceptionistTelemetry;
+      traceId?: string;
+      turnId?: string;
+      trace?: AITrace;
     }
   | { type: "error"; error: string };

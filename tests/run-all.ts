@@ -10,10 +10,11 @@ import { runFailoverIntegrationTests } from "./receptionist/failover-integration
 import { runPhase6Tests } from "./calendar/phase6-google-calendar-scheduling.test";
 import { runVoiceReceptionistTests } from "./voice/voice-receptionist.test";
 import { runWidgetTests } from "./widget/widget.test";
+import { runPlaygroundTraceTests } from "./receptionist/playground-trace.test";
 
 async function main() {
   console.log("\n=======================================================");
-  console.log("   DentAssist AI - Phase 4, 5, 6, 7 & 8 Automated Test Suite");
+  console.log("   DentAssist AI - Phases 4 through 9 Automated Test Suite");
   console.log("=======================================================\n");
 
   try {
@@ -40,8 +41,10 @@ async function main() {
     await runVoiceReceptionistTests();
     console.log("");
     await runWidgetTests();
+    console.log("");
+    await runPlaygroundTraceTests();
     console.log("\n=======================================================");
-    console.log("   All Phase 4, 5, 6, 7 & 8 Automated Tests Passed! ✔");
+    console.log("   All Phases 4, 5, 6, 7, 8 & 9 Automated Tests Passed! ✔");
     console.log("=======================================================\n");
     process.exit(0);
   } catch (err: unknown) {

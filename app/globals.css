@@ -48,6 +48,9 @@
 }
 
 :root {
+  --font-sans:
+    "Google Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
   /* Crisp Clinical Slate & Deep Cobalt Palette */
   --background: oklch(0.985 0.004 250); /* #F8FAFC */
   --foreground: oklch(0.14 0.01 250);

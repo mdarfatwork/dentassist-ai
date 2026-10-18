@@ -19,7 +19,9 @@ interface VoiceTranscriptProps {
   interimTranscript: string;
   finalTranscript: string;
   bookingState: BookingState;
+  selectedTurnId?: string;
   onSelectPrompt?: (prompt: string) => void;
+  onSelectTurnTrace?: (turnId?: string, traceId?: string) => void;
 }
 
 const VOICE_SAMPLE_PROMPTS = [
@@ -36,7 +38,9 @@ export function VoiceTranscript({
   interimTranscript,
   finalTranscript,
   bookingState,
+  selectedTurnId,
   onSelectPrompt,
+  onSelectTurnTrace,
 }: VoiceTranscriptProps) {
   const activeSpeechText = interimTranscript || finalTranscript;
 
@@ -202,19 +206,39 @@ export function VoiceTranscript({
                 className={`max-w-[85%] rounded-[4px] p-3 border space-y-1 ${
                   msg.role === "user"
                     ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-card text-foreground border-border"
+                    : msg.turnId && msg.turnId === selectedTurnId
+                      ? "bg-primary/5 text-foreground border-primary ring-1 ring-primary"
+                      : "bg-card text-foreground border-border"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 text-[10px] opacity-75 font-mono">
                   <span>
                     {msg.role === "user" ? "PATIENT" : "RECEPTIONIST"}
                   </span>
-                  <span className="tabular-nums">
-                    {msg.timestamp.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {msg.role === "assistant" &&
+                      (msg.turnId || msg.traceId) && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onSelectTurnTrace?.(msg.turnId, msg.traceId)
+                          }
+                          className={`px-1.5 py-0.5 rounded-[2px] font-mono text-[9px] font-bold border transition-colors ${
+                            msg.turnId === selectedTurnId
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-muted text-muted-foreground hover:bg-muted/80 border-border"
+                          }`}
+                        >
+                          Inspect Trace
+                        </button>
+                      )}
+                    <span className="tabular-nums">
+                      {msg.timestamp.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
                 </div>
                 <p className="leading-relaxed whitespace-pre-wrap">
                   {msg.content}

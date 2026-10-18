@@ -4,6 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { ReceptionistService } from "@/lib/receptionist/service";
 import { voiceTurnInputSchema } from "@/lib/voice/voice-turn.schema";
 import { db } from "@/lib/db";
+import { TraceStore } from "@/lib/receptionist/trace";
 
 export const receptionistRouter = router({
   /**
@@ -92,13 +93,14 @@ export const receptionistRouter = router({
   }),
 
   /**
-   * Dispatches a user message to the AI Receptionist engine and returns response with telemetry.
+   * Dispatches a user message to the AI Receptionist engine and returns response with telemetry and trace.
    */
   sendMessage: organizationProcedure
     .input(
       z.object({
         conversationId: z.string().optional(),
         message: z.string().min(1, "Message cannot be empty"),
+        channel: z.enum(["chat", "voice"]).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -106,6 +108,7 @@ export const receptionistRouter = router({
         organizationId: ctx.organizationId,
         conversationId: input.conversationId,
         message: input.message,
+        channel: input.channel || "chat",
       });
 
       return response;
@@ -122,6 +125,7 @@ export const receptionistRouter = router({
         organizationId: ctx.organizationId,
         conversationId: input.conversationId,
         message: input.transcript,
+        channel: "voice",
       });
 
       return {
@@ -133,6 +137,146 @@ export const receptionistRouter = router({
         telemetry: response.telemetry,
         isSecurityFlagged: response.isSecurityFlagged,
         securityNotice: response.securityNotice,
+        traceId: response.traceId,
+        turnId: response.turnId,
+        trace: response.trace,
       };
+    }),
+
+  /**
+   * Retrieves a detailed execution trace for a single turn.
+   * Strictly enforces organization scoping and authentication.
+   */
+  getTrace: organizationProcedure
+    .input(
+      z.object({
+        traceId: z.string().min(1, "Trace ID is required"),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const trace = TraceStore.getTrace(ctx.organizationId, input.traceId);
+      if (!trace) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message:
+            "Trace not found or not accessible within this organization.",
+        });
+      }
+      return trace;
+    }),
+
+  /**
+   * Retrieves a turn trace by turnId and conversationId within the active organization.
+   */
+  getTurnTrace: organizationProcedure
+    .input(
+      z.object({
+        conversationId: z.string().min(1),
+        turnId: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const prisma = ctx.db.conversation ? ctx.db : db;
+      const conversation = await prisma.conversation.findFirst({
+        where: {
+          id: input.conversationId,
+          organizationId: ctx.organizationId,
+        },
+      });
+
+      if (!conversation) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Conversation not found in this organization.",
+        });
+      }
+
+      const trace = TraceStore.getTurnTrace(
+        ctx.organizationId,
+        input.conversationId,
+        input.turnId,
+      );
+
+      if (!trace) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Turn trace not found or expired.",
+        });
+      }
+
+      return trace;
+    }),
+
+  /**
+   * Lists all turn traces associated with a conversation in the active organization.
+   */
+  getConversationTraces: organizationProcedure
+    .input(
+      z.object({
+        conversationId: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const prisma = ctx.db.conversation ? ctx.db : db;
+      const conversation = await prisma.conversation.findFirst({
+        where: {
+          id: input.conversationId,
+          organizationId: ctx.organizationId,
+        },
+      });
+
+      if (!conversation) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Conversation not found in this organization.",
+        });
+      }
+
+      return TraceStore.listConversationTraces(
+        ctx.organizationId,
+        input.conversationId,
+      );
+    }),
+
+  /**
+   * Resets/clears a conversation's messages and booking state for test resets.
+   */
+  clearConversation: organizationProcedure
+    .input(
+      z.object({
+        conversationId: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const prisma = ctx.db.conversation ? ctx.db : db;
+      const conversation = await prisma.conversation.findFirst({
+        where: {
+          id: input.conversationId,
+          organizationId: ctx.organizationId,
+        },
+      });
+
+      if (!conversation) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Conversation not found in this organization.",
+        });
+      }
+
+      await prisma.conversationMessage.deleteMany({
+        where: { conversationId: input.conversationId },
+      });
+
+      await prisma.conversation.update({
+        where: { id: input.conversationId },
+        data: { bookingState: {} },
+      });
+
+      TraceStore.clearConversationTraces(
+        ctx.organizationId,
+        input.conversationId,
+      );
+
+      return { success: true };
     }),
 });
