@@ -6,20 +6,28 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { signOut } from "@/lib/auth/auth-client";
 import { LogOut } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface LogoutButtonProps {
   variant?: "default" | "outline" | "ghost" | "secondary" | "destructive";
   className?: string;
   showIcon?: boolean;
+  hideText?: boolean;
+  iconOnly?: boolean;
+  title?: string;
 }
 
 export function LogoutButton({
   variant = "outline",
   className,
   showIcon = true,
+  hideText = false,
+  iconOnly = false,
+  title,
 }: Readonly<LogoutButtonProps>) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const isIconOnly = hideText || iconOnly;
 
   const handleLogout = async () => {
     try {
@@ -44,16 +52,20 @@ export function LogoutButton({
   return (
     <Button
       variant={variant}
-      className={className}
+      className={cn(isIconOnly && "p-0 justify-center", className)}
       onClick={handleLogout}
       disabled={isLoading}
+      title={title || (isIconOnly ? "Sign Out" : undefined)}
+      aria-label="Sign Out"
     >
       {isLoading ? (
-        <Spinner className="mr-2" />
+        <Spinner className={cn(!isIconOnly && "mr-2")} />
       ) : (
-        showIcon && <LogOut className="size-4 mr-2" />
+        showIcon && (
+          <LogOut className={cn("size-4 shrink-0", !isIconOnly && "mr-2")} />
+        )
       )}
-      <span>{isLoading ? "Signing out..." : "Sign Out"}</span>
+      {!isIconOnly && <span>{isLoading ? "Signing out..." : "Sign Out"}</span>}
     </Button>
   );
 }

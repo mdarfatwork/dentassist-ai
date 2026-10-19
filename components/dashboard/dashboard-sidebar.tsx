@@ -179,61 +179,89 @@ export function DashboardSidebar({
 
   return (
     <aside
-      className={`h-full flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-200 select-none ${
+      className={`h-full flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-200 select-none relative ${
         collapsed && !isMobile ? "w-[72px]" : "w-[264px]"
       }`}
       aria-labelledby={headingId}
     >
       {/* Sidebar Header: Brand & Collapse Toggle */}
-      <div className="h-16 px-4 flex items-center justify-between border-b border-sidebar-border shrink-0">
-        <div className="flex items-center gap-3 overflow-hidden">
-          <div className="size-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-xs">
-            <Stethoscope className="size-5" />
+      <div
+        className={`h-16 flex items-center border-b border-sidebar-border shrink-0 transition-all ${
+          collapsed && !isMobile
+            ? "justify-center px-2 relative"
+            : "justify-between px-4"
+        }`}
+      >
+        {collapsed && !isMobile ? (
+          <div className="flex items-center justify-center w-full relative">
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              aria-label="Expand sidebar"
+              title="Expand sidebar"
+              className="group/brand relative size-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-xs hover:bg-primary/90 transition-all cursor-pointer"
+            >
+              <Stethoscope className="size-5 transition-transform group-hover:scale-0 group-hover:opacity-0" />
+              <ChevronRight className="size-5 transition-transform scale-0 opacity-0 group-hover:scale-100 group-hover:opacity-100 absolute" />
+            </button>
+            {onToggleCollapse && (
+              <button
+                type="button"
+                onClick={onToggleCollapse}
+                aria-label="Expand sidebar"
+                title="Expand sidebar"
+                className="absolute -right-5 top-1/2 -translate-y-1/2 size-5 rounded-full border border-sidebar-border bg-sidebar shadow-xs flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-all z-20 cursor-pointer"
+              >
+                <ChevronRight className="size-3" />
+              </button>
+            )}
           </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="size-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-xs">
+                <Stethoscope className="size-5" />
+              </div>
 
-          {(!collapsed || isMobile) && (
-            <div className="flex flex-col min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold text-sm tracking-tight text-foreground truncate">
-                  DentAssist
-                </span>
-                <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-primary/10 text-primary border border-primary/20">
-                  AI
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-sm tracking-tight text-foreground truncate">
+                    DentAssist
+                  </span>
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-primary/10 text-primary border border-primary/20">
+                    AI
+                  </span>
+                </div>
+                <span className="text-[11px] text-muted-foreground truncate">
+                  Clinical Operations
                 </span>
               </div>
-              <span className="text-[11px] text-muted-foreground truncate">
-                Clinical Operations
-              </span>
             </div>
-          )}
-        </div>
 
-        {/* Desktop Collapse Toggle */}
-        {!isMobile && onToggleCollapse && (
-          <button
-            type="button"
-            onClick={onToggleCollapse}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
-          >
-            {collapsed ? (
-              <ChevronRight className="size-4" />
-            ) : (
-              <ChevronLeft className="size-4" />
+            {/* Desktop Collapse Toggle */}
+            {!isMobile && onToggleCollapse && (
+              <button
+                type="button"
+                onClick={onToggleCollapse}
+                aria-label="Collapse sidebar"
+                className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors cursor-pointer"
+              >
+                <ChevronLeft className="size-4" />
+              </button>
             )}
-          </button>
-        )}
 
-        {/* Mobile Close Button */}
-        {isMobile && onCloseMobile && (
-          <button
-            type="button"
-            onClick={onCloseMobile}
-            aria-label="Close navigation"
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
-          >
-            <X className="size-4" />
-          </button>
+            {/* Mobile Close Button */}
+            {isMobile && onCloseMobile && (
+              <button
+                type="button"
+                onClick={onCloseMobile}
+                aria-label="Close navigation"
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors cursor-pointer"
+              >
+                <X className="size-4" />
+              </button>
+            )}
+          </>
         )}
       </div>
 
@@ -333,17 +361,23 @@ export function DashboardSidebar({
             />
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-2 py-1">
+          <div className="flex flex-col items-center gap-2.5 py-1">
             <div
-              title={userName || "User"}
+              title={
+                userName
+                  ? `${userName} (${userEmail || "Practice Admin"})`
+                  : "User Account"
+              }
               className="size-8 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0 border border-primary/20 cursor-default"
             >
               {userInitial}
             </div>
             <LogoutButton
               variant="ghost"
-              className="size-7 p-0"
+              className="size-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
               showIcon={true}
+              hideText={true}
+              title="Sign Out"
             />
           </div>
         )}

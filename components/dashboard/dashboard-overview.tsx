@@ -57,7 +57,22 @@ function formatDate(date: Date | string): string {
 
 function getGreeting(name?: string | null): string {
   const hour = new Date().getHours();
-  const displayName = name ? `, ${name.split(" ")[0]}` : "";
+  let displayName = "";
+
+  if (name?.trim()) {
+    const trimmed = name.trim();
+    const parts = trimmed.split(/\s+/);
+    const titleRegex = /^(dr\.?|doctor|prof\.?|professor|mr\.?|mrs\.?|ms\.?)$/i;
+
+    if (titleRegex.test(parts[0])) {
+      // If starts with title and has a name following (e.g. "Dr. Arfat" or "Dr. Mohammad Arfat")
+      displayName = parts.length > 1 ? `, ${trimmed}` : "";
+    } else {
+      // Standard first name (e.g. "Mohammad Arfat" -> "Mohammad")
+      displayName = `, ${parts[0]}`;
+    }
+  }
+
   if (hour < 12) return `Good morning${displayName}`;
   if (hour < 17) return `Good afternoon${displayName}`;
   return `Good evening${displayName}`;

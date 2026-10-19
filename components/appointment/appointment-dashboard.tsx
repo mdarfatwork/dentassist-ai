@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc/client";
 import { useOrganization } from "@/components/organization/organization-provider";
 import { Button } from "@/components/ui/button";
@@ -45,10 +45,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Combobox,
+  ComboboxInput,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxList,
+  ComboboxItem,
+} from "@/components/ui/combobox";
 import { DatePicker } from "@/components/ui/date-picker";
 
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "@/server/trpc/routers/_app";
+
+interface DoctorOption {
+  value: string;
+  label: string;
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  ALL: "All Statuses",
+  CONFIRMED: "Scheduled",
+  COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
+};
+
+const SOURCE_LABELS: Record<string, string> = {
+  ALL: "All Channels",
+  AI_CHAT: "AI Chat",
+  AI_VOICE: "AI Voice",
+  MANUAL: "Manual / Desk",
+};
 
 type ViewMode = "list" | "calendar";
 
@@ -103,6 +130,20 @@ export function AppointmentDashboard() {
 
   const dentistsQuery = trpc.dentist.list.useQuery();
   const servicesQuery = trpc.service.list.useQuery();
+
+  const doctorOptions = useMemo<DoctorOption[]>(() => {
+    const docs = (dentistsQuery.data || []).map((d) => ({
+      value: d.id,
+      label: d.name,
+    }));
+    return [{ value: "ALL", label: "All Practitioners" }, ...docs];
+  }, [dentistsQuery.data]);
+
+  const selectedDoctorOption = useMemo<DoctorOption>(() => {
+    return (
+      doctorOptions.find((d) => d.value === dentistFilter) ?? doctorOptions[0]
+    );
+  }, [doctorOptions, dentistFilter]);
 
   // Mutations
   const cancelMutation = trpc.appointment.cancel.useMutation({
@@ -309,15 +350,16 @@ export function AppointmentDashboard() {
         </div>
 
         {/* Filters and View Bar */}
-        <div className="mt-5 pt-4 border-t border-border flex flex-wrap items-center justify-between gap-4">
+        <div className="mt-5 pt-4 border-t border-border flex items-center justify-between gap-3 overflow-x-auto pb-1 no-scrollbar min-w-0">
           {/* Left: Quick Date Navigation */}
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center rounded-[3px] border border-border bg-muted/40 p-0.5">
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center rounded-lg border border-border bg-muted/40 p-0.5 shrink-0">
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-xs"
+                className="h-7.5 px-2 text-xs rounded-md"
                 onClick={() => handleShiftDay(-1)}
+                aria-label="Previous day"
               >
                 <ChevronLeft className="size-3.5" />
               </Button>
@@ -329,7 +371,7 @@ export function AppointmentDashboard() {
                     : "ghost"
                 }
                 size="sm"
-                className="h-7 px-3 text-xs font-semibold"
+                className="h-7.5 px-2.5 text-xs font-semibold rounded-md"
                 onClick={() => setSelectedDate(getLocalDateString(new Date()))}
               >
                 Today
@@ -338,29 +380,30 @@ export function AppointmentDashboard() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-xs"
+                className="h-7.5 px-2 text-xs rounded-md"
                 onClick={() => handleShiftDay(1)}
+                aria-label="Next day"
               >
                 <ChevronRight className="size-3.5" />
               </Button>
             </div>
 
-            <div className="flex items-center gap-1.5">
-              <div className="w-38">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <div className="w-36 shrink-0">
                 <DatePicker
                   value={selectedDate === "ALL" ? "" : selectedDate}
                   onChange={(val) =>
                     setSelectedDate(val || getLocalDateString(new Date()))
                   }
                   placeholder="Filter date..."
-                  triggerClassName="h-8 text-xs"
+                  triggerClassName="h-8.5 text-xs rounded-lg"
                   aria-label="Filter appointments by date"
                 />
               </div>
               <Button
                 variant={selectedDate === "ALL" ? "secondary" : "ghost"}
                 size="sm"
-                className="h-8 text-xs shrink-0"
+                className="h-8.5 text-xs shrink-0 rounded-lg px-2.5"
                 onClick={() =>
                   setSelectedDate(
                     selectedDate === "ALL"
@@ -369,32 +412,49 @@ export function AppointmentDashboard() {
                   )
                 }
               >
-                {selectedDate === "ALL" ? "All Dates Active" : "View All"}
+                {selectedDate === "ALL" ? "All Dates Active" : "All Dates"}
               </Button>
             </div>
           </div>
 
-          {/* Center / Right: Filter dropdowns & View Mode Toggle */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Dentist Filter */}
-            <Select
-              value={dentistFilter}
+          {/* Right: Filter dropdowns & View Mode Toggle */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Dentist Filter - Search and Select */}
+            <Combobox<DoctorOption>
+              items={doctorOptions}
+              value={selectedDoctorOption}
               onValueChange={(val) => {
-                if (val) setDentistFilter(val);
+                setDentistFilter(val ? val.value : "ALL");
               }}
+              isItemEqualToValue={(a, b) => a?.value === b?.value}
+              itemToStringLabel={(item) => item?.label ?? ""}
+              itemToStringValue={(item) => item?.value ?? ""}
+              autoHighlight
+              disabled={dentistsQuery.isLoading}
             >
-              <SelectTrigger className="h-8 text-xs min-w-[140px]">
-                <SelectValue placeholder="All Practitioners" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All Practitioners</SelectItem>
-                {(dentistsQuery.data || []).map((d) => (
-                  <SelectItem key={d.id} value={d.id}>
-                    {d.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <ComboboxInput
+                placeholder="Search doctor..."
+                className="h-8.5 text-xs w-[175px] shrink-0 rounded-lg"
+                showClear={dentistFilter !== "ALL"}
+                aria-label="Filter by doctor"
+              />
+              <ComboboxContent className="max-h-64 min-w-[200px] overflow-y-auto">
+                <ComboboxEmpty className="py-2.5 text-xs text-muted-foreground text-center">
+                  No practitioner found
+                </ComboboxEmpty>
+                <ComboboxList className="max-h-56 overflow-y-auto">
+                  {(item: DoctorOption) => (
+                    <ComboboxItem
+                      key={item.value}
+                      value={item}
+                      className="cursor-pointer text-xs"
+                    >
+                      {item.label}
+                    </ComboboxItem>
+                  )}
+                </ComboboxList>
+              </ComboboxContent>
+            </Combobox>
 
             {/* Status Filter */}
             <Select
@@ -403,8 +463,10 @@ export function AppointmentDashboard() {
                 if (val) setStatusFilter(val);
               }}
             >
-              <SelectTrigger className="h-8 text-xs min-w-[115px]">
-                <SelectValue placeholder="All Statuses" />
+              <SelectTrigger className="h-8.5 text-xs w-[120px] shrink-0 rounded-lg">
+                <SelectValue placeholder="All Statuses">
+                  {(val) => STATUS_LABELS[val] || val || "All Statuses"}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All Statuses</SelectItem>
@@ -421,23 +483,25 @@ export function AppointmentDashboard() {
                 if (val) setSourceFilter(val);
               }}
             >
-              <SelectTrigger className="h-8 text-xs min-w-[125px]">
-                <SelectValue placeholder="All Channels" />
+              <SelectTrigger className="h-8.5 text-xs w-[130px] shrink-0 rounded-lg">
+                <SelectValue placeholder="All Channels">
+                  {(val) => SOURCE_LABELS[val] || val || "All Channels"}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All Channels</SelectItem>
                 <SelectItem value="AI_CHAT">AI Chat</SelectItem>
                 <SelectItem value="AI_VOICE">AI Voice</SelectItem>
-                <SelectItem value="MANUAL">Manual / Front Desk</SelectItem>
+                <SelectItem value="MANUAL">Manual / Desk</SelectItem>
               </SelectContent>
             </Select>
 
             {/* View Mode Toggle */}
-            <div className="flex items-center rounded-[3px] border border-border bg-muted/40 p-0.5 ml-1">
+            <div className="flex items-center rounded-lg border border-border bg-muted/40 p-0.5 shrink-0 ml-1">
               <Button
                 variant={viewMode === "list" ? "default" : "ghost"}
                 size="sm"
-                className="h-7 px-2.5 text-xs gap-1"
+                className="h-7.5 px-2.5 text-xs gap-1 rounded-md"
                 onClick={() => setViewMode("list")}
               >
                 <FileText className="size-3" /> List
@@ -445,7 +509,7 @@ export function AppointmentDashboard() {
               <Button
                 variant={viewMode === "calendar" ? "default" : "ghost"}
                 size="sm"
-                className="h-7 px-2.5 text-xs gap-1"
+                className="h-7.5 px-2.5 text-xs gap-1 rounded-md"
                 onClick={() => setViewMode("calendar")}
               >
                 <CalendarRange className="size-3" /> Calendar
