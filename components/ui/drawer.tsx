@@ -127,8 +127,8 @@ function DrawerContent({
           className={cn(
             // Base.
             "group/drawer-popup pointer-events-auto fixed z-50 m-(--drawer-inset,0px) flex h-(--drawer-content-height) max-h-(--drawer-content-max-height,none) min-h-0 w-(--drawer-content-width,auto) transform-[translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))] flex-col border border-border bg-popover text-xs text-popover-foreground shadow-xl transition-[transform,height,opacity,filter] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none select-none [--drawer-bleed-background:transparent] [--drawer-inset:0px] [--drawer-stacked-shadow:0_-10px_15px_-3px_rgb(0_0_0/0.1)] [interpolate-size:allow-keywords] data-[swipe-direction=down]:data-nested-drawer-open:shadow-(--drawer-stacked-shadow)",
-            // Radii per swipe direction - clinical 4px to 6px
-            "data-[swipe-direction=down]:rounded-t-[6px] data-[swipe-direction=up]:rounded-b-[6px] data-[swipe-direction=left]:rounded-r-[6px] data-[swipe-direction=right]:rounded-l-[6px]",
+            // Radii per swipe direction - clinical rounded-2xl
+            "data-[swipe-direction=down]:rounded-t-2xl data-[swipe-direction=up]:rounded-b-2xl data-[swipe-direction=left]:rounded-r-2xl data-[swipe-direction=right]:rounded-l-2xl",
             // Nested.
             "data-nested-drawer-open:overflow-hidden data-nested-drawer-open:brightness-95",
             // Bleed.

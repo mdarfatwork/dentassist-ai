@@ -59,12 +59,12 @@ export function OrganizationSwitcher() {
             <Button
               variant="outline"
               size="sm"
-              className="h-8 px-2.5 gap-2 border-border bg-background hover:bg-muted/70 text-foreground font-medium transition-all max-w-[220px] sm:max-w-[260px] justify-between shadow-none rounded-[3px]"
+              className="h-8 px-2.5 gap-2 border-border bg-background hover:bg-muted/70 text-foreground font-medium transition-all max-w-[220px] sm:max-w-[260px] justify-between shadow-none rounded-lg"
             />
           }
         >
           <div className="flex items-center gap-2 truncate">
-            <div className="size-4.5 rounded-[2px] bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <div className="size-4.5 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
               <Building2 className="size-3" />
             </div>
             <span className="truncate text-xs font-semibold">
@@ -77,7 +77,7 @@ export function OrganizationSwitcher() {
         <DropdownMenuContent align="start" className="w-64 p-1 shadow-md">
           <DropdownMenuLabel className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground font-semibold px-2 py-1">
             <span>Your Practices</span>
-            <span className="text-[10px] font-mono bg-muted px-1.5 py-0.2 rounded-[2px] text-muted-foreground border border-border/60">
+            <span className="text-[10px] font-mono bg-muted px-1.5 py-0.2 rounded-sm text-muted-foreground border border-border/60">
               {organizations.length}{" "}
               {organizations.length === 1 ? "clinic" : "clinics"}
             </span>
@@ -99,11 +99,11 @@ export function OrganizationSwitcher() {
                 <DropdownMenuItem
                   key={org.id}
                   onClick={() => handleSelect(org.id)}
-                  className="flex items-center justify-between py-1.5 px-2 rounded-[2px] cursor-pointer hover:bg-muted/80 transition-colors"
+                  className="flex items-center justify-between py-1.5 px-2 rounded-md cursor-pointer hover:bg-muted/80 transition-colors"
                 >
                   <div className="flex items-center gap-2 min-w-0 pr-2">
                     <div
-                      className={`size-6 rounded-[2px] flex items-center justify-center shrink-0 ${
+                      className={`size-6 rounded-md flex items-center justify-center shrink-0 ${
                         isActive
                           ? "bg-primary text-primary-foreground font-bold text-xs"
                           : "bg-muted text-muted-foreground text-xs"
@@ -139,9 +139,9 @@ export function OrganizationSwitcher() {
 
           <DropdownMenuItem
             onClick={() => setCreateDialogOpen(true)}
-            className="flex items-center gap-2 py-1.5 px-2 text-xs text-primary font-medium cursor-pointer hover:bg-primary/10 hover:text-primary rounded-[2px]"
+            className="flex items-center gap-2 py-1.5 px-2 text-xs text-primary font-medium cursor-pointer hover:bg-primary/10 hover:text-primary rounded-md"
           >
-            <div className="size-5 rounded-[2px] border border-dashed border-primary/40 flex items-center justify-center">
+            <div className="size-5 rounded-md border border-dashed border-primary/40 flex items-center justify-center">
               <Plus className="size-3" />
             </div>
             <span>New Clinic Organization</span>

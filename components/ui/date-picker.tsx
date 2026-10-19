@@ -167,7 +167,7 @@ export function DatePicker({
 
       <PopoverContent
         className={cn(
-          "w-auto p-0 z-[70] shadow-xl border-border bg-popover rounded-[4px]",
+          "w-auto p-0 z-[70] shadow-xl border-border bg-popover rounded-xl",
           className,
         )}
         align="start"

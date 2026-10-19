@@ -14,7 +14,7 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="input-group"
       role="group"
       className={cn(
-        "group/input-group relative flex h-8.5 w-full min-w-0 items-center rounded-[3px] border border-input bg-background text-xs text-foreground transition-colors outline-none",
+        "group/input-group relative flex h-8.5 w-full min-w-0 items-center rounded-lg border border-input bg-background text-xs text-foreground transition-colors outline-none",
         "focus-within:border-ring focus-within:ring-1 focus-within:ring-ring/40",
         "has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot=input-group-control]:focus-visible]:ring-1 has-[[data-slot=input-group-control]:focus-visible]:ring-ring/40",
         "has-[[data-slot][aria-invalid=true]]:border-destructive has-[[data-slot][aria-invalid=true]]:ring-1 has-[[data-slot][aria-invalid=true]]:ring-destructive/30",
@@ -28,7 +28,7 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 const inputGroupAddonVariants = cva(
-  "flex h-auto cursor-text items-center justify-center gap-1.5 py-1 text-xs font-medium text-muted-foreground select-none group-data-[disabled=true]/input-group:opacity-50 **:data-[slot=kbd]:rounded-[2px] **:data-[slot=kbd]:bg-muted **:data-[slot=kbd]:px-1 [&>svg:not([class*='size-'])]:size-3.5",
+  "flex h-auto cursor-text items-center justify-center gap-1.5 py-1 text-xs font-medium text-muted-foreground select-none group-data-[disabled=true]/input-group:opacity-50 **:data-[slot=kbd]:rounded-sm **:data-[slot=kbd]:bg-muted **:data-[slot=kbd]:px-1 [&>svg:not([class*='size-'])]:size-3.5",
   {
     variants: {
       align: {
@@ -71,16 +71,16 @@ function InputGroupAddon({
 }
 
 const inputGroupButtonVariants = cva(
-  "flex items-center gap-1 rounded-[2px] text-xs shadow-none text-muted-foreground hover:text-foreground hover:bg-muted/70 active:bg-muted",
+  "flex items-center gap-1 rounded-md text-xs shadow-none text-muted-foreground hover:text-foreground hover:bg-muted/70 active:bg-muted",
   {
     variants: {
       size: {
-        xs: "h-6 gap-1 rounded-[2px] px-1.5 [&>svg:not([class*='size-'])]:size-3.5",
-        sm: "h-7 gap-1 rounded-[2px] px-2 text-xs",
+        xs: "h-6 gap-1 rounded-md px-1.5 [&>svg:not([class*='size-'])]:size-3.5",
+        sm: "h-7 gap-1 rounded-md px-2 text-xs",
         "icon-xs":
-          "size-6 rounded-[2px] p-0 has-[>svg]:p-0 [&>svg:not([class*='size-'])]:size-3.5",
+          "size-6 rounded-md p-0 has-[>svg]:p-0 [&>svg:not([class*='size-'])]:size-3.5",
         "icon-sm":
-          "size-7 rounded-[2px] p-0 has-[>svg]:p-0 [&>svg:not([class*='size-'])]:size-3.5",
+          "size-7 rounded-md p-0 has-[>svg]:p-0 [&>svg:not([class*='size-'])]:size-3.5",
       },
     },
     defaultVariants: {

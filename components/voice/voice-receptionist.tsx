@@ -125,7 +125,7 @@ export function VoiceReceptionist({
             >
               <SelectTrigger
                 aria-label="Speech Recognition Language"
-                className="h-7 text-[11px] font-medium bg-card border-border rounded-[2px] px-2 py-0.5 min-w-[130px]"
+                className="h-7 text-[11px] font-medium bg-card border-border rounded-lg px-2 py-0.5 min-w-[130px]"
               >
                 <SelectValue placeholder="Select language" />
               </SelectTrigger>
@@ -204,12 +204,12 @@ export function VoiceReceptionist({
               onChange={(e) => setFallbackText(e.target.value)}
               placeholder="Type your message if voice input is unavailable..."
               disabled={state === "processing"}
-              className="h-9 text-xs rounded-[3px] border-border focus:ring-primary"
+              className="h-9 text-xs border-border focus:ring-primary"
             />
             <Button
               type="submit"
               disabled={!fallbackText.trim() || state === "processing"}
-              className="h-9 px-3.5 text-xs font-semibold rounded-[3px] bg-primary text-primary-foreground hover:bg-primary/90 shadow-none"
+              className="h-9 px-3.5 text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-none"
             >
               <Send className="size-3.5" />
               <span className="sr-only sm:not-sr-only sm:ml-1.5">Send</span>

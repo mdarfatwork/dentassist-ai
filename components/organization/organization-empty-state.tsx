@@ -73,10 +73,10 @@ export function OrganizationEmptyState({
       {/* Welcome Card - Clean Clinical Workspace Initializer */}
       <Card className="w-full border-border shadow-none overflow-hidden">
         <div className="p-6 sm:p-8 border-b border-border bg-card">
-          <div className="size-9 rounded-[3px] bg-primary text-primary-foreground flex items-center justify-center mb-3">
+          <div className="size-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center mb-3">
             <Building2 className="size-4.5" />
           </div>
-          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[2px] border border-primary/20 bg-primary/10 text-primary text-[11px] font-semibold mb-2">
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border border-primary/20 bg-primary/10 text-primary text-[11px] font-semibold mb-2">
             Practice Initializer
           </div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
@@ -121,7 +121,7 @@ export function OrganizationEmptyState({
             </div>
 
             {previewSlug && (
-              <div className="rounded-[3px] bg-muted/50 border border-border px-3 py-2 text-xs flex items-center justify-between">
+              <div className="rounded-md bg-muted/50 border border-border px-3 py-2 text-xs flex items-center justify-between">
                 <span className="text-muted-foreground text-[11px]">
                   Generated Practice Identifier:
                 </span>

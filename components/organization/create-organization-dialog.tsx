@@ -101,7 +101,7 @@ export function CreateOrganizationDialog({
       <CredenzaContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>
           <CredenzaHeader>
-            <div className="size-8 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center mb-1">
+            <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-1">
               <Building2 className="size-4" />
             </div>
             <CredenzaTitle>Create Practice Organization</CredenzaTitle>
@@ -139,7 +139,7 @@ export function CreateOrganizationDialog({
             </div>
 
             {previewSlug && (
-              <div className="rounded-[3px] bg-muted/50 border border-border px-3 py-2 text-xs flex items-center justify-between">
+              <div className="rounded-md bg-muted/50 border border-border px-3 py-2 text-xs flex items-center justify-between">
                 <span className="text-muted-foreground text-[11px]">
                   Generated Tenant Slug:
                 </span>
