@@ -88,10 +88,7 @@ function DialogHeader({
   return (
     <div
       data-slot="dialog-header"
-      className={cn(
-        "flex flex-col gap-1 text-left pb-3 border-b border-border/50",
-        className,
-      )}
+      className={cn("flex flex-col gap-1.5 text-left", className)}
       {...props}
     />
   );
@@ -111,7 +108,7 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end pt-3 border-t border-border/50",
+        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end pt-2",
         className,
       )}
       {...props}
