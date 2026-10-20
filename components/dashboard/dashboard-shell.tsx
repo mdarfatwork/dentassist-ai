@@ -19,7 +19,6 @@ import { ClinicProfileForm } from "@/components/clinic/clinic-profile-form";
 import { ClinicPhotoGallery } from "@/components/clinic/clinic-photo-gallery";
 import { KnowledgeManager } from "@/components/knowledge/knowledge-manager";
 import { ReceptionistPlayground } from "@/components/receptionist/receptionist-playground";
-import { VoiceReceptionist } from "@/components/voice/voice-receptionist";
 import { WebsiteWidgetManager } from "@/components/widget/website-widget-manager";
 
 interface DashboardShellProps {
@@ -211,9 +210,13 @@ function DashboardShellContent({
 
           {activeTab === "knowledge" && <KnowledgeManager />}
 
-          {activeTab === "receptionist" && <ReceptionistPlayground />}
+          {activeTab === "receptionist" && (
+            <ReceptionistPlayground initialMode="chat" />
+          )}
 
-          {activeTab === "voice" && <VoiceReceptionist />}
+          {activeTab === "voice" && (
+            <ReceptionistPlayground initialMode="voice" />
+          )}
 
           {activeTab === "widget" && <WebsiteWidgetManager />}
 

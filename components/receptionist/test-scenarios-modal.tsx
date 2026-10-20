@@ -63,19 +63,19 @@ export function TestScenariosModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden">
-        <DialogHeader className="p-5 border-b border-border bg-muted/20">
-          <div className="flex items-center gap-2">
-            <div className="size-7 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center">
+      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden rounded-2xl">
+        <DialogHeader className="p-5 border-b border-border/80 bg-muted/20">
+          <div className="flex items-center gap-2.5">
+            <div className="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
               <FlaskConical className="size-4" />
             </div>
             <div>
-              <DialogTitle className="text-sm font-bold text-foreground">
+              <DialogTitle className="text-sm sm:text-base font-semibold text-foreground">
                 Predefined Test Scenarios
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
-                Validate receptionist behaviors across real clinic hours, RAG,
-                scheduling, and safety guardrails.
+                Validate receptionist behaviors across clinic hours, service
+                questions, scheduling, and safety guardrails.
               </DialogDescription>
             </div>
           </div>
@@ -87,10 +87,10 @@ export function TestScenariosModal({
                 key={cat}
                 type="button"
                 onClick={() => setSelectedCategory(cat)}
-                className={`text-[11px] font-medium px-2 py-0.5 rounded-[2px] border transition-colors ${
+                className={`text-xs font-medium px-3 py-1 rounded-full border transition-all ${
                   selectedCategory === cat
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-card text-muted-foreground hover:text-foreground border-border"
+                    ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                    : "bg-background text-muted-foreground hover:text-foreground border-border/80"
                 }`}
               >
                 {cat}
@@ -107,20 +107,20 @@ export function TestScenariosModal({
             return (
               <div
                 key={scenario.id}
-                className="rounded-[4px] border border-border bg-card p-4 space-y-2.5 hover:border-primary/50 transition-colors"
+                className="rounded-xl border border-border/80 bg-card p-4 space-y-2.5 hover:border-primary/40 transition-colors shadow-2xs"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded-[2px] bg-primary/10 text-primary border border-primary/20">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
                         <Icon className="size-3" />
                         {scenario.category}
                       </span>
-                      <h4 className="text-xs font-bold text-foreground">
+                      <h4 className="text-xs font-semibold text-foreground">
                         {scenario.title}
                       </h4>
                     </div>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
                       {scenario.testPurpose}
                     </p>
                   </div>
@@ -128,29 +128,29 @@ export function TestScenariosModal({
                   <Button
                     size="sm"
                     onClick={() => handleInsert(scenario)}
-                    className="shrink-0 text-xs gap-1.5 h-7 px-3 rounded-[2px]"
+                    className="shrink-0 text-xs gap-1.5 h-8 px-3 rounded-xl"
                   >
-                    Insert Prompt
+                    <span>Insert Prompt</span>
                     <ArrowRight className="size-3" />
                   </Button>
                 </div>
 
                 {/* Prompt Preview */}
-                <div className="p-2.5 rounded-[3px] bg-muted/40 border border-border text-xs font-mono text-foreground flex items-center justify-between gap-2">
-                  <span className="truncate">
+                <div className="p-2.5 rounded-lg bg-muted/40 border border-border/60 text-xs text-foreground flex items-center justify-between gap-2">
+                  <span className="truncate italic">
                     &ldquo;{scenario.patientPrompt}&rdquo;
                   </span>
                   <Badge
                     variant="outline"
-                    className="font-mono text-[9px] shrink-0"
+                    className="text-[10px] font-medium shrink-0 rounded-full"
                   >
                     Expected: {scenario.expectedIntent}
                   </Badge>
                 </div>
 
                 {/* Guidance */}
-                <div className="text-[10px] text-muted-foreground flex items-start gap-1.5 bg-muted/10 p-2 rounded-[2px]">
-                  <span className="font-semibold text-foreground shrink-0">
+                <div className="text-[11px] text-muted-foreground flex items-start gap-1.5 bg-muted/20 p-2.5 rounded-lg">
+                  <span className="font-medium text-foreground shrink-0">
                     Validation:
                   </span>
                   <span>{scenario.guidance}</span>

@@ -6,11 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import {
   Mic,
   Bot,
-  User,
   Calendar,
   Clock,
   CheckCircle2,
   Volume2,
+  Activity,
 } from "lucide-react";
 
 interface VoiceTranscriptProps {
@@ -25,11 +25,9 @@ interface VoiceTranscriptProps {
 }
 
 const VOICE_SAMPLE_PROMPTS = [
-  "What are your clinic operating hours?",
-  "Do you have teeth whitening available?",
-  "I'd like to book an appointment tomorrow morning.",
-  "How much does a routine cleaning cost?",
-  "Where is your clinic located?",
+  "What are your opening hours?",
+  "Do you offer teeth whitening?",
+  "I'd like to book an appointment.",
 ];
 
 export function VoiceTranscript({
@@ -48,33 +46,30 @@ export function VoiceTranscript({
     <div className="space-y-4">
       {/* Live Audio / Speaking Active Monitor */}
       {(state === "listening" || state === "speaking" || activeSpeechText) && (
-        <div className="p-3.5 rounded-[4px] border border-primary/30 bg-primary/5 space-y-2">
-          <div className="flex items-center justify-between text-[11px] font-mono text-primary font-semibold">
-            <span className="flex items-center gap-1.5">
+        <div className="p-4 rounded-2xl border border-primary/20 bg-primary/5 space-y-2 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-primary font-medium">
+            <span className="flex items-center gap-2">
               {state === "speaking" ? (
                 <>
-                  <Volume2 className="size-3.5 animate-bounce" />
-                  RECEPTIONIST AUDIO OUTPUT
+                  <Volume2 className="size-4 animate-bounce" />
+                  <span>Receptionist speaking</span>
                 </>
               ) : (
                 <>
-                  <Mic className="size-3.5 animate-pulse text-red-500" />
-                  PATIENT MICROPHONE INPUT
+                  <Mic className="size-4 animate-pulse text-red-500" />
+                  <span>Listening to your voice</span>
                 </>
               )}
-            </span>
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              Real-time Transcribing
             </span>
           </div>
 
           <div className="text-sm font-medium text-foreground min-h-6 flex items-center">
             {activeSpeechText ? (
-              <p className="italic text-foreground/90">
+              <p className="italic text-foreground/90 leading-relaxed">
                 &ldquo;{activeSpeechText}&rdquo;
               </p>
             ) : (
-              <span className="text-xs text-muted-foreground italic flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground italic flex items-center gap-2">
                 <span className="inline-block size-1.5 rounded-full bg-primary animate-ping" />
                 Listening for speech... Speak clearly into your microphone.
               </span>
@@ -88,21 +83,21 @@ export function VoiceTranscript({
         bookingState.dateDisplay ||
         bookingState.selectedTimeDisplay ||
         bookingState.confirmationPending) && (
-        <div className="rounded-[4px] border border-border bg-muted/40 p-3 space-y-2">
-          <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground">
-            <span className="flex items-center gap-1 text-foreground">
+        <div className="rounded-xl border border-border/80 bg-muted/30 p-3.5 space-y-2.5 shadow-2xs">
+          <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
+            <span className="flex items-center gap-1.5 text-foreground">
               <Calendar className="size-3.5 text-primary" /> Active Booking
               Context
             </span>
             <Badge
               variant="outline"
-              className="text-[10px] font-mono uppercase border-border"
+              className="text-[10px] font-medium rounded-full uppercase border-border/80"
             >
               {bookingState.status || "In Progress"}
             </Badge>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
             {bookingState.serviceName && (
               <div className="flex flex-col">
                 <span className="text-[10px] text-muted-foreground">
@@ -135,17 +130,16 @@ export function VoiceTranscript({
           </div>
 
           {bookingState.confirmationPending && (
-            <div className="text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-[2px] flex items-center gap-1.5">
+            <div className="text-[11px] font-medium text-amber-800 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
               <span>
-                ⚠️ Awaiting patient confirmation to finalize appointment
-                reservation.
+                Awaiting your confirmation to finalize appointment reservation.
               </span>
             </div>
           )}
 
           {bookingState.isConfirmed && (
-            <div className="text-[11px] font-medium text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-600/20 px-2 py-1 rounded-[2px] flex items-center gap-1.5">
-              <CheckCircle2 className="size-3 text-emerald-600" />
+            <div className="text-[11px] font-medium text-emerald-800 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-600/20 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
+              <CheckCircle2 className="size-3.5 text-emerald-600" />
               <span>
                 Appointment Confirmed! Ref:{" "}
                 <code className="font-mono font-bold">
@@ -160,28 +154,27 @@ export function VoiceTranscript({
       {/* Conversation Turns Thread */}
       <div className="space-y-3 min-h-[160px] max-h-[380px] overflow-y-auto p-1 pr-2">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center space-y-3 border border-dashed border-border rounded-[4px] p-6">
-            <div className="size-9 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-              <Mic className="size-4" />
+          <div className="flex flex-col items-center justify-center py-8 text-center space-y-3 border border-dashed border-border/80 rounded-2xl p-6 bg-muted/10">
+            <div className="size-12 rounded-full bg-primary/10 text-primary flex items-center justify-center border border-primary/20">
+              <Mic className="size-6" />
             </div>
-            <div className="space-y-1">
-              <p className="text-xs font-semibold text-foreground">
-                No voice turns yet
+            <div className="space-y-1 max-w-sm">
+              <p className="text-sm font-semibold text-foreground tracking-tight">
+                Ready to talk?
               </p>
-              <p className="text-[11px] text-muted-foreground max-w-sm">
-                Click &quot;Start Voice Conversation&quot; and speak aloud to
-                ask about clinic hours, prices, dentist availability, or
-                booking.
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Start a voice conversation to ask about services, clinic hours,
+                or appointments.
               </p>
             </div>
 
-            <div className="pt-2 flex flex-wrap justify-center gap-1.5 max-w-md">
+            <div className="pt-2 flex flex-wrap justify-center gap-2 max-w-md">
               {VOICE_SAMPLE_PROMPTS.map((sample) => (
                 <button
                   key={sample}
                   type="button"
                   onClick={() => onSelectPrompt?.(sample)}
-                  className="text-[11px] px-2 py-1 rounded-[2px] bg-muted/60 hover:bg-muted text-foreground border border-border transition-colors text-left"
+                  className="text-xs px-3.5 py-1.5 rounded-full bg-card hover:bg-muted text-foreground border border-border/80 hover:border-primary/40 transition-colors shadow-2xs font-medium"
                 >
                   &ldquo;{sample}&rdquo;
                 </button>
@@ -192,64 +185,54 @@ export function VoiceTranscript({
           messages.map((msg) => (
             <div
               key={msg.id}
-              className={`flex gap-3 text-xs ${
-                msg.role === "user" ? "justify-end" : "justify-start"
+              className={`flex gap-2.5 text-xs ${
+                msg.role === "user"
+                  ? "justify-end"
+                  : "justify-start items-start"
               }`}
             >
               {msg.role === "assistant" && (
-                <div className="size-6 rounded-[2px] bg-primary flex items-center justify-center text-primary-foreground shrink-0 mt-0.5">
-                  <Bot className="size-3.5" />
+                <div className="size-7 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                  <Bot className="size-4" />
                 </div>
               )}
 
               <div
-                className={`max-w-[85%] rounded-[4px] p-3 border space-y-1 ${
+                className={`space-y-1.5 transition-all ${
                   msg.role === "user"
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : msg.turnId && msg.turnId === selectedTurnId
-                      ? "bg-primary/5 text-foreground border-primary ring-1 ring-primary"
-                      : "bg-card text-foreground border-border"
+                    ? "max-w-[80%] rounded-2xl rounded-br-xs p-3.5 bg-primary text-primary-foreground shadow-xs leading-relaxed"
+                    : `max-w-[85%] rounded-2xl rounded-bl-xs p-3.5 bg-card text-foreground border shadow-2xs leading-relaxed ${
+                        msg.turnId && msg.turnId === selectedTurnId
+                          ? "border-primary ring-1 ring-primary/30"
+                          : "border-border/70"
+                      }`
                 }`}
               >
-                <div className="flex items-center justify-between gap-2 text-[10px] opacity-75 font-mono">
-                  <span>
-                    {msg.role === "user" ? "PATIENT" : "RECEPTIONIST"}
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    {msg.role === "assistant" &&
-                      (msg.turnId || msg.traceId) && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            onSelectTurnTrace?.(msg.turnId, msg.traceId)
-                          }
-                          className={`px-1.5 py-0.5 rounded-[2px] font-mono text-[9px] font-bold border transition-colors ${
-                            msg.turnId === selectedTurnId
-                              ? "bg-primary text-primary-foreground border-primary"
-                              : "bg-muted text-muted-foreground hover:bg-muted/80 border-border"
-                          }`}
-                        >
-                          Inspect Trace
-                        </button>
-                      )}
-                    <span className="tabular-nums">
+                <p className="leading-relaxed whitespace-pre-wrap">
+                  {msg.content}
+                </p>
+
+                {msg.role === "assistant" && (msg.turnId || msg.traceId) && (
+                  <div className="pt-1 border-t border-border/50 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onSelectTurnTrace?.(msg.turnId, msg.traceId)
+                      }
+                      className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <Activity className="size-3 text-primary" />
+                      <span>Activity details</span>
+                    </button>
+                    <span className="text-[10px] text-muted-foreground tabular-nums">
                       {msg.timestamp.toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
                     </span>
                   </div>
-                </div>
-                <p className="leading-relaxed whitespace-pre-wrap">
-                  {msg.content}
-                </p>
+                )}
               </div>
-
-              {msg.role === "user" && (
-                <div className="size-6 rounded-[2px] bg-muted border border-border flex items-center justify-center text-muted-foreground shrink-0 mt-0.5">
-                  <User className="size-3.5" />
-                </div>
-              )}
             </div>
           ))
         )}

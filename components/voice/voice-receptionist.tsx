@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useOrganization } from "@/components/organization/organization-provider";
 import { useVoiceConversation } from "@/hooks/use-voice-conversation";
 import { VoiceStatus } from "./voice-status";
 import { VoiceControls } from "./voice-controls";
@@ -15,14 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Stethoscope,
-  Clock,
-  Send,
-  ShieldCheck,
-  Languages,
-  Sparkles,
-} from "lucide-react";
+import { Send, ShieldCheck, Languages, Mic } from "lucide-react";
 
 import { type VoiceTurnResponse } from "@/lib/voice/types";
 
@@ -46,7 +38,6 @@ export function VoiceReceptionist({
   onSelectTurnTrace,
   selectedTurnId,
 }: VoiceReceptionistProps) {
-  const { activeOrganization } = useOrganization();
   const [showTextFallback, setShowTextFallback] = useState<boolean>(false);
   const [fallbackText, setFallbackText] = useState<string>("");
 
@@ -92,28 +83,19 @@ export function VoiceReceptionist({
   };
 
   return (
-    <div className="rounded-[4px] border border-border bg-card overflow-hidden space-y-0">
-      {/* Clinic Header Bar */}
-      <div className="border-b border-border bg-muted/30 px-5 py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[2px] border border-primary/20 bg-primary/10 text-primary text-[10px] font-semibold tracking-tight uppercase">
-              <Sparkles className="size-3" /> Voice Receptionist MVP
-            </span>
-            <span className="text-[11px] font-mono text-muted-foreground">
-              {activeOrganization?.slug}
-            </span>
+    <div className="flex flex-col h-full bg-card overflow-hidden">
+      {/* Compact Voice Header Bar */}
+      <div className="border-b border-border/80 bg-muted/20 px-5 py-3.5 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <div className="size-7 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+            <Mic className="size-3.5" />
           </div>
-
-          <h2 className="text-base font-bold text-foreground flex items-center gap-2 tracking-tight">
-            <Stethoscope className="size-4 text-primary" />
-            <span>
-              {activeOrganization?.name || "Dental Clinic Receptionist"}
-            </span>
-          </h2>
+          <h3 className="text-sm sm:text-base font-semibold text-foreground tracking-tight">
+            Voice Receptionist
+          </h3>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           {/* Language Selector */}
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Languages className="size-3.5 text-primary shrink-0" />
@@ -125,13 +107,17 @@ export function VoiceReceptionist({
             >
               <SelectTrigger
                 aria-label="Speech Recognition Language"
-                className="h-7 text-[11px] font-medium bg-card border-border rounded-lg px-2 py-0.5 min-w-[130px]"
+                className="h-8 text-xs font-medium bg-background border-border/80 rounded-xl px-2.5 py-1 min-w-[130px] focus:ring-1 focus:ring-primary"
               >
                 <SelectValue placeholder="Select language" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-xl">
                 {SUPPORTED_LANGUAGES.map((lang) => (
-                  <SelectItem key={lang.code} value={lang.code}>
+                  <SelectItem
+                    key={lang.code}
+                    value={lang.code}
+                    className="rounded-lg text-xs"
+                  >
                     {lang.label}
                   </SelectItem>
                 ))}
@@ -144,7 +130,7 @@ export function VoiceReceptionist({
               onClick={onBackToChat}
               variant="outline"
               size="sm"
-              className="h-7 text-xs px-2.5 rounded-[2px] border-border text-muted-foreground hover:text-foreground"
+              className="h-8 text-xs px-3 rounded-xl border-border/80 text-muted-foreground hover:text-foreground"
             >
               Switch to Chat
             </Button>
@@ -153,7 +139,7 @@ export function VoiceReceptionist({
       </div>
 
       {/* Main Voice Interaction Body */}
-      <div className="p-5 space-y-5">
+      <div className="p-5 space-y-5 flex-1 overflow-y-auto">
         {/* Live Status and Error Reporting */}
         <VoiceStatus
           state={state}
@@ -193,23 +179,23 @@ export function VoiceReceptionist({
           showTextFallback={showTextFallback}
         />
 
-        {/* Fallback Text Input (Accessible for unsupported browsers or quiet environments) */}
+        {/* Fallback Text Input (Accessible for quiet environments) */}
         {showTextFallback && (
           <form
             onSubmit={handleSendText}
-            className="flex items-center gap-2 pt-2 border-t border-border"
+            className="flex items-center gap-2 pt-2 border-t border-border/60"
           >
             <Input
               value={fallbackText}
               onChange={(e) => setFallbackText(e.target.value)}
               placeholder="Type your message if voice input is unavailable..."
               disabled={state === "processing"}
-              className="h-9 text-xs border-border focus:ring-primary"
+              className="h-9 text-xs rounded-xl border-border/80 focus:ring-primary"
             />
             <Button
               type="submit"
               disabled={!fallbackText.trim() || state === "processing"}
-              className="h-9 px-3.5 text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-none"
+              className="h-9 px-3.5 text-xs font-semibold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-none"
             >
               <Send className="size-3.5" />
               <span className="sr-only sm:not-sr-only sm:ml-1.5">Send</span>
@@ -217,19 +203,14 @@ export function VoiceReceptionist({
           </form>
         )}
 
-        {/* Privacy & Browser Disclosure */}
-        <div className="pt-2 border-t border-border/60 flex flex-col sm:flex-row items-start sm:items-center justify-between text-[11px] text-muted-foreground gap-2">
+        {/* Concise Privacy Disclosure */}
+        <div className="pt-2 border-t border-border/60 flex items-center justify-between text-[11px] text-muted-foreground">
           <div className="flex items-center gap-1.5">
-            <ShieldCheck className="size-3 text-primary" />
+            <ShieldCheck className="size-3.5 text-primary" />
             <span>
-              Voice is processed via browser Web Speech API. No audio recordings
-              are retained on server storage.
+              Voice audio is processed locally via browser Web Speech API. No
+              audio recordings are retained on servers.
             </span>
-          </div>
-
-          <div className="flex items-center gap-2 font-mono text-[10px]">
-            <Clock className="size-3" />
-            <span>Timezone: {activeOrganization?.timezone || "UTC"}</span>
           </div>
         </div>
       </div>

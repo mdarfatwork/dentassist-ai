@@ -2,6 +2,7 @@
 
 import { type VoiceState } from "@/lib/voice/types";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import {
   MicOff,
   PhoneCall,
@@ -51,28 +52,28 @@ export function VoiceControls({
     state === "requesting_permission";
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl border border-border bg-card">
-      {/* Primary Voice Action Button */}
-      <div className="flex items-center gap-3 w-full sm:w-auto">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl border border-border/80 bg-muted/20 shadow-xs">
+      {/* Dominant Voice Action Button */}
+      <div className="flex items-center gap-2.5 w-full sm:w-auto">
         {!isSessionActive ? (
           <Button
             onClick={onStartSession}
             disabled={!isSupported}
-            className="w-full sm:w-auto gap-2 text-xs font-semibold h-9 px-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-none"
+            className="w-full sm:w-auto gap-2 text-xs font-semibold h-10 px-5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-xs"
           >
             {microphonePermissionState === "denied" ? (
               <>
-                <ShieldAlert className="size-3.5" />
+                <ShieldAlert className="size-4" />
                 <span>Microphone Blocked (Retry)</span>
               </>
             ) : microphonePermissionState === "prompt" ? (
               <>
-                <Mic className="size-3.5" />
-                <span>Allow Mic & Start Call</span>
+                <Mic className="size-4" />
+                <span>Allow Mic & Start</span>
               </>
             ) : (
               <>
-                <PhoneCall className="size-3.5" />
+                <PhoneCall className="size-4" />
                 <span>Start Voice Conversation</span>
               </>
             )}
@@ -80,9 +81,9 @@ export function VoiceControls({
         ) : state === "requesting_permission" ? (
           <Button
             disabled
-            className="w-full sm:w-auto gap-2 text-xs font-semibold h-9 px-4 bg-muted text-muted-foreground shadow-none"
+            className="w-full sm:w-auto gap-2 text-xs font-semibold h-10 px-5 rounded-xl bg-muted text-muted-foreground shadow-none"
           >
-            <Loader2 className="size-3.5 animate-spin" />
+            <Loader2 className="size-4 animate-spin" />
             <span>Requesting Microphone...</span>
           </Button>
         ) : (
@@ -91,7 +92,7 @@ export function VoiceControls({
               <Button
                 onClick={onInterrupt}
                 variant="destructive"
-                className="gap-1.5 text-xs font-semibold h-9 px-3 shadow-none animate-pulse"
+                className="gap-1.5 text-xs font-semibold h-10 px-3.5 rounded-xl shadow-xs animate-pulse"
                 title="Interrupt assistant speaking and talk now"
               >
                 <VolumeX className="size-3.5" />
@@ -103,7 +104,7 @@ export function VoiceControls({
               <Button
                 onClick={onStopListening}
                 variant="outline"
-                className="gap-1.5 text-xs font-semibold h-9 px-3 border-primary/40 text-primary hover:bg-primary/10 shadow-none"
+                className="gap-1.5 text-xs font-semibold h-10 px-3.5 rounded-xl border-primary/40 text-primary hover:bg-primary/10 shadow-xs"
                 title="Finish utterance and send immediately"
               >
                 <MicOff className="size-3.5" />
@@ -114,11 +115,11 @@ export function VoiceControls({
             <Button
               onClick={onEndSession}
               variant="outline"
-              className="gap-1.5 text-xs font-semibold h-9 px-3 border-border text-muted-foreground hover:text-foreground shadow-none"
+              className="gap-1.5 text-xs font-semibold h-10 px-3.5 rounded-xl border-border/80 text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:border-destructive/30 shadow-xs"
               title="Terminate voice receptionist session"
             >
               <PhoneOff className="size-3.5 text-destructive" />
-              <span>End Call</span>
+              <span>End Conversation</span>
             </Button>
           </div>
         )}
@@ -127,7 +128,7 @@ export function VoiceControls({
           <Button
             onClick={onRetry}
             variant="outline"
-            className="gap-1.5 text-xs font-semibold h-9 px-3 shadow-none"
+            className="gap-1.5 text-xs font-semibold h-10 px-3.5 rounded-xl shadow-xs"
           >
             <RotateCcw className="size-3.5" />
             <span>Retry</span>
@@ -135,23 +136,27 @@ export function VoiceControls({
         )}
       </div>
 
-      {/* Secondary Controls: Auto-listen toggle & Text Mode toggle */}
-      <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-border">
-        <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-muted-foreground hover:text-foreground transition-colors">
-          <input
-            type="checkbox"
+      {/* Secondary Settings: Continuous Mode & Text Mode toggle */}
+      <div className="flex items-center gap-5 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-border/60">
+        <div className="flex items-center gap-2">
+          <Switch
+            id="voice-continuous-mode"
             checked={isAutoListen}
-            onChange={(e) => onToggleAutoListen(e.target.checked)}
-            className="size-3.5 rounded-sm border-border text-primary focus:ring-primary focus:ring-1"
+            onCheckedChange={onToggleAutoListen}
           />
-          <span className="text-[11px] font-medium">Continuous Mode</span>
-        </label>
+          <label
+            htmlFor="voice-continuous-mode"
+            className="text-xs font-medium text-foreground cursor-pointer select-none"
+          >
+            Continuous Mode
+          </label>
+        </div>
 
         <Button
           onClick={onToggleTextFallback}
           variant="ghost"
           size="sm"
-          className="gap-1.5 text-xs text-muted-foreground hover:text-foreground h-8 px-2.5"
+          className="rounded-xl gap-1.5 text-xs text-muted-foreground hover:text-foreground h-8 px-2.5"
         >
           <MessageSquare className="size-3.5 text-primary" />
           <span>{showTextFallback ? "Hide Text" : "Text Fallback"}</span>
