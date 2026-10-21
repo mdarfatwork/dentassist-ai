@@ -11,6 +11,7 @@ import { runPhase6Tests } from "./calendar/phase6-google-calendar-scheduling.tes
 import { runVoiceReceptionistTests } from "./voice/voice-receptionist.test";
 import { runWidgetTests } from "./widget/widget.test";
 import { runPlaygroundTraceTests } from "./receptionist/playground-trace.test";
+import { runDashboardRoutesTests } from "./dashboard/dashboard-routes.test";
 
 async function main() {
   console.log("\n=======================================================");
@@ -43,6 +44,8 @@ async function main() {
     await runWidgetTests();
     console.log("");
     await runPlaygroundTraceTests();
+    console.log("");
+    await runDashboardRoutesTests();
     console.log("\n=======================================================");
     console.log("   All Phases 4, 5, 6, 7, 8 & 9 Automated Tests Passed! ✔");
     console.log("=======================================================\n");

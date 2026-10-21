@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { resolveLegacyTab } from "@/lib/dashboard/routes";
 import { trpc } from "@/lib/trpc/client";
 import { useOrganization } from "@/components/organization/organization-provider";
 import { Button } from "@/components/ui/button";
@@ -26,7 +28,7 @@ import {
 } from "lucide-react";
 
 interface DashboardOverviewProps {
-  onNavigateTab: (tab: string) => void;
+  onNavigateTab?: (tab: string) => void;
   userName?: string | null;
 }
 
@@ -82,8 +84,17 @@ export function DashboardOverview({
   onNavigateTab,
   userName,
 }: Readonly<DashboardOverviewProps>) {
+  const router = useRouter();
   const { activeOrganization } = useOrganization();
   const timezone = activeOrganization?.timezone || "UTC";
+
+  const handleNavigate = (target: string) => {
+    onNavigateTab?.(target);
+    const destination =
+      resolveLegacyTab(target) ||
+      (target.startsWith("/") ? target : `/dashboard/${target}`);
+    router.push(destination);
+  };
 
   const [scheduleFilter, setScheduleFilter] = useState<
     "today" | "upcoming" | "all"
@@ -277,7 +288,7 @@ export function DashboardOverview({
 
           <div className="flex flex-wrap items-center gap-2.5 shrink-0">
             <Button
-              onClick={() => onNavigateTab("appointments")}
+              onClick={() => handleNavigate("appointments")}
               className="gap-2 text-xs font-semibold shadow-xs"
             >
               <Plus className="size-4" /> Book Appointment
@@ -285,7 +296,7 @@ export function DashboardOverview({
 
             <Button
               variant="outline"
-              onClick={() => onNavigateTab("voice")}
+              onClick={() => handleNavigate("voice")}
               className="gap-2 text-xs font-semibold bg-background hover:bg-muted/60"
             >
               <Mic className="size-4 text-primary" /> Test Voice Receptionist
@@ -321,7 +332,7 @@ export function DashboardOverview({
               <span>{todayCompletedCount} completed</span>
               <button
                 type="button"
-                onClick={() => onNavigateTab("appointments")}
+                onClick={() => handleNavigate("appointments")}
                 className="text-primary hover:underline font-medium inline-flex items-center gap-1 text-[11px]"
               >
                 Schedule <ArrowRight className="size-3" />
@@ -355,7 +366,7 @@ export function DashboardOverview({
               <span>{allAppointments.length} total recorded</span>
               <button
                 type="button"
-                onClick={() => onNavigateTab("appointments")}
+                onClick={() => handleNavigate("appointments")}
                 className="text-primary hover:underline font-medium inline-flex items-center gap-1 text-[11px]"
               >
                 View all <ArrowRight className="size-3" />
@@ -397,7 +408,7 @@ export function DashboardOverview({
               </span>
               <button
                 type="button"
-                onClick={() => onNavigateTab("calendar")}
+                onClick={() => handleNavigate("calendar")}
                 className="text-primary hover:underline font-medium inline-flex items-center gap-1 text-[11px] shrink-0"
               >
                 {isCalendarConnected ? "Manage" : "Connect"}{" "}
@@ -436,7 +447,7 @@ export function DashboardOverview({
               </span>
               <button
                 type="button"
-                onClick={() => onNavigateTab("receptionist")}
+                onClick={() => handleNavigate("receptionist")}
                 className="text-primary hover:underline font-medium inline-flex items-center gap-1 text-[11px]"
               >
                 Inspect <ArrowRight className="size-3" />
@@ -516,7 +527,7 @@ export function DashboardOverview({
                 action={
                   <Button
                     size="sm"
-                    onClick={() => onNavigateTab("appointments")}
+                    onClick={() => handleNavigate("appointments")}
                     className="gap-2 text-xs"
                   >
                     <Plus className="size-3.5" /> Book an Appointment
@@ -541,7 +552,7 @@ export function DashboardOverview({
                       {displayedAppointments.slice(0, 7).map((appt) => (
                         <tr
                           key={appt.id}
-                          onClick={() => onNavigateTab("appointments")}
+                          onClick={() => handleNavigate("appointments")}
                           className="hover:bg-muted/30 cursor-pointer transition-colors"
                         >
                           <td className="py-3 px-3.5 font-mono text-xs font-semibold text-foreground whitespace-nowrap">
@@ -627,7 +638,7 @@ export function DashboardOverview({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onNavigateTab("appointments")}
+                    onClick={() => handleNavigate("appointments")}
                     className="gap-1.5 text-xs text-primary hover:text-primary"
                   >
                     Manage Full Clinical Calendar{" "}
@@ -678,7 +689,7 @@ export function DashboardOverview({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => onNavigateTab("calendar")}
+                    onClick={() => handleNavigate("calendar")}
                     className="text-xs h-7"
                   >
                     {isCalendarConnected
@@ -727,7 +738,7 @@ export function DashboardOverview({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => onNavigateTab("receptionist")}
+                    onClick={() => handleNavigate("receptionist")}
                     className="text-xs h-7"
                   >
                     View Receptionist
@@ -783,7 +794,7 @@ export function DashboardOverview({
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => onNavigateTab(item.tab)}
+                  onClick={() => handleNavigate(item.tab)}
                   className="w-full text-left p-3 hover:bg-muted/50 transition-colors flex items-center justify-between gap-3 group"
                 >
                   <div className="flex items-start gap-2.5 min-w-0">
@@ -825,7 +836,7 @@ export function DashboardOverview({
             <div className="space-y-2">
               <button
                 type="button"
-                onClick={() => onNavigateTab("voice")}
+                onClick={() => handleNavigate("voice")}
                 className="w-full text-left p-3 rounded-lg border border-border bg-muted/20 hover:bg-muted/60 transition-colors flex items-center justify-between group"
               >
                 <div className="flex items-center gap-2.5">
@@ -846,7 +857,7 @@ export function DashboardOverview({
 
               <button
                 type="button"
-                onClick={() => onNavigateTab("widget")}
+                onClick={() => handleNavigate("widget")}
                 className="w-full text-left p-3 rounded-lg border border-border bg-muted/20 hover:bg-muted/60 transition-colors flex items-center justify-between group"
               >
                 <div className="flex items-center gap-2.5">
@@ -867,7 +878,7 @@ export function DashboardOverview({
 
               <button
                 type="button"
-                onClick={() => onNavigateTab("knowledge")}
+                onClick={() => handleNavigate("knowledge")}
                 className="w-full text-left p-3 rounded-lg border border-border bg-muted/20 hover:bg-muted/60 transition-colors flex items-center justify-between group"
               >
                 <div className="flex items-center gap-2.5">

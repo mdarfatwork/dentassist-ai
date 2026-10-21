@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useId } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { OrganizationSwitcher } from "@/components/organization/organization-switcher";
 import { LogoutButton } from "@/components/auth/logout-button";
 import {
@@ -34,7 +36,7 @@ export interface NavItemConfig {
     | "destructive"
     | "outline"
     | "info";
-  href?: string;
+  href: string;
 }
 
 export interface NavGroupConfig {
@@ -43,8 +45,8 @@ export interface NavGroupConfig {
 }
 
 interface DashboardSidebarProps {
-  activeTab: string;
-  onSelectTab: (tabId: string) => void;
+  activeTab?: string;
+  onSelectTab?: (tabId: string) => void;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
   isMobile?: boolean;
@@ -77,6 +79,7 @@ export function DashboardSidebar({
   isCalendarConnected = false,
 }: Readonly<DashboardSidebarProps>) {
   const headingId = useId();
+  const pathname = usePathname();
 
   const navGroups: NavGroupConfig[] = [
     {
@@ -86,6 +89,7 @@ export function DashboardSidebar({
           id: "overview",
           label: "Practice Overview",
           icon: LayoutDashboard,
+          href: "/dashboard",
         },
         {
           id: "appointments",
@@ -93,6 +97,7 @@ export function DashboardSidebar({
           icon: CalendarCheck,
           badge: appointmentsCount > 0 ? appointmentsCount : undefined,
           badgeVariant: "secondary",
+          href: "/dashboard/appointments",
         },
         {
           id: "dentists",
@@ -100,6 +105,7 @@ export function DashboardSidebar({
           icon: Stethoscope,
           badge: dentistsCount > 0 ? dentistsCount : undefined,
           badgeVariant: "outline",
+          href: "/dashboard/practitioners",
         },
         {
           id: "services",
@@ -107,11 +113,13 @@ export function DashboardSidebar({
           icon: Sparkles,
           badge: servicesCount > 0 ? servicesCount : undefined,
           badgeVariant: "outline",
+          href: "/dashboard/services",
         },
         {
           id: "hours",
           label: "Working Hours",
           icon: Clock,
+          href: "/dashboard/working-hours",
         },
         {
           id: "holidays",
@@ -119,6 +127,7 @@ export function DashboardSidebar({
           icon: CalendarOff,
           badge: holidaysCount > 0 ? holidaysCount : undefined,
           badgeVariant: "outline",
+          href: "/dashboard/holidays",
         },
       ],
     },
@@ -131,21 +140,25 @@ export function DashboardSidebar({
           icon: BookOpen,
           badge: docsCount > 0 ? docsCount : undefined,
           badgeVariant: "outline",
+          href: "/dashboard/knowledge-base",
         },
         {
           id: "receptionist",
           label: "AI Receptionist",
           icon: Bot,
+          href: "/dashboard/receptionist",
         },
         {
           id: "voice",
           label: "Voice Receptionist",
           icon: Mic,
+          href: "/dashboard/voice-receptionist",
         },
         {
           id: "widget",
           label: "Website Widget",
           icon: Globe,
+          href: "/dashboard/widget",
         },
         {
           id: "calendar",
@@ -153,6 +166,7 @@ export function DashboardSidebar({
           icon: Calendar,
           badge: isCalendarConnected ? "Synced" : undefined,
           badgeVariant: "success",
+          href: "/dashboard/calendar",
         },
       ],
     },
@@ -163,13 +177,14 @@ export function DashboardSidebar({
           id: "profile",
           label: "Practice Profile",
           icon: Building2,
+          href: "/dashboard/settings",
         },
       ],
     },
   ];
 
   const handleItemClick = (id: string) => {
-    onSelectTab(id);
+    onSelectTab?.(id);
     if (isMobile && onCloseMobile) {
       onCloseMobile();
     }
@@ -288,14 +303,20 @@ export function DashboardSidebar({
             <div className="space-y-0.5">
               {group.items.map((item) => {
                 const Icon = item.icon;
-                const isActive = activeTab === item.id;
+                const isActive =
+                  item.href === "/dashboard"
+                    ? pathname === "/dashboard" || pathname === "/dashboard/"
+                    : pathname === item.href ||
+                      pathname.startsWith(`${item.href}/`) ||
+                      activeTab === item.id;
 
                 return (
-                  <button
+                  <Link
                     key={item.id}
-                    type="button"
+                    href={item.href}
                     onClick={() => handleItemClick(item.id)}
                     title={collapsed && !isMobile ? item.label : undefined}
+                    aria-current={isActive ? "page" : undefined}
                     className={`w-full flex items-center rounded-lg text-xs transition-colors cursor-pointer group ${
                       collapsed && !isMobile
                         ? "justify-center p-2.5"
@@ -330,7 +351,7 @@ export function DashboardSidebar({
                         {item.badge}
                       </span>
                     )}
-                  </button>
+                  </Link>
                 );
               })}
             </div>

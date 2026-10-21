@@ -1,80 +1,31 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import React, { useState, useEffect, Suspense, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { trpc } from "@/lib/trpc/client";
 import { useOrganization } from "@/components/organization/organization-provider";
 import { DashboardSidebar } from "./dashboard-sidebar";
 import { DashboardHeader } from "./dashboard-header";
-import { DashboardOverview } from "./dashboard-overview";
-
-// Clinical Workspace Sub-Managers
-import { AppointmentManager } from "@/components/appointment/appointment-manager";
-import { DentistManager } from "@/components/clinic/dentist-manager";
-import { ServiceManager } from "@/components/clinic/service-manager";
-import { WorkingHoursEditor } from "@/components/clinic/working-hours-editor";
-import { HolidayManager } from "@/components/clinic/holiday-manager";
-import { GoogleCalendarCard } from "@/components/clinic/google-calendar-card";
-import { ClinicProfileForm } from "@/components/clinic/clinic-profile-form";
-import { ClinicPhotoGallery } from "@/components/clinic/clinic-photo-gallery";
-import { KnowledgeManager } from "@/components/knowledge/knowledge-manager";
-import { ReceptionistPlayground } from "@/components/receptionist/receptionist-playground";
-import { WebsiteWidgetManager } from "@/components/widget/website-widget-manager";
+import { getDashboardRouteMeta } from "@/lib/dashboard/routes";
 
 interface DashboardShellProps {
+  children?: ReactNode;
   userName?: string | null;
   userEmail?: string | null;
   emailVerified?: boolean;
-  initialTab?: string;
 }
 
-const TAB_META: Record<string, { title: string; group: string }> = {
-  overview: { title: "Practice Overview", group: "Workspace" },
-  appointments: { title: "Appointments Calendar", group: "Workspace" },
-  dentists: { title: "Practitioners Roster", group: "Workspace" },
-  services: { title: "Dental Services", group: "Workspace" },
-  hours: { title: "Operating Hours", group: "Workspace" },
-  holidays: { title: "Closures & Holidays", group: "Workspace" },
-  knowledge: { title: "Knowledge Base", group: "AI & Integrations" },
-  receptionist: { title: "AI Receptionist", group: "AI & Integrations" },
-  voice: { title: "Voice Receptionist", group: "AI & Integrations" },
-  widget: { title: "Website Widget", group: "AI & Integrations" },
-  calendar: { title: "Google Calendar", group: "AI & Integrations" },
-  profile: { title: "Practice Profile", group: "Settings" },
-};
-
 function DashboardShellContent({
+  children,
   userName,
   userEmail,
   emailVerified,
-  initialTab = "overview",
 }: Readonly<DashboardShellProps>) {
-  const searchParams = useSearchParams();
+  const pathname = usePathname();
   const { activeOrganization } = useOrganization();
-
-  const paramTab = searchParams.get("tab");
-  const [internalTab, setInternalTab] = useState<string>(
-    paramTab && TAB_META[paramTab] ? paramTab : initialTab,
-  );
-  const activeTab = paramTab && TAB_META[paramTab] ? paramTab : internalTab;
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  // Handle tab navigation & URL push
-  const handleSelectTab = (tabId: string) => {
-    setInternalTab(tabId);
-    setMobileMenuOpen(false);
-    const newParams = new URLSearchParams(window.location.search);
-    if (tabId === "overview") {
-      newParams.delete("tab");
-    } else {
-      newParams.set("tab", tabId);
-    }
-    const query = newParams.toString();
-    const newPath = query ? `/dashboard?${query}` : "/dashboard";
-    window.history.pushState(null, "", newPath);
-  };
 
   // Close mobile drawer on Escape key
   useEffect(() => {
@@ -87,7 +38,7 @@ function DashboardShellContent({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Real data queries for counts and status
+  // Real data queries for counts and status badges
   const dentistsQuery = trpc.dentist.list.useQuery();
   const servicesQuery = trpc.service.list.useQuery();
   const hoursQuery = trpc.workingHours.get.useQuery();
@@ -120,18 +71,14 @@ function DashboardShellContent({
     (isCalendarConnected ? 1 : 0);
   const completionPercentage = Math.round((completedCount / 7) * 100);
 
-  const currentTabMeta = TAB_META[activeTab] || {
-    title: "Practice Workspace",
-    group: "Dashboard",
-  };
+  const currentRouteMeta = getDashboardRouteMeta(pathname);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex font-sans">
       {/* Desktop Sticky/Fixed Left Sidebar */}
       <div className="hidden lg:block shrink-0 h-screen sticky top-0 z-30">
         <DashboardSidebar
-          activeTab={activeTab}
-          onSelectTab={handleSelectTab}
+          activeTab={currentRouteMeta.id}
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
           userName={userName}
@@ -159,8 +106,7 @@ function DashboardShellContent({
           {/* Drawer panel */}
           <div className="fixed inset-y-0 left-0 w-[270px] max-w-[85vw] bg-sidebar z-50 shadow-2xl transition-transform animate-in slide-in-from-left duration-200 flex flex-col">
             <DashboardSidebar
-              activeTab={activeTab}
-              onSelectTab={handleSelectTab}
+              activeTab={currentRouteMeta.id}
               isMobile={true}
               onCloseMobile={() => setMobileMenuOpen(false)}
               userName={userName}
@@ -181,8 +127,8 @@ function DashboardShellContent({
       <div className="flex-1 flex flex-col min-w-0 min-h-screen">
         {/* Compact Top Header */}
         <DashboardHeader
-          activeTabTitle={currentTabMeta.title}
-          activeTabGroup={currentTabMeta.group}
+          activeTabTitle={currentRouteMeta.title}
+          activeTabGroup={currentRouteMeta.group}
           onOpenMobileMenu={() => setMobileMenuOpen(true)}
           userName={userName}
           userEmail={userEmail}
@@ -191,43 +137,7 @@ function DashboardShellContent({
 
         {/* Operational Workspace Body */}
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {activeTab === "overview" && (
-            <DashboardOverview
-              onNavigateTab={handleSelectTab}
-              userName={userName}
-            />
-          )}
-
-          {activeTab === "appointments" && <AppointmentManager />}
-
-          {activeTab === "dentists" && <DentistManager />}
-
-          {activeTab === "services" && <ServiceManager />}
-
-          {activeTab === "hours" && <WorkingHoursEditor />}
-
-          {activeTab === "holidays" && <HolidayManager />}
-
-          {activeTab === "knowledge" && <KnowledgeManager />}
-
-          {activeTab === "receptionist" && (
-            <ReceptionistPlayground initialMode="chat" />
-          )}
-
-          {activeTab === "voice" && (
-            <ReceptionistPlayground initialMode="voice" />
-          )}
-
-          {activeTab === "widget" && <WebsiteWidgetManager />}
-
-          {activeTab === "calendar" && <GoogleCalendarCard />}
-
-          {activeTab === "profile" && (
-            <div className="space-y-6">
-              <ClinicProfileForm />
-              <ClinicPhotoGallery />
-            </div>
-          )}
+          {children}
         </main>
       </div>
     </div>

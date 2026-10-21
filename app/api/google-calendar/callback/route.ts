@@ -23,13 +23,16 @@ export async function GET(req: NextRequest) {
   if (error) {
     console.warn("[GoogleCalendarCallback] Google returned error:", error);
     return NextResponse.redirect(
-      new URL(`/dashboard?calendarError=${encodeURIComponent(error)}`, baseUrl),
+      new URL(
+        `/dashboard/calendar?calendarError=${encodeURIComponent(error)}`,
+        baseUrl,
+      ),
     );
   }
 
   if (!code || !state) {
     return NextResponse.redirect(
-      new URL("/dashboard?calendarError=missing_params", baseUrl),
+      new URL("/dashboard/calendar?calendarError=missing_params", baseUrl),
     );
   }
 
@@ -39,7 +42,7 @@ export async function GET(req: NextRequest) {
 
     if (!session?.user) {
       return NextResponse.redirect(
-        new URL("/login?callbackUrl=/dashboard", baseUrl),
+        new URL("/login?callbackUrl=/dashboard/calendar", baseUrl),
       );
     }
 
@@ -75,7 +78,10 @@ export async function GET(req: NextRequest) {
     );
 
     return NextResponse.redirect(
-      new URL("/dashboard?calendarConnected=true&selectCalendar=true", baseUrl),
+      new URL(
+        "/dashboard/calendar?calendarConnected=true&selectCalendar=true",
+        baseUrl,
+      ),
     );
   } catch (err: unknown) {
     console.error("[GoogleCalendarCallback] OAuth callback error:", err);
@@ -83,7 +89,7 @@ export async function GET(req: NextRequest) {
       err instanceof Error ? err.message : "Failed to connect Google Calendar.";
     return NextResponse.redirect(
       new URL(
-        `/dashboard?calendarError=${encodeURIComponent(message)}`,
+        `/dashboard/calendar?calendarError=${encodeURIComponent(message)}`,
         baseUrl,
       ),
     );

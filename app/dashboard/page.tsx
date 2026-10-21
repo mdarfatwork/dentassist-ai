@@ -1,57 +1,71 @@
-import { headers, cookies } from "next/headers";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth/auth";
-import {
-  getUserOrganizations,
-  getActiveOrganization,
-} from "@/lib/auth/organization";
-import { ACTIVE_ORG_COOKIE_NAME } from "@/lib/organization/cookies";
-import { OrganizationProvider } from "@/components/organization/organization-provider";
-import { OrganizationEmptyState } from "@/components/organization/organization-empty-state";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { DashboardOverview } from "@/components/dashboard/dashboard-overview";
+import { resolveLegacyTab } from "@/lib/dashboard/routes";
 
 export const metadata = {
-  title: "Clinical Dashboard | DentAssist AI",
+  title: "Practice Overview | DentAssist AI",
   description:
-    "Daily operations, appointments scheduling, and autonomous AI receptionist management.",
+    "Real-time dental clinic operations, daily schedule, autonomous receptionist activity, and workspace health.",
 };
 
-export default async function DashboardPage() {
-  const reqHeaders = await headers();
-  const cookieStore = await cookies();
+interface DashboardPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
 
+export default async function DashboardPage({
+  searchParams,
+}: Readonly<DashboardPageProps>) {
+  const params = await searchParams;
+
+  // 1. Legacy Tab Compatibility Redirect (/dashboard?tab=...)
+  const tabParam = typeof params.tab === "string" ? params.tab : undefined;
+  if (tabParam) {
+    const targetRoute = resolveLegacyTab(tabParam);
+    if (targetRoute && targetRoute !== "/dashboard") {
+      const remainingParams = new URLSearchParams();
+      for (const [key, value] of Object.entries(params)) {
+        if (key === "tab") continue;
+        if (Array.isArray(value)) {
+          for (const v of value) remainingParams.append(key, v);
+        } else if (typeof value === "string") {
+          remainingParams.append(key, value);
+        }
+      }
+      const qs = remainingParams.toString();
+      const destination = qs ? `${targetRoute}?${qs}` : targetRoute;
+      redirect(destination);
+    }
+  }
+
+  // 2. Google Calendar OAuth Callback Query Params Legacy Fallback
+  if (
+    params.calendarConnected !== undefined ||
+    params.calendarError !== undefined ||
+    params.selectCalendar !== undefined
+  ) {
+    const remainingParams = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (key === "tab") continue;
+      if (Array.isArray(value)) {
+        for (const v of value) remainingParams.append(key, v);
+      } else if (typeof value === "string") {
+        remainingParams.append(key, value);
+      }
+    }
+    const qs = remainingParams.toString();
+    const destination = qs
+      ? `/dashboard/calendar?${qs}`
+      : "/dashboard/calendar";
+    redirect(destination);
+  }
+
+  // 3. Render Default Operations Landing Page
+  const reqHeaders = await headers();
   const sessionData = await auth.api.getSession({
     headers: reqHeaders,
   });
 
-  if (!sessionData?.user) {
-    redirect("/login");
-  }
-
-  const { user } = sessionData;
-
-  const activeOrgCookie =
-    cookieStore.get(ACTIVE_ORG_COOKIE_NAME)?.value ?? null;
-  const organizations = await getUserOrganizations(user.id);
-  const activeOrg = await getActiveOrganization(user.id, activeOrgCookie);
-
-  return (
-    <OrganizationProvider
-      initialActiveOrg={activeOrg}
-      initialOrganizations={organizations}
-    >
-      {organizations.length === 0 ? (
-        <div className="min-h-screen bg-background flex items-center justify-center p-6">
-          <OrganizationEmptyState userName={user.name} />
-        </div>
-      ) : (
-        <DashboardShell
-          userName={user.name}
-          userEmail={user.email}
-          emailVerified={user.emailVerified}
-          initialTab="overview"
-        />
-      )}
-    </OrganizationProvider>
-  );
+  return <DashboardOverview userName={sessionData?.user?.name} />;
 }

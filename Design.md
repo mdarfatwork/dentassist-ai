@@ -191,7 +191,8 @@ All UI components are built around reusable primitives in `@/components/ui/` and
 
 ### Component Directory
 
-- `components/dashboard/dashboard-shell.tsx` — Master layout shell, active tab state, URL query synchronization (`?tab=...`), and mobile drawer state.
+- `components/dashboard/dashboard-shell.tsx` — Master layout shell, pathname-based navigation synchronization, and mobile drawer state.
+- `lib/dashboard/routes.ts` — Central routing definitions, metadata resolution, and legacy tab compatibility mapping.
 - `components/dashboard/dashboard-sidebar.tsx` — Responsive left navigation sidebar with desktop collapse and mobile drawer support.
 - `components/dashboard/dashboard-header.tsx` — Compact top header with breadcrumbs and actions.
 - `components/dashboard/dashboard-overview.tsx` — Operations-first dashboard with KPIs, daily schedule, and checklist.
