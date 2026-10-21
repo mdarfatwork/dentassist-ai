@@ -21,13 +21,13 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import {
-  Credenza,
-  CredenzaContent,
-  CredenzaDescription,
-  CredenzaFooter,
-  CredenzaHeader,
-  CredenzaTitle,
-} from "@/components/ui/credenza";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Sparkles,
   Plus,
@@ -194,9 +194,9 @@ export function ServiceManager() {
     if (services.length === 0) {
       return (
         /* Empty State */
-        <div className="flex flex-col items-center justify-center py-10 px-4 text-center rounded-[4px] border border-dashed border-border bg-muted/20">
-          <div className="size-9 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center mb-2.5">
-            <Sparkles className="size-4" />
+        <div className="flex flex-col items-center justify-center py-12 px-4 text-center rounded-2xl border border-dashed border-border/80 bg-muted/20">
+          <div className="size-10 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center mb-3">
+            <Sparkles className="size-5" />
           </div>
           <h3 className="text-sm font-semibold text-foreground">
             No treatments configured
@@ -208,7 +208,7 @@ export function ServiceManager() {
           <Button
             onClick={openAddDialog}
             size="sm"
-            className="gap-1.5 font-semibold"
+            className="gap-1.5 rounded-lg font-semibold"
           >
             <Plus className="size-3.5" /> Add First Service
           </Button>
@@ -218,20 +218,20 @@ export function ServiceManager() {
 
     return (
       /* Services Grid */
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
         {services.map((service) => (
           <div
             key={service.id}
-            className="group relative flex flex-col justify-between p-3.5 rounded-[4px] border border-border bg-card hover:border-primary/40 transition-colors"
+            className="group relative flex flex-col justify-between p-4 rounded-lg border border-border/80 bg-card hover:border-primary/40 hover:shadow-xs transition-all"
           >
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <div className="flex items-start justify-between gap-2">
-                <h4 className="font-semibold text-xs text-foreground">
+                <h4 className="font-semibold text-xs text-foreground leading-snug group-hover:text-primary transition-colors">
                   {service.name}
                 </h4>
                 <Badge
                   variant="secondary"
-                  className="font-mono text-[10px] shrink-0 gap-1 font-semibold"
+                  className="rounded-full px-2.5 py-0.5 font-mono text-[10px] shrink-0 gap-1 font-semibold border-border/70"
                 >
                   <Clock className="size-2.5 text-primary" />{" "}
                   {service.durationMinutes}m
@@ -239,7 +239,7 @@ export function ServiceManager() {
               </div>
 
               {service.description ? (
-                <p className="text-xs text-muted-foreground line-clamp-2 leading-normal">
+                <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                   {service.description}
                 </p>
               ) : (
@@ -254,8 +254,9 @@ export function ServiceManager() {
                 variant="ghost"
                 size="icon-xs"
                 onClick={() => openEditDialog(service)}
-                className="text-muted-foreground hover:text-foreground"
-                title="Edit Service"
+                className="rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors"
+                title={`Edit ${service.name}`}
+                aria-label={`Edit ${service.name}`}
               >
                 <Pencil className="size-3.5" />
                 <span className="sr-only">Edit {service.name}</span>
@@ -264,8 +265,9 @@ export function ServiceManager() {
                 variant="ghost"
                 size="icon-xs"
                 onClick={() => openDeleteDialog(service)}
-                className="text-muted-foreground hover:text-destructive"
-                title="Delete Service"
+                className="rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                title={`Delete ${service.name}`}
+                aria-label={`Delete ${service.name}`}
               >
                 <Trash2 className="size-3.5" />
                 <span className="sr-only">Delete {service.name}</span>
@@ -278,8 +280,8 @@ export function ServiceManager() {
   };
 
   return (
-    <Card className="border-border shadow-xs">
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <Card className="rounded-2xl border-border/80 shadow-xs overflow-hidden">
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 border-b border-border/50">
         <div>
           <CardTitle className="text-xl font-bold flex items-center gap-2">
             <Sparkles className="size-5 text-primary" /> Treatments & Services
@@ -293,45 +295,50 @@ export function ServiceManager() {
         <Button
           onClick={openAddDialog}
           size="sm"
-          className="gap-1.5 self-start sm:self-auto"
+          className="gap-1.5 self-start sm:self-auto rounded-lg font-semibold"
         >
           <Plus className="size-4" /> Add Service
         </Button>
       </CardHeader>
 
-      <CardContent>{renderContent()}</CardContent>
+      <CardContent className="p-5 sm:p-6">{renderContent()}</CardContent>
 
       {/* Add / Edit Dialog */}
-      <Credenza
+      <Dialog
         open={isAddOpen || editingService !== null}
         onOpenChange={(open) => {
-          if (!open) closeDialogs();
+          if (!open && !isSaving) closeDialogs();
         }}
       >
-        <CredenzaContent className="sm:max-w-md">
-          <form onSubmit={handleSave}>
-            <CredenzaHeader>
-              <div className="size-8 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center mb-1">
-                <Sparkles className="size-4" />
+        <DialogContent className="max-w-[480px] rounded-2xl p-6 gap-4">
+          <form onSubmit={handleSave} className="space-y-4">
+            <div className="flex items-start gap-3.5">
+              <div className="size-10 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0 mt-0.5">
+                <Sparkles className="size-5" />
               </div>
-              <CredenzaTitle>
-                {editingService ? "Edit Service" : "Add Dental Service"}
-              </CredenzaTitle>
-              <CredenzaDescription>
-                Configure service duration and patient description.
-              </CredenzaDescription>
-            </CredenzaHeader>
+              <DialogHeader className="gap-1 flex-1 pr-4">
+                <DialogTitle className="text-base font-semibold text-foreground leading-snug">
+                  {editingService ? "Edit Service" : "Add Dental Service"}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
+                  Configure service duration and patient description.
+                </DialogDescription>
+              </DialogHeader>
+            </div>
 
             {actionError && (
-              <Alert variant="destructive" className="my-3">
+              <Alert variant="destructive" className="rounded-xl my-2">
                 <AlertCircle className="size-4" />
                 <AlertDescription>{actionError}</AlertDescription>
               </Alert>
             )}
 
-            <div className="flex flex-col gap-4 py-3">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="service-name" className="text-sm font-medium">
+            <div className="flex flex-col gap-3.5 py-1">
+              <div className="flex flex-col gap-1.5">
+                <Label
+                  htmlFor="service-name"
+                  className="text-xs font-semibold text-foreground"
+                >
                   Service Name <span className="text-destructive">*</span>
                 </Label>
                 <Input
@@ -351,6 +358,7 @@ export function ServiceManager() {
                   disabled={isSaving}
                   autoFocus
                   aria-invalid={!!fieldErrors.name}
+                  className="rounded-lg"
                 />
                 {fieldErrors.name && (
                   <p className="text-xs text-destructive">{fieldErrors.name}</p>
@@ -358,10 +366,10 @@ export function ServiceManager() {
               </div>
 
               {/* Duration with presets */}
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1.5">
                 <Label
                   htmlFor="service-duration"
-                  className="text-sm font-medium flex items-center justify-between"
+                  className="text-xs font-semibold text-foreground flex items-center justify-between"
                 >
                   <span className="flex items-center gap-1.5">
                     <Clock className="size-3.5 text-primary" /> Duration
@@ -378,7 +386,7 @@ export function ServiceManager() {
                       key={preset}
                       type="button"
                       onClick={() => setDurationMinutes(preset)}
-                      className={`text-xs px-2.5 py-1 rounded-md border font-medium transition-colors cursor-pointer ${
+                      className={`text-xs px-2.5 py-1 rounded-lg border font-medium transition-colors cursor-pointer ${
                         durationMinutes === preset
                           ? "bg-primary text-primary-foreground border-primary"
                           : "bg-muted/60 text-muted-foreground border-border hover:bg-muted"
@@ -399,6 +407,7 @@ export function ServiceManager() {
                   onChange={(e) => setDurationMinutes(Number(e.target.value))}
                   disabled={isSaving}
                   aria-invalid={!!fieldErrors.durationMinutes}
+                  className="rounded-lg"
                 />
                 {fieldErrors.durationMinutes && (
                   <p className="text-xs text-destructive">
@@ -407,10 +416,10 @@ export function ServiceManager() {
                 )}
               </div>
 
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1.5">
                 <Label
                   htmlFor="service-description"
-                  className="text-sm font-medium flex items-center gap-1.5"
+                  className="text-xs font-semibold text-foreground flex items-center gap-1.5"
                 >
                   <FileText className="size-3.5 text-primary" /> Description
                   (Optional)
@@ -422,23 +431,25 @@ export function ServiceManager() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="e.g. Standard 6-month preventive cleaning and polishing."
                   disabled={isSaving}
+                  className="rounded-lg"
                 />
               </div>
             </div>
 
-            <CredenzaFooter>
+            <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 pt-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={closeDialogs}
                 disabled={isSaving}
+                className="rounded-lg font-medium"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isSaving || !name.trim()}
-                className="gap-1.5"
+                className="gap-1.5 rounded-lg font-medium"
               >
                 {isSaving ? (
                   <>
@@ -451,43 +462,48 @@ export function ServiceManager() {
                   </>
                 )}
               </Button>
-            </CredenzaFooter>
+            </DialogFooter>
           </form>
-        </CredenzaContent>
-      </Credenza>
+        </DialogContent>
+      </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <Credenza
+      {/* Safe Delete Confirmation Dialog */}
+      <Dialog
         open={deletingService !== null}
         onOpenChange={(open) => {
-          if (!open) closeDialogs();
+          if (!open && !deleteMutation.isPending) closeDialogs();
         }}
       >
-        <CredenzaContent className="sm:max-w-md">
-          <CredenzaHeader>
-            <div className="size-8 rounded-[3px] bg-destructive/10 text-destructive flex items-center justify-center mb-1">
-              <AlertCircle className="size-4" />
+        <DialogContent className="max-w-[460px] rounded-2xl p-6 gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="size-10 rounded-full bg-destructive/10 text-destructive flex items-center justify-center shrink-0 mt-0.5">
+              <AlertCircle className="size-5" />
             </div>
-            <CredenzaTitle>Delete {deletingService?.name}?</CredenzaTitle>
-            <CredenzaDescription>
-              Are you sure you want to delete this treatment? This action cannot
-              be undone.
-            </CredenzaDescription>
-          </CredenzaHeader>
+            <DialogHeader className="gap-1 flex-1 pr-4">
+              <DialogTitle className="text-base font-semibold text-foreground leading-snug">
+                Delete {deletingService?.name}?
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
+                Are you sure you want to delete this treatment? This action
+                cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+          </div>
 
           {actionError && (
-            <Alert variant="destructive" className="my-2">
+            <Alert variant="destructive" className="rounded-xl my-1">
               <AlertCircle className="size-4" />
               <AlertDescription>{actionError}</AlertDescription>
             </Alert>
           )}
 
-          <CredenzaFooter className="mt-4">
+          <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 pt-2">
             <Button
               type="button"
               variant="outline"
               onClick={closeDialogs}
               disabled={deleteMutation.isPending}
+              className="rounded-lg font-medium"
             >
               Cancel
             </Button>
@@ -496,7 +512,7 @@ export function ServiceManager() {
               variant="destructive"
               onClick={handleDeleteConfirm}
               disabled={deleteMutation.isPending}
-              className="gap-1.5"
+              className="gap-1.5 rounded-lg font-medium"
             >
               {deleteMutation.isPending ? (
                 <>
@@ -504,13 +520,13 @@ export function ServiceManager() {
                 </>
               ) : (
                 <>
-                  <Trash2 className="size-4" /> Delete Service
+                  <Trash2 className="size-3.5" /> Delete Service
                 </>
               )}
             </Button>
-          </CredenzaFooter>
-        </CredenzaContent>
-      </Credenza>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
