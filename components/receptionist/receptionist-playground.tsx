@@ -15,6 +15,7 @@ import {
 import {
   Bot,
   ArrowUp,
+  Square,
   RotateCcw,
   Mic,
   MessageSquare,
@@ -124,29 +125,60 @@ function parseSSELines(lines: string[]): ReceptionistStreamEvent[] {
 async function consumeSSEStream(
   stream: ReadableStream<Uint8Array>,
   onEvent: (event: ReceptionistStreamEvent) => void,
+  signal?: AbortSignal,
 ) {
   const reader = stream.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n\n");
-    buffer = lines.pop() || "";
-
-    const events = parseSSELines(lines);
-    for (const event of events) {
-      onEvent(event);
+  const onAbort = () => {
+    try {
+      void reader.cancel();
+    } catch {
+      // ignore
     }
+  };
+
+  if (signal) {
+    if (signal.aborted) {
+      void reader.cancel();
+      return;
+    }
+    signal.addEventListener("abort", onAbort, { once: true });
   }
 
-  if (buffer.trim()) {
-    const remainingEvents = parseSSELines([buffer]);
-    for (const event of remainingEvents) {
-      onEvent(event);
+  try {
+    while (true) {
+      if (signal?.aborted) break;
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n\n");
+      buffer = lines.pop() || "";
+
+      const events = parseSSELines(lines);
+      for (const event of events) {
+        if (signal?.aborted) break;
+        onEvent(event);
+      }
+    }
+
+    if (!signal?.aborted && buffer.trim()) {
+      const remainingEvents = parseSSELines([buffer]);
+      for (const event of remainingEvents) {
+        if (signal?.aborted) break;
+        onEvent(event);
+      }
+    }
+  } finally {
+    if (signal) {
+      signal.removeEventListener("abort", onAbort);
+    }
+    try {
+      reader.releaseLock();
+    } catch {
+      // ignore if already released or closed
     }
   }
 }
@@ -188,6 +220,7 @@ export function ReceptionistPlayground({
   const messageCounterRef = useRef(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // tRPC mutations & queries
   const createConversationMutation =
@@ -203,17 +236,32 @@ export function ReceptionistPlayground({
     scrollToBottom();
   }, [messages]);
 
+  // Cancel generation on component unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
   // Auto-grow composer textarea
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
     textarea.style.height = "auto";
-    const nextHeight = Math.min(Math.max(textarea.scrollHeight, 38), 160);
+    const nextHeight = Math.min(Math.max(textarea.scrollHeight, 24), 160);
     textarea.style.height = `${nextHeight}px`;
   }, [inputMessage]);
 
   // Start fresh conversation thread
   const handleNewConversation = async () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsGenerating(false);
+
     try {
       const conv = await createConversationMutation.mutateAsync();
       setConversationId(conv.id);
@@ -234,6 +282,12 @@ export function ReceptionistPlayground({
 
   // Clear conversation with server reset
   const handleConfirmClear = async () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsGenerating(false);
+
     if (conversationId) {
       try {
         await clearConversationMutation.mutateAsync({ conversationId });
@@ -268,10 +322,26 @@ export function ReceptionistPlayground({
     [messages],
   );
 
+  // Stop ongoing AI response generation immediately
+  const handleStop = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsGenerating(false);
+  }, []);
+
   // Send message through real AI Core
   const handleSend = async (messageToSend?: string) => {
     const text = (messageToSend || inputMessage).trim();
     if (!text || isGenerating) return;
+
+    // Reset abort controller for this new turn
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
 
     setInputMessage("");
     setIsSecurityFlagged(false);
@@ -303,6 +373,7 @@ export function ReceptionistPlayground({
           message: text,
           conversationId: conversationId || undefined,
         }),
+        signal: abortController.signal,
       });
 
       if (!res.ok) {
@@ -314,56 +385,85 @@ export function ReceptionistPlayground({
         throw new Error("No response body received for streaming.");
       }
 
-      await consumeSSEStream(res.body, (event) => {
-        if (event.type === "token") {
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantMessageId
-                ? { ...m, content: m.content + event.delta }
-                : m,
-            ),
-          );
-        } else if (event.type === "done") {
-          if (event.conversationId) {
-            setConversationId(event.conversationId);
-          }
-          if (event.bookingState) {
-            setBookingState(event.bookingState);
-          }
-          if (event.isSecurityFlagged) {
-            setIsSecurityFlagged(true);
-            setSecurityNotice(
-              event.securityNotice || "Request blocked by safety policy.",
+      await consumeSSEStream(
+        res.body,
+        (event) => {
+          if (event.type === "token") {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantMessageId
+                  ? { ...m, content: m.content + event.delta }
+                  : m,
+              ),
             );
-          }
+          } else if (event.type === "done") {
+            if (event.conversationId) {
+              setConversationId(event.conversationId);
+            }
+            if (event.bookingState) {
+              setBookingState(event.bookingState);
+            }
+            if (event.isSecurityFlagged) {
+              setIsSecurityFlagged(true);
+              setSecurityNotice(
+                event.securityNotice || "Request blocked by safety policy.",
+              );
+            }
 
-          // Attach trace to message & select it
-          if (event.trace) {
-            setSelectedTrace(event.trace);
-            setSelectedTurnId(event.turnId || event.trace.turnId);
-          }
+            // Attach trace to message & select it
+            if (event.trace) {
+              setSelectedTrace(event.trace);
+              setSelectedTurnId(event.turnId || event.trace.turnId);
+            }
 
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantMessageId
-                ? {
-                    ...m,
-                    content: event.reply || m.content,
-                    sources: event.sources,
-                    toolCalls: event.toolCalls,
-                    traceId: event.traceId,
-                    turnId: event.turnId,
-                    trace: event.trace,
-                    isStreaming: false,
-                  }
-                : m,
-            ),
-          );
-        } else if (event.type === "error") {
-          throw new Error(event.error || "Generation error");
-        }
-      });
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantMessageId
+                  ? {
+                      ...m,
+                      content: event.reply || m.content,
+                      sources: event.sources,
+                      toolCalls: event.toolCalls,
+                      traceId: event.traceId,
+                      turnId: event.turnId,
+                      trace: event.trace,
+                      isStreaming: false,
+                    }
+                  : m,
+              ),
+            );
+          } else if (event.type === "error") {
+            throw new Error(event.error || "Generation error");
+          }
+        },
+        abortController.signal,
+      );
     } catch (err: unknown) {
+      const isAbort =
+        abortController.signal.aborted ||
+        (err instanceof DOMException && err.name === "AbortError") ||
+        (typeof err === "object" &&
+          err !== null &&
+          "name" in err &&
+          (err as { name: string }).name === "AbortError");
+
+      if (isAbort) {
+        // User stopped generation - finalize assistant message gracefully without an error banner
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantMessageId
+              ? {
+                  ...m,
+                  content:
+                    m.content.trim() || "Response generation stopped.",
+                  isStreaming: false,
+                }
+              : m,
+          ),
+        );
+        return;
+      }
+
       const errorMsg =
         err instanceof Error
           ? err.message
@@ -381,6 +481,7 @@ export function ReceptionistPlayground({
       );
     } finally {
       setIsGenerating(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -418,11 +519,10 @@ export function ReceptionistPlayground({
             <button
               type="button"
               onClick={() => setMode("chat")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-all ${
-                mode === "chat"
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-all ${mode === "chat"
                   ? "bg-card text-foreground font-semibold shadow-xs"
                   : "text-muted-foreground hover:text-foreground font-medium"
-              }`}
+                }`}
             >
               <MessageSquare className="size-3.5 text-primary" />
               <span>Chat</span>
@@ -430,11 +530,10 @@ export function ReceptionistPlayground({
             <button
               type="button"
               onClick={() => setMode("voice")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-all ${
-                mode === "voice"
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-all ${mode === "voice"
                   ? "bg-card text-foreground font-semibold shadow-xs"
                   : "text-muted-foreground hover:text-foreground font-medium"
-              }`}
+                }`}
             >
               <Mic className="size-3.5 text-primary" />
               <span>Voice</span>
@@ -502,9 +601,8 @@ export function ReceptionistPlayground({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
         {/* Left Panel: Conversation Thread (Chat or Voice) */}
         <div
-          className={`lg:col-span-7 xl:col-span-8 rounded-2xl border border-border/80 bg-card flex flex-col h-[680px] overflow-hidden shadow-xs ${
-            showMobileDebug ? "hidden lg:flex" : "flex"
-          }`}
+          className={`lg:col-span-7 xl:col-span-8 rounded-2xl border border-border/80 bg-card flex flex-col h-[680px] overflow-hidden shadow-xs ${showMobileDebug ? "hidden lg:flex" : "flex"
+            }`}
         >
           {mode === "voice" ? (
             <div className="flex-1 overflow-y-auto">
@@ -528,11 +626,10 @@ export function ReceptionistPlayground({
               <div className="px-4 py-3 border-b border-border/60 bg-muted/20 flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
                   <span
-                    className={`size-2 rounded-full ${
-                      isGenerating
+                    className={`size-2 rounded-full ${isGenerating
                         ? "bg-primary animate-pulse"
                         : "bg-emerald-500"
-                    }`}
+                      }`}
                   />
                   <span className="font-medium text-foreground">
                     {isGenerating
@@ -590,11 +687,10 @@ export function ReceptionistPlayground({
                     return (
                       <div
                         key={msg.id}
-                        className={`flex gap-2.5 text-xs ${
-                          msg.role === "user"
+                        className={`flex gap-2.5 text-xs ${msg.role === "user"
                             ? "justify-end"
                             : "justify-start items-start"
-                        }`}
+                          }`}
                       >
                         {isAssistant && (
                           <div className="size-7 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
@@ -603,15 +699,13 @@ export function ReceptionistPlayground({
                         )}
 
                         <div
-                          className={`space-y-2 transition-all ${
-                            msg.role === "user"
+                          className={`space-y-2 transition-all ${msg.role === "user"
                               ? "max-w-[80%] rounded-2xl rounded-br-xs p-3.5 bg-primary text-primary-foreground shadow-xs leading-relaxed"
-                              : `max-w-[85%] rounded-2xl rounded-bl-xs p-4 bg-card text-foreground border shadow-2xs leading-relaxed ${
-                                  isSelected
-                                    ? "border-primary ring-1 ring-primary/30"
-                                    : "border-border/70"
-                                }`
-                          }`}
+                              : `max-w-[85%] rounded-2xl rounded-bl-xs p-4 bg-card text-foreground border shadow-2xs leading-relaxed ${isSelected
+                                ? "border-primary ring-1 ring-primary/30"
+                                : "border-border/70"
+                              }`
+                            }`}
                         >
                           <div className="leading-relaxed">
                             {msg.content ? (
@@ -646,40 +740,58 @@ export function ReceptionistPlayground({
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Chat Composer */}
-              <div className="p-3.5 border-t border-border/70 bg-card">
+              {/* Chat Composer - ChatGPT Style Unified Container */}
+              <div className="p-3 sm:p-4 border-t border-border/60 bg-card/60 backdrop-blur-xs">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
                     void handleSend();
                   }}
-                  className="flex gap-2 items-end"
+                  className="relative flex items-end gap-2 rounded-2xl sm:rounded-[24px] border border-border/80 bg-background p-1.5 pl-4 shadow-2xs transition-all duration-200 focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/15"
                 >
-                  <div className="flex-1 relative">
-                    <textarea
-                      ref={textareaRef}
-                      value={inputMessage}
-                      onChange={(e) => setInputMessage(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder="Ask about opening hours, services, or appointments..."
-                      disabled={isGenerating}
-                      rows={1}
-                      className="w-full resize-none rounded-xl border border-border/80 bg-background px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary leading-relaxed transition-all"
-                    />
-                  </div>
+                  <textarea
+                    ref={textareaRef}
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={
+                      isGenerating
+                        ? "Receptionist is responding..."
+                        : "Ask about opening hours, services, or appointments..."
+                    }
+                    disabled={isGenerating}
+                    rows={1}
+                    className="flex-1 resize-none border-0 bg-transparent py-1.5 pr-1 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0 leading-relaxed min-h-[24px] max-h-[160px] overflow-y-auto scrollbar-hide disabled:opacity-60 disabled:cursor-not-allowed"
+                  />
 
-                  <Button
-                    type="submit"
-                    disabled={isGenerating || !inputMessage.trim()}
-                    className="h-10 px-4 text-xs font-semibold gap-1.5 rounded-xl shrink-0 shadow-xs bg-primary text-primary-foreground hover:bg-primary/90"
-                  >
-                    <ArrowUp className="size-3.5" />
-                    <span>Send</span>
-                  </Button>
+                  <div className="flex items-center shrink-0 mb-0.5">
+                    {isGenerating ? (
+                      <button
+                        type="button"
+                        onClick={handleStop}
+                        aria-label="Stop generation"
+                        title="Stop generation"
+                        className="size-8 rounded-full bg-foreground text-background hover:bg-foreground/85 flex items-center justify-center transition-all duration-150 shadow-xs hover:scale-105 active:scale-95 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      >
+                        <Square className="size-3 fill-current" />
+                      </button>
+                    ) : (
+                      <button
+                        type="submit"
+                        disabled={!inputMessage.trim()}
+                        aria-label="Send message"
+                        title="Send message"
+                        className={`size-8 rounded-full flex items-center justify-center transition-all duration-150 shadow-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                          inputMessage.trim()
+                            ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 active:scale-95 cursor-pointer shadow-primary/20"
+                            : "bg-muted text-muted-foreground/35 cursor-not-allowed"
+                        }`}
+                      >
+                        <ArrowUp className="size-4 stroke-[2.5]" />
+                      </button>
+                    )}
+                  </div>
                 </form>
-                <div className="text-[11px] text-muted-foreground pt-2 px-1">
-                  Press Enter to send, Shift+Enter for new line
-                </div>
               </div>
             </>
           )}
@@ -687,9 +799,8 @@ export function ReceptionistPlayground({
 
         {/* Right Panel: Activity Details */}
         <div
-          className={`lg:col-span-5 xl:col-span-4 h-[680px] rounded-2xl flex flex-col overflow-hidden ${
-            showMobileDebug ? "flex flex-col" : "hidden lg:flex lg:flex-col"
-          }`}
+          className={`lg:col-span-5 xl:col-span-4 h-[680px] rounded-2xl flex flex-col overflow-hidden ${showMobileDebug ? "flex flex-col" : "hidden lg:flex lg:flex-col"
+            }`}
         >
           <DebugPanel trace={selectedTrace} isLoading={isGenerating} />
         </div>
