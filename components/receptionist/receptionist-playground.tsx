@@ -454,8 +454,7 @@ export function ReceptionistPlayground({
             m.id === assistantMessageId
               ? {
                   ...m,
-                  content:
-                    m.content.trim() || "Response generation stopped.",
+                  content: m.content.trim() || "Response generation stopped.",
                   isStreaming: false,
                 }
               : m,
@@ -519,10 +518,11 @@ export function ReceptionistPlayground({
             <button
               type="button"
               onClick={() => setMode("chat")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-all ${mode === "chat"
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-all ${
+                mode === "chat"
                   ? "bg-card text-foreground font-semibold shadow-xs"
                   : "text-muted-foreground hover:text-foreground font-medium"
-                }`}
+              }`}
             >
               <MessageSquare className="size-3.5 text-primary" />
               <span>Chat</span>
@@ -530,10 +530,11 @@ export function ReceptionistPlayground({
             <button
               type="button"
               onClick={() => setMode("voice")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-all ${mode === "voice"
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-all ${
+                mode === "voice"
                   ? "bg-card text-foreground font-semibold shadow-xs"
                   : "text-muted-foreground hover:text-foreground font-medium"
-                }`}
+              }`}
             >
               <Mic className="size-3.5 text-primary" />
               <span>Voice</span>
@@ -601,8 +602,9 @@ export function ReceptionistPlayground({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
         {/* Left Panel: Conversation Thread (Chat or Voice) */}
         <div
-          className={`lg:col-span-7 xl:col-span-8 rounded-2xl border border-border/80 bg-card flex flex-col h-[680px] overflow-hidden shadow-xs ${showMobileDebug ? "hidden lg:flex" : "flex"
-            }`}
+          className={`lg:col-span-7 xl:col-span-8 rounded-2xl border border-border/80 bg-card flex flex-col h-[680px] overflow-hidden shadow-xs ${
+            showMobileDebug ? "hidden lg:flex" : "flex"
+          }`}
         >
           {mode === "voice" ? (
             <div className="flex-1 overflow-y-auto">
@@ -626,10 +628,11 @@ export function ReceptionistPlayground({
               <div className="px-4 py-3 border-b border-border/60 bg-muted/20 flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
                   <span
-                    className={`size-2 rounded-full ${isGenerating
+                    className={`size-2 rounded-full ${
+                      isGenerating
                         ? "bg-primary animate-pulse"
                         : "bg-emerald-500"
-                      }`}
+                    }`}
                   />
                   <span className="font-medium text-foreground">
                     {isGenerating
@@ -687,10 +690,11 @@ export function ReceptionistPlayground({
                     return (
                       <div
                         key={msg.id}
-                        className={`flex gap-2.5 text-xs ${msg.role === "user"
+                        className={`flex gap-2.5 text-xs ${
+                          msg.role === "user"
                             ? "justify-end"
                             : "justify-start items-start"
-                          }`}
+                        }`}
                       >
                         {isAssistant && (
                           <div className="size-7 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
@@ -699,13 +703,15 @@ export function ReceptionistPlayground({
                         )}
 
                         <div
-                          className={`space-y-2 transition-all ${msg.role === "user"
+                          className={`space-y-2 transition-all ${
+                            msg.role === "user"
                               ? "max-w-[80%] rounded-2xl rounded-br-xs p-3.5 bg-primary text-primary-foreground shadow-xs leading-relaxed"
-                              : `max-w-[85%] rounded-2xl rounded-bl-xs p-4 bg-card text-foreground border shadow-2xs leading-relaxed ${isSelected
-                                ? "border-primary ring-1 ring-primary/30"
-                                : "border-border/70"
-                              }`
-                            }`}
+                              : `max-w-[85%] rounded-2xl rounded-tl-xs p-4 bg-card text-foreground border shadow-2xs leading-relaxed ${
+                                  isSelected
+                                    ? "border-primary ring-1 ring-primary/30"
+                                    : "border-border/70"
+                                }`
+                          }`}
                         >
                           <div className="leading-relaxed">
                             {msg.content ? (
@@ -799,8 +805,9 @@ export function ReceptionistPlayground({
 
         {/* Right Panel: Activity Details */}
         <div
-          className={`lg:col-span-5 xl:col-span-4 h-[680px] rounded-2xl flex flex-col overflow-hidden ${showMobileDebug ? "flex flex-col" : "hidden lg:flex lg:flex-col"
-            }`}
+          className={`lg:col-span-5 xl:col-span-4 h-[680px] rounded-2xl flex flex-col overflow-hidden ${
+            showMobileDebug ? "flex flex-col" : "hidden lg:flex lg:flex-col"
+          }`}
         >
           <DebugPanel trace={selectedTrace} isLoading={isGenerating} />
         </div>
