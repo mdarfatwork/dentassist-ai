@@ -1,5 +1,5 @@
 import { ClinicProfileForm } from "@/components/clinic/clinic-profile-form";
-import { ClinicPhotoGallery } from "@/components/clinic/clinic-photo-gallery";
+// import { ClinicPhotoGallery } from "@/components/clinic/clinic-photo-gallery";
 
 export const metadata = {
   title: "Practice Profile & Settings | DentAssist AI",
@@ -11,7 +11,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <ClinicProfileForm />
-      <ClinicPhotoGallery />
+      {/* <ClinicPhotoGallery /> */}
     </div>
   );
 }
