@@ -11,11 +11,12 @@ interface MarketingHeaderProps {
 }
 
 const NAV_ITEMS = [
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "Features", href: "#features" },
-  { label: "Scheduling", href: "#scheduling" },
-  { label: "Security", href: "#security" },
-  { label: "FAQ", href: "#faq" },
+  { label: "About", href: "/about" },
+  { label: "How It Works", href: "/#how-it-works" },
+  { label: "Features", href: "/#features" },
+  { label: "Scheduling", href: "/#scheduling" },
+  { label: "Security", href: "/#security" },
+  { label: "FAQ", href: "/#faq" },
 ];
 
 export function MarketingHeader({
@@ -84,13 +85,13 @@ export function MarketingHeader({
           aria-label="Main Navigation"
         >
           {NAV_ITEMS.map((item) => (
-            <a
+            <Link
               key={item.href}
               href={item.href}
               className="px-3 py-1.5 rounded-md hover:text-foreground hover:bg-muted/70 transition-colors"
             >
               {item.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
@@ -160,14 +161,14 @@ export function MarketingHeader({
         >
           <nav className="flex flex-col space-y-1">
             {NAV_ITEMS.map((item) => (
-              <a
+              <Link
                 key={item.href}
                 href={item.href}
                 onClick={closeMobileMenu}
                 className="px-3 py-2.5 rounded-md text-sm font-medium text-foreground hover:bg-muted transition-colors"
               >
                 {item.label}
-              </a>
+              </Link>
             ))}
           </nav>
 

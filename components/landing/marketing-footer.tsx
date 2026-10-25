@@ -34,61 +34,28 @@ export function MarketingFooter() {
             </p>
           </div>
 
-          {/* Navigation Column */}
+          {/* Product Navigation Column */}
           <div className="md:col-span-4 space-y-2.5">
             <p className="text-xs font-semibold uppercase tracking-wider text-foreground">
-              Navigation
+              Product
             </p>
             <ul className="space-y-2 text-xs">
               <li>
-                <a
-                  href="#how-it-works"
+                <Link
+                  href="/"
                   className="hover:text-foreground transition-colors"
                 >
-                  How It Works
-                </a>
+                  Home
+                </Link>
               </li>
               <li>
-                <a
-                  href="#features"
+                <Link
+                  href="/about"
                   className="hover:text-foreground transition-colors"
                 >
-                  Features & Knowledge Base
-                </a>
+                  About DentAssist AI
+                </Link>
               </li>
-              <li>
-                <a
-                  href="#scheduling"
-                  className="hover:text-foreground transition-colors"
-                >
-                  Google Calendar Scheduling
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#security"
-                  className="hover:text-foreground transition-colors"
-                >
-                  Security & Multi-Tenancy
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#faq"
-                  className="hover:text-foreground transition-colors"
-                >
-                  Frequently Asked Questions
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Clinic Account Access Column */}
-          <div className="md:col-span-3 space-y-2.5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-foreground">
-              Clinic Portal
-            </p>
-            <ul className="space-y-2 text-xs">
               <li>
                 <Link
                   href="/signup"
@@ -111,6 +78,39 @@ export function MarketingFooter() {
                   className="hover:text-foreground transition-colors"
                 >
                   Practice Dashboard
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Legal & Support Column */}
+          <div className="md:col-span-3 space-y-2.5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-foreground">
+              Legal & Support
+            </p>
+            <ul className="space-y-2 text-xs">
+              <li>
+                <Link
+                  href="/privacy"
+                  className="hover:text-foreground transition-colors"
+                >
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/terms"
+                  className="hover:text-foreground transition-colors"
+                >
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/#faq"
+                  className="hover:text-foreground transition-colors"
+                >
+                  Frequently Asked Questions
                 </Link>
               </li>
             </ul>
