@@ -9,13 +9,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+import { getSiteUrl } from "@/lib/site";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
   title: {
-    default: "DentAssist AI",
+    default: "DentAssist AI — AI Receptionist for Dental Practices",
     template: "%s | DentAssist AI",
   },
   description:
-    "AI receptionist for dental clinics. Answer patient questions, manage appointments, and provide 24/7 assistance.",
+    "DentAssist AI answers routine patient inquiries using your clinic's documents and assists patients with booking appointments via Google Calendar.",
 };
 
 import { TRPCProvider } from "@/lib/trpc/Provider";

@@ -1,0 +1,32 @@
+# DentAssist AI
+
+> AI receptionist for dental practices. Answers routine patient questions using clinic documents and assists with Google Calendar appointment scheduling.
+
+DentAssist AI is an autonomous clinical front-desk assistant built specifically for independent dental practices and clinics. It operates via an embeddable website chat widget to answer everyday patient questions and check real-time appointment availability using practice operating rules and Google Calendar.
+
+## Target Audience
+- Dental practice owners
+- Clinic administrators and practice managers
+- Front-desk dental reception teams
+
+## Core Capabilities (V0)
+
+- **AI Patient Chat Grounded in Clinic Documents**: Answers patient inquiries regarding office policies, accepted insurance, treatments, fees, and pre-appointment prep using uploaded practice documents (stored in AWS S3 and semantically indexed in Pinecone).
+- **Google Calendar Appointment Scheduling**: Evaluates clinic working hours, practitioner assignments, procedure chair durations, and existing Google Calendar events via secure OAuth to offer available appointment slots and assist patients with bookings.
+- **Multi-Tenant Practice Portal**: Clean administrative dashboard to manage practitioner rosters, dental services, operating hours, holiday closures, and knowledge documents with complete tenant database separation.
+
+## Out of Scope for V0
+- AI phone or voice reception is temporarily deferred and not available publicly in V0.
+- DentAssist AI is an administrative tool, not a licensed healthcare provider, and does not provide clinical diagnosis, medical advice, or emergency triage.
+
+## Canonical Public Links
+
+- [DentAssist AI Homepage](https://dentassist.ai/): Product overview, workflow explanation, and platform capabilities.
+- [About DentAssist AI](https://dentassist.ai/about): Background on the problem of front-desk burnout, multi-tenant architecture, and human-oversight principles.
+- [Privacy Policy](https://dentassist.ai/privacy): Discloses technical data collection, multi-tenant isolation, AES-256 encrypted Google OAuth tokens, and configured infrastructure subprocessors (Neon, AWS S3, Pinecone, Google, Resend, and LLMs).
+- [Terms of Service](https://dentassist.ai/terms): Operational agreement, clinical disclaimers, Google Calendar integration limitations, and practice responsibilities.
+- [Practice Account Registration](https://dentassist.ai/signup): Onboarding route for dental clinic administrators.
+- [Clinic Staff Login](https://dentassist.ai/login): Authentication portal for existing practice users.
+
+## Extended Documentation
+- [Full LLM Specification (llms-full.txt)](https://dentassist.ai/llms-full.txt): Detailed structured guide covering architecture, scheduling workflows, FAQs, and data safeguards.

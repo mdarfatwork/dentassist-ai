@@ -1,0 +1,208 @@
+# DentAssist AI — Full LLM Knowledge Specification
+
+> Comprehensive product documentation, architecture overview, operational workflows, and verified technical capabilities for DentAssist AI.
+
+---
+
+## 1. Product Overview
+
+DentAssist AI is an autonomous, cloud-based clinical front-desk assistant purpose-built for dental practices and oral healthcare clinics. Operating as a lightweight, embeddable website chat widget, DentAssist AI handles inbound patient inquiries around the clock, answers clinic-specific questions using practice-approved documents, and coordinates appointment scheduling directly through real-time Google Calendar integration.
+
+By offloading repetitive operational questions and scheduling tasks from dental reception teams, DentAssist AI enables front-desk staff to focus on chairside hospitality, complex treatment coordination, and in-person patient care.
+
+Canonical Origin: https://dentassist.ai
+
+---
+
+## 2. Intended Audience
+
+DentAssist AI is designed exclusively for the operational and administrative workflows of dental healthcare facilities:
+
+- **Independent Dental Practices**: Single-provider or multi-operatory dental clinics seeking continuous patient inquiry coverage without expanding headcount.
+- **Group Practices & Dental Service Organizations (DSOs)**: Multi-provider clinics requiring consistent front-desk responses across different practitioner schedules and specializations.
+- **Dental Practice Managers**: Administrators responsible for front-desk productivity, phone congestion reduction, scheduling accuracy, and patient conversion.
+- **Reception & Front-Desk Staff**: Administrative personnel who experience peak-hour phone strain, repetitive Q&A fatigue, and after-hours booking friction.
+
+---
+
+## 3. Problems the Product Addresses
+
+1. **After-Hours Patient Drop-Off**: Prospective dental patients frequently research treatments or check appointments in the evenings or over weekends when the office is closed. Without an immediate response mechanism, inquiries remain unanswered and appointments are booked with competing clinics.
+2. **Repetitive Front-Desk Inquiries**: Up to 60-70% of inbound calls and messages revolve around standard queries: accepted insurance networks, parking and directions, pre-visit instructions, whitening pricing, or routine cleaning availability.
+3. **Double-Booking and Calendar Friction**: Manual back-and-forth phone calls to match patient availability with specific dentist chairs and procedure durations tie up phone lines and risk scheduling conflicts.
+4. **Front-Desk Burnout and Turnover**: Dental receptionists frequently juggle checking in arriving patients, answering ringing phones, verifying insurance eligibility, and collecting co-pays simultaneously.
+
+---
+
+## 4. Product Capabilities Available in V0
+
+The initial release (V0) of DentAssist AI provides two core production capabilities:
+
+### Capability 1: Grounded AI Patient Chat
+- **Website Embed Widget**: A responsive floating chat interface rendered on the clinic's public website via an asynchronous script embed (`/widget.js`).
+- **Clinic-Specific Knowledge Retrieval**: Answers patient queries accurately by retrieving semantic chunks from clinic-uploaded documents (e.g., PDF/DOCX policy manuals, price lists, post-op instructions).
+- **Practice Identity & Tone Customization**: Configurable clinic name, welcome greeting, brand accent colors, and administrative tone (friendly, professional, concise).
+- **Human Escalation**: When asked questions outside configured knowledge or requiring medical assessment, the assistant gracefully advises the patient to contact the office staff directly.
+
+### Capability 2: Google Calendar Appointment Availability & Booking
+- **Direct Google Calendar Integration**: Connects to the practice's Google Calendar using OAuth 2.0 with offline refresh tokens.
+- **Slot Availability Engine**: Analyzes clinic working hours, designated provider schedules, procedure chair durations, buffer times, and existing calendar events to calculate open slots.
+- **Structured Appointment Booking**: Collects the patient's name, phone number, email address, procedure interest, and preferred provider, then creates an appointment event with calendar invitations.
+
+---
+
+## 5. How the Product Works
+
+1. **Document Upload & Ingestion**:
+   - The clinic administrator uploads policy documents, fee schedules, or FAQs in the DentAssist AI dashboard.
+   - Files are stored in Amazon Web Services (AWS S3) and segmented into text chunks.
+   - Text chunks are converted into dense vector embeddings and stored in Pinecone vector index partitioned by the clinic's unique tenant ID (`clinicId`).
+
+2. **Patient Interaction Flow**:
+   - A prospective or existing patient visits the clinic's website and opens the chat widget.
+   - The patient types a question (e.g., *"Do you accept Delta Dental?"* or *"How much does teeth whitening cost?"*).
+   - The query is matched semantically against the clinic's Pinecone namespace.
+   - The top relevant document chunks are passed to the LLM alongside strict system guidelines instructing it to answer strictly based on provided context.
+   - The grounded answer is streamed back to the patient.
+
+3. **Scheduling Flow**:
+   - The patient asks to book an appointment (e.g., *"I'd like to schedule a routine cleaning with Dr. Smith next Tuesday"*).
+   - The system queries the Google Calendar API for the provider's active calendar within clinic operating hours.
+   - Real-time availability is returned as interactive time options.
+   - Once selected and contact details are collected, the event is scheduled and recorded.
+
+---
+
+## 6. Clinic Configuration and Knowledge Sources
+
+Clinic managers maintain full governance over what information the AI accesses:
+
+- **Operating Hours**: Configured Monday through Sunday with opening, closing, and lunch break intervals.
+- **Roster & Providers**: Names, professional titles, and specific procedures performed by each clinician.
+- **Service Catalog**: Defined treatment types with default chair durations (e.g., Cleaning: 60 min; Consultation: 30 min; Emergency Exam: 45 min).
+- **Knowledge Documents**: PDF, DOCX, or text files containing verified insurance lists, cancellation policies, financing options, pediatric policies, and pre-op fasting requirements.
+- **Knowledge Refresh**: Clinic administrators can add, update, or delete knowledge documents anytime from the dashboard, updating the vector index in real time.
+
+---
+
+## 7. AI Chatbot Behavior and Limitations
+
+### Operational Boundaries
+- **Strictly Administrative Scope**: DentAssist AI answers administrative, logistical, and practice-specific inquiries.
+- **Strict Refusal of Medical Diagnoses**: The assistant explicitly refuses requests to diagnose dental pain, evaluate clinical photos, interpret symptoms, or prescribe medications.
+- **Emergency Safeguard**: For queries indicating severe swelling, trauma, difficulty breathing, or uncontrollable bleeding, the AI provides an urgent directive to call local emergency services (911/999) or visit an urgent care center immediately.
+- **No Hallucinated Policies**: If a policy or insurance plan is not mentioned in the clinic's uploaded documents, the AI clearly states that it does not have that information and suggests asking the receptionist.
+
+---
+
+## 8. Google Calendar Scheduling Workflow
+
+1. **Authentication**: The clinic connects their Google Workspace or Gmail account via Google OAuth 2.0. Access tokens and refresh tokens are encrypted using AES-256 before storage in the database.
+2. **Calendar Selection**: The practice designates which calendar represents appointments for each provider.
+3. **Availability Computation**:
+   - Reads the clinic's configured working hours.
+   - Fetches existing `busy` blocks using the Google Calendar FreeBusy API.
+   - Evaluates slot duration matching the requested treatment.
+   - Excludes holidays and blackout dates configured in clinic settings.
+4. **Booking Confirmation**:
+   - Patient provides: Full Name, Email, Mobile Phone, and Reason for Visit.
+   - DentAssist AI creates the calendar event with attendee invitations and clear details.
+
+---
+
+## 9. Practice Setup Process
+
+Setting up DentAssist AI takes less than 15 minutes:
+
+1. **Create an Account**: Register with clinic work email at `https://dentassist.ai/signup`.
+2. **Profile & Working Hours**: Enter practice name, physical address, phone number, timezone, and weekly operating hours.
+3. **Upload Knowledge**: Drag-and-drop clinic policy sheets, insurance guides, or procedure price lists.
+4. **Connect Google Calendar**: Authorize calendar sync via the secure Google OAuth integration card.
+5. **Install Website Widget**: Copy the generated one-line HTML snippet and paste it into the footer of your clinic website (WordPress, Squarespace, Webflow, custom HTML, etc.).
+
+---
+
+## 10. Tenant Isolation and Security
+
+DentAssist AI is built on a multi-tenant relational architecture designed to safeguard operational data:
+
+- **Relational Data Isolation**: All database tables in Neon (PostgreSQL) enforce clinic-level scoping (`clinicId`). Every database query enforces tenant separation.
+- **Vector Space Separation**: Document embeddings are strictly partitioned by tenant namespace in Pinecone, preventing cross-practice knowledge leakage.
+- **Credential Encryption**: Google Calendar OAuth tokens and refresh tokens are encrypted at rest using AES-256 before persistence.
+- **Encrypted Ingestion**: Practice documents uploaded to AWS S3 are transmitted over TLS and encrypted at rest using AWS server-side encryption.
+- **Subprocessor Integrity**: Only audited infrastructure providers are used (Neon PostgreSQL, AWS S3, Pinecone, Google APIs, Resend, and vetted LLM inference endpoints).
+- **Compliance Note**: While DentAssist AI follows secure engineering practices and data minimization, users must verify compliance with local health record regulations for their specific region.
+
+---
+
+## 11. Account Creation and Sign-in
+
+- **Practice Registration**: Practice owners and administrators can create an account at [https://dentassist.ai/signup](https://dentassist.ai/signup).
+- **Staff Sign-in**: Registered staff members can log into their practice portal at [https://dentassist.ai/login](https://dentassist.ai/login).
+- **Password Reset**: Self-service recovery is available at [https://dentassist.ai/forgot-password](https://dentassist.ai/forgot-password) with transactional delivery via Resend.
+- **Protected Dashboard**: All administrative routes (`/dashboard/*`) require verified server-side session authentication.
+
+---
+
+## 12. Frequently Asked Questions
+
+### Can DentAssist AI diagnose dental issues or recommend treatments?
+No. DentAssist AI is an administrative and logistical communication tool. It cannot diagnose conditions, interpret symptoms, evaluate dental pain, or prescribe medication. Inquiries requiring clinical judgment are referred to clinic staff or emergency care.
+
+### Does DentAssist AI support automated phone calls or voice reception in V0?
+No. Voice and AI phone reception are temporarily deferred and are not available in the V0 release. DentAssist AI V0 operates exclusively as an embeddable website chat widget.
+
+### Which calendar systems are supported?
+DentAssist AI currently integrates with Google Calendar via secure OAuth 2.0. Additional calendar and practice management software (PMS) integrations are evaluated for future releases.
+
+### How does the AI know our clinic's specific policies?
+During setup, clinic staff upload practice documents (PDFs, Word documents, text sheets) into the dashboard. DentAssist AI retrieves facts directly from these files when answering patient inquiries.
+
+### What happens when the AI does not know the answer?
+When faced with an unlisted question or missing policy, the AI politely informs the patient that the specific detail is not in its records and invites them to call or message the front desk directly.
+
+---
+
+## 13. Public Page Directory
+
+All verified, publicly accessible pages on DentAssist AI:
+
+- **Homepage**: [https://dentassist.ai/](https://dentassist.ai/) — Comprehensive overview of the AI receptionist, live chat widget capabilities, and interactive demo.
+- **About Us**: [https://dentassist.ai/about](https://dentassist.ai/about) — Mission, founding background, the problem of front-desk burnout, architectural principles, and team overview.
+- **Privacy Policy**: [https://dentassist.ai/privacy](https://dentassist.ai/privacy) — Data collection policies, multi-tenant isolation, Google OAuth token encryption, and infrastructure subprocessors.
+- **Terms of Service**: [https://dentassist.ai/terms](https://dentassist.ai/terms) — Service usage terms, practice responsibilities, clinical disclaimers, and integration agreements.
+- **Sign Up**: [https://dentassist.ai/signup](https://dentassist.ai/signup) — Practice registration and administrative account creation.
+- **Login**: [https://dentassist.ai/login](https://dentassist.ai/login) — Secure portal access for authenticated clinic staff.
+
+---
+
+## 14. Privacy Policy and Terms of Service Summaries
+
+### Privacy Policy Summary ([Read Full Policy](https://dentassist.ai/privacy))
+- **Data Minimization**: The platform only stores data necessary to service clinic accounts, answer patient questions, and facilitate appointment bookings.
+- **Subprocessors**: Transparently discloses infrastructure partners: Neon (PostgreSQL), AWS S3 (document storage), Pinecone (vector search), Google APIs (OAuth & Calendar), Resend (transactional email), and LLM inference providers.
+- **No Data Resale**: Clinic knowledge, conversational records, and calendar events are never sold, rented, or monetized for advertising.
+
+### Terms of Service Summary ([Read Full Terms](https://dentassist.ai/terms))
+- **Non-Clinical Disclaimer**: Expressly states that DentAssist AI does not practice dentistry or provide medical triage.
+- **Practice Verification Obligation**: Dental practices remain responsible for verifying the accuracy of uploaded knowledge documents and reviewing booked appointments.
+- **Calendar Availability**: While the system coordinates with Google Calendar, the clinic retains final authority over schedule modifications and chair availability.
+
+---
+
+## 15. Current Product Limitations
+
+1. **No Phone or Voice Support**: Operates as a text-based website widget only; no telephonic IVR or voice reception in V0.
+2. **No Native PMS Syncing in V0**: Integrations with specialized dental practice management systems (Dentrix, Eaglesoft, Open Dental) are not yet natively provided; scheduling relies on Google Calendar.
+3. **No Direct Insurance Eligibility Verification**: The AI can recite accepted insurance providers listed in clinic documents, but cannot perform real-time EDI claim or benefit verification.
+4. **Google Calendar Dependency**: Calendar availability accuracy requires the practice to keep its Google Calendar updated and properly configured.
+
+---
+
+## 16. Support and Practice Contact
+
+Dental practices requiring technical onboarding assistance, enterprise inquiries, or operational support can connect with the DentAssist AI team through:
+
+- **Practice Administration Portal**: Authenticated support and knowledge base available directly inside the clinic dashboard.
+- **Email Support**: Inquiries regarding platform configuration, legal terms, or privacy can be directed to the administrative support team at [support@dentassist.ai](mailto:support@dentassist.ai).
+- **Website**: Visit [https://dentassist.ai/](https://dentassist.ai/) for product updates, feature guides, and documentation.
