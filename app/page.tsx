@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
   CalendarCheck,
-  PhoneCall,
+  MessageSquare,
   ShieldCheck,
   Stethoscope,
   Clock,
@@ -79,9 +79,10 @@ export default async function HomePage() {
           </h1>
 
           <p className="mt-4 text-sm sm:text-base text-muted-foreground max-w-2xl leading-relaxed">
-            DentAssist AI handles incoming patient calls, qualifies triage
-            criteria, and schedules appointments directly into your clinic
-            management calendar with 24/7 clinical protocol compliance.
+            DentAssist AI engages patient inquiries via intelligent AI chat,
+            qualifies triage criteria, and schedules appointments directly into
+            your clinic management calendar with 24/7 clinical protocol
+            compliance.
           </p>
 
           <div className="mt-6 flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto">
@@ -122,16 +123,16 @@ export default async function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-3 border border-border divide-y md:divide-y-0 md:divide-x divide-border bg-card rounded-[4px]">
           <div className="p-6 space-y-2.5">
             <div className="size-8 rounded-[3px] bg-primary/10 text-primary flex items-center justify-center mb-3">
-              <PhoneCall className="size-4" />
+              <MessageSquare className="size-4" />
             </div>
             <div className="text-xs font-mono font-semibold uppercase tracking-wider text-muted-foreground">
               01 • Inbound Operations
             </div>
             <h3 className="font-bold text-foreground text-sm">
-              24/7 Clinical Call Triaging
+              24/7 Clinical Patient Triaging
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Natural conversational voice answering with zero dropped calls.
+              Autonomous conversational AI answering patient inquiries 24/7.
               Identifies emergency tooth pain, cosmetic inquiries, and routine
               cleanings.
             </p>

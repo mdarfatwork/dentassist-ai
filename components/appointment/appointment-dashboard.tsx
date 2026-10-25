@@ -491,7 +491,6 @@ export function AppointmentDashboard() {
               <SelectContent>
                 <SelectItem value="ALL">All Channels</SelectItem>
                 <SelectItem value="AI_CHAT">AI Chat</SelectItem>
-                <SelectItem value="AI_VOICE">AI Voice</SelectItem>
                 <SelectItem value="MANUAL">Manual / Desk</SelectItem>
               </SelectContent>
             </Select>

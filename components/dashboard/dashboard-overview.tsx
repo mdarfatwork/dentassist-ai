@@ -20,7 +20,6 @@ import {
   CheckCircle2,
   Stethoscope,
   Globe,
-  Mic,
   Building2,
   BookOpen,
   Sliders,
@@ -296,10 +295,10 @@ export function DashboardOverview({
 
             <Button
               variant="outline"
-              onClick={() => handleNavigate("voice")}
+              onClick={() => handleNavigate("receptionist")}
               className="gap-2 text-xs font-semibold bg-background hover:bg-muted/60"
             >
-              <Mic className="size-4 text-primary" /> Test Voice Receptionist
+              <Bot className="size-4 text-primary" /> Test AI Receptionist
             </Button>
           </div>
         </div>
@@ -836,19 +835,19 @@ export function DashboardOverview({
             <div className="space-y-2">
               <button
                 type="button"
-                onClick={() => handleNavigate("voice")}
+                onClick={() => handleNavigate("receptionist")}
                 className="w-full text-left p-3 rounded-lg border border-border bg-muted/20 hover:bg-muted/60 transition-colors flex items-center justify-between group"
               >
                 <div className="flex items-center gap-2.5">
                   <div className="size-7 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                    <Mic className="size-3.5" />
+                    <Bot className="size-3.5" />
                   </div>
                   <div>
                     <div className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
-                      Test Voice Receptionist
+                      Test AI Receptionist
                     </div>
                     <div className="text-[11px] text-muted-foreground">
-                      Simulate browser voice call
+                      Simulate chatbot & appointment intake
                     </div>
                   </div>
                 </div>

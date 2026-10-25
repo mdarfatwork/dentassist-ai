@@ -17,8 +17,6 @@ import {
   ArrowUp,
   Square,
   RotateCcw,
-  Mic,
-  MessageSquare,
   FlaskConical,
   Activity,
   Plus,
@@ -190,14 +188,8 @@ interface ReceptionistPlaygroundProps {
 export function ReceptionistPlayground({
   initialMode = "chat",
 }: ReceptionistPlaygroundProps = {}) {
-  // Mode: chat or voice
-  const [mode, setMode] = useState<"chat" | "voice">(initialMode);
-  const [prevInitialMode, setPrevInitialMode] = useState(initialMode);
-
-  if (prevInitialMode !== initialMode) {
-    setPrevInitialMode(initialMode);
-    setMode(initialMode);
-  }
+  // Mode: chat (voice mode temporarily deferred in UI for V0)
+  const [mode, setMode] = useState<"chat" | "voice">("chat");
 
   // Conversation & turn state
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -511,36 +503,8 @@ export function ReceptionistPlayground({
           </p>
         </div>
 
-        {/* Global Controls & Mode Switch */}
+        {/* Global Controls */}
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Segmented Mode Switcher */}
-          <div className="inline-flex items-center rounded-xl border border-border/80 bg-muted/50 p-1">
-            <button
-              type="button"
-              onClick={() => setMode("chat")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-all ${
-                mode === "chat"
-                  ? "bg-card text-foreground font-semibold shadow-xs"
-                  : "text-muted-foreground hover:text-foreground font-medium"
-              }`}
-            >
-              <MessageSquare className="size-3.5 text-primary" />
-              <span>Chat</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("voice")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-all ${
-                mode === "voice"
-                  ? "bg-card text-foreground font-semibold shadow-xs"
-                  : "text-muted-foreground hover:text-foreground font-medium"
-              }`}
-            >
-              <Mic className="size-3.5 text-primary" />
-              <span>Voice</span>
-            </button>
-          </div>
-
           <Button
             variant="outline"
             size="sm"

@@ -266,11 +266,11 @@ export function ClinicSetupWizard({
                       </div>
                       <div>
                         <h5 className="text-xs font-semibold text-foreground">
-                          AI Voice & Web Receptionist
+                          AI Chatbot & Receptionist
                         </h5>
                         <p className="text-[11px] text-muted-foreground">
-                          24/7 conversational AI answering calls and booking
-                          patients.
+                          24/7 conversational AI answering patient inquiries and
+                          booking appointments.
                         </p>
                       </div>
                     </div>

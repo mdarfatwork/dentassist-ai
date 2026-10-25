@@ -14,7 +14,6 @@ import {
   CalendarOff,
   BookOpen,
   Bot,
-  Mic,
   Globe,
   Calendar,
   Building2,
@@ -147,12 +146,6 @@ export function DashboardSidebar({
           label: "AI Receptionist",
           icon: Bot,
           href: "/dashboard/receptionist",
-        },
-        {
-          id: "voice",
-          label: "Voice Receptionist",
-          icon: Mic,
-          href: "/dashboard/voice-receptionist",
         },
         {
           id: "widget",

@@ -34,7 +34,6 @@ import {
   Sliders,
   Send,
   Bot,
-  Mic,
   Trash2,
   Plus,
 } from "lucide-react";
@@ -255,7 +254,7 @@ function WebsiteWidgetForm({
             </Badge>
           </div>
           <h2 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
-            Website Chat & Voice Receptionist
+            Website Chatbot & Booking Receptionist
           </h2>
           <p className="text-xs text-muted-foreground max-w-2xl leading-normal">
             Install DentAssist on your practice website using a single snippet.
@@ -402,7 +401,7 @@ function WebsiteWidgetForm({
               </div>
 
               {/* Toggles */}
-              <div className="border-t border-border pt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="border-t border-border pt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <label className="flex items-center gap-2 cursor-pointer text-xs">
                   <input
                     type="checkbox"
@@ -412,18 +411,6 @@ function WebsiteWidgetForm({
                   />
                   <span className="font-medium text-foreground">
                     Enable Chat
-                  </span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer text-xs">
-                  <input
-                    type="checkbox"
-                    checked={enableVoice}
-                    onChange={(e) => setEnableVoice(e.target.checked)}
-                    className="rounded-[2px] text-primary focus:ring-0"
-                  />
-                  <span className="font-medium text-foreground flex items-center gap-1">
-                    <Mic className="size-3 text-primary" /> Voice Reception
                   </span>
                 </label>
 
@@ -800,11 +787,6 @@ function WebsiteWidgetForm({
                     {/* Input Footer */}
                     <div className="p-2 border-t border-border bg-white dark:bg-slate-950 space-y-1">
                       <div className="flex items-center gap-1.5">
-                        {enableVoice && (
-                          <div className="size-7 rounded-[4px] border border-border flex items-center justify-center text-muted-foreground shrink-0">
-                            <Mic className="size-3.5 text-primary" />
-                          </div>
-                        )}
                         <input
                           type="text"
                           value={previewInput}
