@@ -2,10 +2,6 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { db } from "@/lib/db";
 import { env } from "@/config/env";
-import {
-  sendVerificationEmail,
-  sendPasswordResetEmail,
-} from "@/lib/email/send-email";
 
 export const auth = betterAuth({
   database: prismaAdapter(db, {
@@ -22,26 +18,7 @@ export const auth = betterAuth({
     "http://10.*:*",
   ],
   emailAndPassword: {
-    enabled: true,
-    requireEmailVerification: false,
-    async sendResetPassword({ user, url }) {
-      await sendPasswordResetEmail({
-        to: user.email,
-        name: user.name,
-        resetUrl: url,
-      });
-    },
-  },
-  emailVerification: {
-    sendOnSignUp: true,
-    autoSignInAfterVerification: true,
-    async sendVerificationEmail({ user, url }) {
-      await sendVerificationEmail({
-        to: user.email,
-        name: user.name,
-        verificationUrl: url,
-      });
-    },
+    enabled: false,
   },
   socialProviders: {
     google: {
