@@ -97,6 +97,9 @@ model Organization {
   googleCalendarConnection GoogleCalendarConnection?
   conversations  Conversation[]
   websiteWidget  WebsiteWidget?
+  whatsappConnection        WhatsAppConnection?
+  whatsappAuthStates        WhatsAppAuthState[]
+  whatsappProcessedMessages WhatsAppProcessedMessage[]
 
   @@index([slug])
   @@map("organization")
@@ -382,4 +385,65 @@ model WidgetSession {
   @@index([tokenHash])
   @@map("widget_session")
 }
+
+enum WhatsAppConnectionStatus {
+  DISCONNECTED
+  CONNECTING
+  AWAITING_SCAN
+  CONNECTED
+  FAILED
+}
+
+model WhatsAppConnection {
+  id                 String                   @id @default(cuid())
+  organizationId     String                   @unique
+  status             WhatsAppConnectionStatus @default(DISCONNECTED)
+  phoneNumber        String?
+  jid                String?
+  platform           String?
+  pushName           String?
+  qrCode             String?                  @db.Text
+  qrExpiresAt        DateTime?
+  lastConnectedAt    DateTime?
+  lastDisconnectedAt DateTime?
+  disconnectReason   String?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+
+  organization       Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("whatsapp_connection")
+}
+
+model WhatsAppAuthState {
+  id             String       @id @default(cuid())
+  organizationId String
+  key            String
+  value          String       @db.Text
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, key])
+  @@index([organizationId])
+  @@map("whatsapp_auth_state")
+}
+
+model WhatsAppProcessedMessage {
+  id             String       @id @default(cuid())
+  organizationId String
+  messageId      String
+  remoteJid      String
+  senderJid      String?
+  processedAt    DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, messageId])
+  @@index([organizationId])
+  @@map("whatsapp_processed_message")
+}
+
 

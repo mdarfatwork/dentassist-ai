@@ -12,6 +12,7 @@ import { appointmentRouter } from "./appointment";
 import { googleCalendarRouter } from "./google-calendar";
 import { availabilityRouter } from "./availability";
 import { widgetRouter } from "./widget";
+import { whatsappRouter } from "./whatsapp";
 
 export const appRouter = router({
   auth: authRouter,
@@ -27,6 +28,7 @@ export const appRouter = router({
   googleCalendar: googleCalendarRouter,
   availability: availabilityRouter,
   widget: widgetRouter,
+  whatsapp: whatsappRouter,
 });
 
 export type AppRouter = typeof appRouter;
