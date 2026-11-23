@@ -1,3 +1,12 @@
+if (typeof process.loadEnvFile === "function") {
+  try {
+    process.loadEnvFile(".env");
+  } catch {}
+  try {
+    process.loadEnvFile(".env.local");
+  } catch {}
+}
+
 import { runChunkingNormalizerTests } from "./knowledge/chunking-normalizer.test";
 import { runPromptGuardTests } from "./knowledge/prompt-guard.test";
 import { runMultiTenantIsolationTests } from "./knowledge/multi-tenant-isolation.test";
@@ -12,6 +21,7 @@ import { runVoiceReceptionistTests } from "./voice/voice-receptionist.test";
 import { runWidgetTests } from "./widget/widget.test";
 import { runPlaygroundTraceTests } from "./receptionist/playground-trace.test";
 import { runDashboardRoutesTests } from "./dashboard/dashboard-routes.test";
+import { runWhatsAppIntegrationTests } from "./whatsapp/whatsapp-integration.test";
 
 async function main() {
   console.log("\n=======================================================");
@@ -46,6 +56,8 @@ async function main() {
     await runPlaygroundTraceTests();
     console.log("");
     await runDashboardRoutesTests();
+    console.log("");
+    await runWhatsAppIntegrationTests();
     console.log("\n=======================================================");
     console.log("   All Phases 4, 5, 6, 7, 8 & 9 Automated Tests Passed! ✔");
     console.log("=======================================================\n");

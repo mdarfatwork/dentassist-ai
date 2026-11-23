@@ -75,6 +75,13 @@ const envSchema = z.object({
   RAG_TOP_K: z.coerce.number().default(5),
   RAG_CHUNK_SIZE: z.coerce.number().default(600),
   RAG_CHUNK_OVERLAP: z.coerce.number().default(80),
+  // WhatsApp Baileys Integration & Worker
+  WHATSAPP_AUTH_ENCRYPTION_KEY: z.string().optional(),
+  WHATSAPP_WORKER_URL: z.string().default("http://localhost:3001"),
+  WHATSAPP_WORKER_PORT: z.coerce.number().default(3001),
+  WHATSAPP_WORKER_SECRET: z
+    .string()
+    .default("dentassist-whatsapp-worker-secret-dev"),
 });
 
 const rawEnv = {
@@ -156,6 +163,13 @@ const rawEnv = {
   RAG_TOP_K: process.env.RAG_TOP_K || 5,
   RAG_CHUNK_SIZE: process.env.RAG_CHUNK_SIZE || 600,
   RAG_CHUNK_OVERLAP: process.env.RAG_CHUNK_OVERLAP || 80,
+  WHATSAPP_AUTH_ENCRYPTION_KEY: process.env.WHATSAPP_AUTH_ENCRYPTION_KEY,
+  WHATSAPP_WORKER_URL:
+    process.env.WHATSAPP_WORKER_URL || "http://localhost:3001",
+  WHATSAPP_WORKER_PORT: process.env.WHATSAPP_WORKER_PORT || 3001,
+  WHATSAPP_WORKER_SECRET:
+    process.env.WHATSAPP_WORKER_SECRET ||
+    "dentassist-whatsapp-worker-secret-dev",
 };
 
 const parsed = envSchema.safeParse(rawEnv);
