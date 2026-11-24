@@ -84,6 +84,17 @@ export class WhatsAppSessionManager {
       };
     }
 
+    // Safely tear down previous inactive socket to avoid duplicate listeners
+    if (existing?.sock) {
+      try {
+        existing.isExplicitDisconnect = true;
+        existing.sock.end?.(undefined);
+      } catch {
+        // ignore error during cleanup
+      }
+      this.sessions.delete(organizationId);
+    }
+
     this.initLocks.add(organizationId);
 
     // Clear any pending reconnect timer

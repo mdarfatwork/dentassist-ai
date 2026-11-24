@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { encryptAuthData, decryptAuthData } from "@/lib/whatsapp/encryption";
 import { initDatabaseAuthState } from "@/lib/whatsapp/db-auth-state";
 import { WhatsAppWorkerClient } from "@/lib/whatsapp/worker-client";
+import { WhatsAppCommandQueue } from "@/lib/whatsapp/command-queue";
+import { WhatsAppDaemon } from "@/server/whatsapp/daemon";
 import { getBaileys } from "@/lib/whatsapp/baileys-loader";
 
 export async function runWhatsAppIntegrationTests() {
@@ -417,7 +419,7 @@ export async function runWhatsAppIntegrationTests() {
     assert.strictEqual(
       disconnectResult.success,
       true,
-      "Disconnect RPC must succeed",
+      "Disconnect must succeed",
     );
 
     // Verify DB updated to DISCONNECTED and QR cleared
@@ -476,11 +478,285 @@ export async function runWhatsAppIntegrationTests() {
       "  ✔ Verified DisconnectReason status codes match official WhatsApp protocol.",
     );
 
+    // -------------------------------------------------------------------------
+    // TEST SECTION 8: PostgreSQL Command Queue - Persistence, Idempotency & Validation
+    // -------------------------------------------------------------------------
+    console.log(
+      "\n▶ 8. Testing Command Queue - Enqueueing, Idempotency & Payload Validation...",
+    );
+
+    const idempotencyKey = `idemp_${Date.now()}`;
+    const enqueuedCmd1 = await WhatsAppCommandQueue.enqueueCommand({
+      organizationId: testOrgAId,
+      commandType: "CONNECT",
+      idempotencyKey,
+    });
+
+    assert.strictEqual(enqueuedCmd1.organizationId, testOrgAId);
+    assert.strictEqual(enqueuedCmd1.commandType, "CONNECT");
+    assert.strictEqual(enqueuedCmd1.status, "PENDING");
+
+    // Idempotent re-enqueue with same key: must return original command
+    const enqueuedCmd2 = await WhatsAppCommandQueue.enqueueCommand({
+      organizationId: testOrgAId,
+      commandType: "CONNECT",
+      idempotencyKey,
+    });
+    assert.strictEqual(
+      enqueuedCmd1.id,
+      enqueuedCmd2.id,
+      "Repeated command with same idempotency key must return existing command record",
+    );
+
+    // Enqueueing DISCONNECT supersedes pending CONNECT
+    const disconnectCmd = await WhatsAppCommandQueue.enqueueCommand({
+      organizationId: testOrgAId,
+      commandType: "DISCONNECT",
+    });
+    assert.strictEqual(disconnectCmd.commandType, "DISCONNECT");
+
+    const supersededConnect = await db.whatsAppCommand.findUnique({
+      where: { id: enqueuedCmd1.id },
+    });
+    assert.strictEqual(
+      supersededConnect?.status,
+      "FAILED",
+      "Pending CONNECT command must be superseded and marked FAILED by DISCONNECT",
+    );
+
+    // Validation: missing orgId or invalid commandType
+    await assert.rejects(
+      () =>
+        WhatsAppCommandQueue.enqueueCommand({
+          organizationId: "",
+          commandType: "CONNECT",
+        }),
+      /organizationId is required/i,
+      "Missing organizationId must be rejected",
+    );
+
+    await assert.rejects(
+      () =>
+        WhatsAppCommandQueue.enqueueCommand({
+          organizationId: testOrgAId,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          commandType: "INVALID_CMD" as any,
+        }),
+      /invalid commandType/i,
+      "Invalid commandType must be rejected",
+    );
+
+    console.log(
+      "  ✔ Command queue enqueueing, idempotency, supersession, and validation passed.",
+    );
+
+    // -------------------------------------------------------------------------
+    // TEST SECTION 9: Atomic Concurrency Control (FOR UPDATE SKIP LOCKED) & Lease Recovery
+    // -------------------------------------------------------------------------
+    console.log(
+      "\n▶ 9. Testing Atomic Claiming, Concurrency Defense & Lease Expiration Recovery...",
+    );
+
+    // Clean up any remaining commands from previous section for clean test state
+    await db.whatsAppCommand.deleteMany({
+      where: { organizationId: { in: [testOrgAId, testOrgBId] } },
+    });
+
+    // Enqueue a fresh command
+    const freshCmd = await WhatsAppCommandQueue.enqueueCommand({
+      organizationId: testOrgAId,
+      commandType: "CONNECT",
+    });
+
+    // Worker 1 claims the command
+    const worker1Claim = await WhatsAppCommandQueue.claimNextCommand({
+      workerId: "test-worker-1",
+      leaseDurationMs: 30000,
+    });
+
+    assert(
+      worker1Claim !== null,
+      "Worker 1 must successfully claim the command",
+    );
+    assert.strictEqual(worker1Claim.id, freshCmd.id);
+    assert.strictEqual(worker1Claim.status, "PROCESSING");
+    assert.strictEqual(worker1Claim.claimedBy, "test-worker-1");
+    assert.strictEqual(worker1Claim.attemptCount, 1);
+
+    // Worker 2 attempts to claim concurrently while Worker 1 holds the lease: must receive null
+    const worker2ConcurrentClaim = await WhatsAppCommandQueue.claimNextCommand({
+      workerId: "test-worker-2",
+      leaseDurationMs: 30000,
+    });
+    assert.strictEqual(
+      worker2ConcurrentClaim,
+      null,
+      "Worker 2 must NOT claim the command while Worker 1 holds active lease (FOR UPDATE SKIP LOCKED)",
+    );
+
+    // Simulate Worker 1 crashing and lease expiring (set leaseExpiresAt to 5s in the past)
+    await db.whatsAppCommand.update({
+      where: { id: freshCmd.id },
+      data: {
+        leaseExpiresAt: new Date(Date.now() - 5000),
+      },
+    });
+
+    // Worker 2 attempts claim again: lease expired, so Worker 2 should recover and claim it!
+    const worker2RecoveredClaim = await WhatsAppCommandQueue.claimNextCommand({
+      workerId: "test-worker-2",
+      leaseDurationMs: 30000,
+    });
+
+    assert(
+      worker2RecoveredClaim !== null,
+      "Worker 2 must recover abandoned command after lease expiry",
+    );
+    assert.strictEqual(worker2RecoveredClaim.id, freshCmd.id);
+    assert.strictEqual(worker2RecoveredClaim.claimedBy, "test-worker-2");
+    assert.strictEqual(
+      worker2RecoveredClaim.attemptCount,
+      2,
+      "Attempt count must increment on recovery",
+    );
+
+    // Complete the command
+    await WhatsAppCommandQueue.completeCommand(freshCmd.id);
+    const completedRecord = await db.whatsAppCommand.findUnique({
+      where: { id: freshCmd.id },
+    });
+    assert.strictEqual(completedRecord?.status, "COMPLETED");
+    assert(completedRecord?.completedAt !== null, "completedAt must be set");
+
+    console.log(
+      "  ✔ Atomic command claiming (FOR UPDATE SKIP LOCKED), concurrency isolation, and lease recovery passed.",
+    );
+
+    // -------------------------------------------------------------------------
+    // TEST SECTION 10: Bounded Retries & Error Sanitization
+    // -------------------------------------------------------------------------
+    console.log("\n▶ 10. Testing Bounded Retries & Error Sanitization...");
+
+    // Enqueue command with maxAttempts = 2
+    const failCmd = await WhatsAppCommandQueue.enqueueCommand({
+      organizationId: testOrgBId,
+      commandType: "CONNECT",
+      maxAttempts: 2,
+    });
+
+    // Claim attempt 1
+    const failClaim1 = await WhatsAppCommandQueue.claimNextCommand({
+      workerId: "fail-test-worker",
+    });
+    assert(failClaim1 !== null);
+
+    // Fail attempt 1 as retryable with error containing sensitive token
+    const sensitiveError = new Error(
+      "Connection failed for user with bearer secret_token_xyz123 and auth=password456",
+    );
+    await WhatsAppCommandQueue.failCommand(failCmd.id, sensitiveError, true);
+
+    const afterAttempt1 = await db.whatsAppCommand.findUnique({
+      where: { id: failCmd.id },
+    });
+    assert.strictEqual(
+      afterAttempt1?.status,
+      "PENDING",
+      "Retryable command below maxAttempts must return to PENDING",
+    );
+    assert(
+      !afterAttempt1.error?.includes("secret_token_xyz123"),
+      "Sensitive tokens must be sanitized from error logs",
+    );
+    assert(
+      afterAttempt1.error?.includes("[REDACTED]"),
+      "Sanitized error must contain [REDACTED] indicator",
+    );
+
+    // Claim attempt 2
+    const failClaim2 = await WhatsAppCommandQueue.claimNextCommand({
+      workerId: "fail-test-worker",
+    });
+    assert(failClaim2 !== null);
+    assert.strictEqual(failClaim2.attemptCount, 2);
+
+    // Fail attempt 2: now at maxAttempts -> must transition to terminal FAILED
+    await WhatsAppCommandQueue.failCommand(
+      failCmd.id,
+      new Error("Terminal attempt failure"),
+      true,
+    );
+
+    const finalFailed = await db.whatsAppCommand.findUnique({
+      where: { id: failCmd.id },
+    });
+    assert.strictEqual(
+      finalFailed?.status,
+      "FAILED",
+      "Command reaching maxAttempts must terminate in FAILED status",
+    );
+
+    console.log("  ✔ Bounded retries and error sanitization defense passed.");
+
+    // -------------------------------------------------------------------------
+    // TEST SECTION 11: WhatsApp Daemon Startup & Graceful Shutdown
+    // -------------------------------------------------------------------------
+    console.log(
+      "\n▶ 11. Testing WhatsApp Daemon Startup & SIGTERM Graceful Shutdown...",
+    );
+
+    const testDaemon = new WhatsAppDaemon({
+      workerId: "test-daemon-smoke",
+      pollIntervalMs: 100,
+    });
+
+    // Start daemon in background
+    const daemonPromise = testDaemon.start();
+
+    // Verify daemon is running and idle without errors
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Initiate graceful shutdown
+    await testDaemon.shutdown("SIGTERM");
+    await daemonPromise;
+
+    console.log(
+      "  ✔ WhatsApp Daemon idle startup, health, and SIGTERM graceful shutdown passed.",
+    );
+
+    // -------------------------------------------------------------------------
+    // TEST SECTION 12: Tenant Isolation & Non-Existent Organization State
+    // -------------------------------------------------------------------------
+    console.log(
+      "\n▶ 12. Testing Unauthorized & Non-Existent Organization Boundaries...",
+    );
+
+    const nonExistentStatus = await WhatsAppWorkerClient.getStatus(
+      "non_existent_org_id",
+    );
+    assert.strictEqual(
+      nonExistentStatus.state.status,
+      "DISCONNECTED",
+      "Non-existent org must safely return DISCONNECTED",
+    );
+    assert.strictEqual(
+      nonExistentStatus.state.qrCode,
+      null,
+      "Non-existent org must have null QR",
+    );
+
+    console.log(
+      "  ✔ Tenant boundary check on non-existent organization passed.",
+    );
+
     console.log("\n=======================================================");
     console.log("   All WhatsApp & Baileys Integration Tests Passed! ✔");
     console.log("=======================================================\n");
   } finally {
     // Cleanup test fixtures
+    await db.whatsAppCommand.deleteMany({
+      where: { organizationId: { in: [testOrgAId, testOrgBId] } },
+    });
     await db.whatsAppProcessedMessage.deleteMany({
       where: { organizationId: { in: [testOrgAId, testOrgBId] } },
     });

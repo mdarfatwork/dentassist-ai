@@ -307,6 +307,7 @@ DentAssist AI uses strict runtime validation via Zod in [config/env.ts](file:///
 | `NVIDIA_API_KEY`                       | Optional  | Server        | NVIDIA NIM API key for Prompt Guard model.                                                           | Production, Preview  | Server-only secret.                                    |
 | `EMBEDDING_PROVIDER`                   | Optional  | Server        | `pinecone` (default) or `mock`.                                                                      | Production, Preview  | Use `pinecone` in production.                          |
 | `EMBEDDING_MODEL`                      | Optional  | Server        | Embedding model name (default: `multilingual-e5-large`).                                             | Production, Preview  | Must match Pinecone inference model.                   |
+| `WHATSAPP_AUTH_ENCRYPTION_KEY`         | **Yes\*** | Server        | 32-byte hex/base64 encryption key for AES-256-GCM auth credentials and Signal keys at rest.          | Production, Preview  | Server-only secret (*Required for WhatsApp).           |
 | `NEXT_PUBLIC_COMPANY_LEGAL_NAME`       | Optional  | Client        | Registered business name displayed in Terms/Privacy pages.                                           | Production           | Configurable branding.                                 |
 | `NEXT_PUBLIC_COMPANY_ADDRESS`          | Optional  | Client        | Registered office address in Terms/Privacy pages.                                                    | Production           | Configurable branding.                                 |
 | `NEXT_PUBLIC_LEGAL_JURISDICTION`       | Optional  | Client        | Governing jurisdiction in legal documents.                                                           | Production           | Configurable legal string.                             |
@@ -502,6 +503,120 @@ Returns:
 - `status`: `"healthy"` | `"degraded"` | `"failing"`
 - Provider circuit states (`CLOSED`, `OPEN`, `HALF_OPEN`)
 - Consecutive failure counts and active cooldowns
+
+---
+
+## 8b. WhatsApp Baileys Integration & Vercel Daemons Setup
+
+DentAssist AI includes an autonomous WhatsApp AI Receptionist powered by [@whiskeysockets/baileys](https://github.com/WhiskeySockets/Baileys). It enables dental practices to link their verified clinic WhatsApp phone line via QR pairing directly to the 24/7 AI Receptionist.
+
+### Architecture: Vercel Daemons & PostgreSQL Command Queue
+
+Vercel Daemons run continuous containerized background processes on Vercel Fluid compute alongside your Next.js application.
+
+```
+┌─────────────────────────────────┐                 ┌─────────────────────────────────┐
+│ Next.js App Router (Serverless) │                 │ Vercel Daemon (Fluid Compute)   │
+│                                 │                 │                                 │
+│ - Dashboard UI (/whatsapp)      │                 │ - Owns persistent Baileys WS    │
+│ - tRPC Mutations & Queries      │                 │ - AES-256-GCM Credential store  │
+│ - Real-time SSE Stream          │                 │ - AI Receptionist message loop  │
+└───────────────┬─────────────────┘                 └────────────────┬────────────────┘
+                │ Enqueue Commands                                   │ Polls & Claims
+                │ Reads State                                        │ Updates Status
+                ▼                                                    ▼
+    ┌────────────────────────────────────────────────────────────────────┐
+    │                     Neon PostgreSQL Database                        │
+    │                                                                    │
+    │ - whatsapp_command: Durable queue with FOR UPDATE SKIP LOCKED      │
+    │ - whatsapp_connection: Authoritative status, phone number & QR     │
+    │ - whatsapp_auth_state: Encrypted Signal protocol keys at rest      │
+    │ - whatsapp_processed_message: Atomic inbound deduplication         │
+    └────────────────────────────────────────────────────────────────────┘
+```
+
+#### Why a Database Command Queue?
+
+1. **Directionality Constraint:** Vercel Daemons do not receive inbound web traffic. Services and serverless functions cannot target a daemon via HTTP or service bindings (bindings only point Daemon -> Service).
+2. **Reliability & Crash Safety:** Commands (`CONNECT`, `DISCONNECT`) are durably stored in PostgreSQL. If the daemon restarts or redeploys, active sessions are restored via `restoreAllSessions()`, and in-flight commands with expired leases are recovered automatically.
+3. **Tenant Isolation:** All commands and auth states are strictly partitioned by `organizationId`.
+
+### Configuration in `vercel.json`
+
+The daemon is declared under the top-level `daemons` key in `vercel.json`:
+
+```json
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "daemons": {
+    "whatsapp-worker": {
+      "root": ".",
+      "entrypoint": "Dockerfile.daemon",
+      "instances": {
+        "iad1": 1
+      },
+      "resources": {
+        "requests": {
+          "memory": "1Gi"
+        }
+      },
+      "terminationGracePeriodSeconds": 30
+    }
+  }
+}
+```
+
+- **Instances:** Conservative default of `1` instance in region `iad1` (US East).
+- **Grace Period:** 30 seconds termination grace period to allow in-flight commands and active sockets to close cleanly upon `SIGTERM`.
+- **Public Beta Notice:** Vercel Daemons are in public beta and run exclusively on **Production** deployments. Preview deployments do not run daemons.
+
+### Required Environment Variables
+
+Set `WHATSAPP_AUTH_ENCRYPTION_KEY` in your Vercel Project Environment Variables:
+
+```bash
+# Generate a 32-byte hexadecimal encryption key
+openssl rand -hex 32
+```
+
+Add to Vercel (Production environment):
+
+- **`WHATSAPP_AUTH_ENCRYPTION_KEY`**: `<your-32-byte-hex-key>`
+- **`DATABASE_URL`**: Your Neon pooled database connection string with SSL mode enabled.
+
+### Database Migration
+
+Ensure the `whatsapp_command` table and related indexes are applied to your database:
+
+```bash
+# Apply reviewed migration
+pnpm prisma db push
+```
+
+### Local Development & Docker Testing
+
+```bash
+# 1. Run Next.js web application
+pnpm dev
+
+# 2. In a separate terminal, run the WhatsApp daemon locally
+pnpm worker:whatsapp
+
+# 3. (Optional) Test the production container image locally using Docker
+docker build -f Dockerfile.daemon -t dentassist-whatsapp-daemon .
+docker run --env-file .env.local dentassist-whatsapp-daemon
+```
+
+### Operational Troubleshooting & Recovery Runbook
+
+| Scenario                                | Symptom / Error                              | Automatic Recovery / Resolution Steps                                                                                                                                                                                               |
+| :-------------------------------------- | :------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Daemon Crash / Pod Eviction**         | Daemon container restarts                    | Vercel Fluid compute automatically respawns the container. On boot, `restoreAllSessions()` reads database connection records with status `CONNECTED` or `CONNECTING` and re-establishes live sockets without requiring user action. |
+| **Command Stuck in Processing**         | Network timeout during command execution     | The claiming query sets a 60-second lease (`leaseExpiresAt`). If the worker terminates before completing, any active worker claims the command once `leaseExpiresAt < NOW()` using `FOR UPDATE SKIP LOCKED`.                        |
+| **Expired QR Code**                     | Patient takes > 60 seconds to scan           | Baileys QR expires after 60 seconds. The database automatically marks the QR as expired; the dashboard presents a "Refresh QR Code" button that enqueues a fresh `CONNECT` command.                                                 |
+| **Stale / Desynchronized Session**      | Device disconnected from WhatsApp mobile app | Baileys emits `connection.close` with status code `401 (loggedOut)`. The daemon updates the database status to `DISCONNECTED` and purges the encrypted session keys from `whatsapp_auth_state`.                                     |
+| **Corrupted Authentication Ciphertext** | Tampered record or modified encryption key   | `decryptAuthData` verifies AES-256-GCM authentication tag. If verification fails, it throws a safe error, logs a diagnostic warning without exposing keys, and allows the clinic to re-pair cleanly.                                |
+| **Missing Encryption Key**              | `WHATSAPP_AUTH_ENCRYPTION_KEY` missing       | The daemon fails fast on startup with a secret-safe error message: `FATAL: WHATSAPP_AUTH_ENCRYPTION_KEY or BETTER_AUTH_SECRET is required`. Add the key in the Vercel dashboard.                                                    |
 
 ---
 
