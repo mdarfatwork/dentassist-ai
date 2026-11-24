@@ -1,5 +1,5 @@
-import { env } from "@/config/env";
 import { db } from "@/lib/db";
+import { WhatsAppCommandQueue } from "./command-queue";
 import type {
   WhatsAppConnectionState,
   WorkerSessionStatusResponse,
@@ -8,169 +8,152 @@ import type {
 } from "./types";
 
 /**
- * WhatsApp Worker Client
- * Facilitates secure, authenticated communication between the Next.js application
- * and the persistent Node.js WhatsApp worker service.
+ * WhatsApp Worker Client (Vercel Daemon Architecture)
+ * Writes durable commands to PostgreSQL and reads authoritative state directly from the database.
+ * Completely eliminates inbound HTTP dependencies to the persistent worker.
  */
 export class WhatsAppWorkerClient {
-  private static getBaseUrl(): string {
-    return env.WHATSAPP_WORKER_URL.replace(/\/$/, "");
-  }
-
-  private static getHeaders(): Record<string, string> {
-    return {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${env.WHATSAPP_WORKER_SECRET}`,
-      "x-worker-secret": env.WHATSAPP_WORKER_SECRET,
-    };
-  }
-
   /**
-   * Request the worker to start or restore a Baileys session for the clinic organization.
+   * Request the daemon to start or restore a Baileys session for the clinic organization
+   * via the durable PostgreSQL command queue.
    */
   public static async connect(
     organizationId: string,
   ): Promise<WorkerConnectResponse> {
-    const url = `${this.getBaseUrl()}/api/sessions/${organizationId}/connect`;
+    if (!organizationId) {
+      throw new Error("organizationId is required to connect WhatsApp.");
+    }
 
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: this.getHeaders(),
-        signal: AbortSignal.timeout(10000),
-      });
+    // 1. Check current connection status
+    const existing = await db.whatsAppConnection.findUnique({
+      where: { organizationId },
+    });
 
-      if (!response.ok) {
-        const errorData = (await response.json().catch(() => ({}))) as {
-          message?: string;
-        };
-        throw new Error(
-          errorData.message ||
-            `Worker connect failed with HTTP ${response.status}`,
-        );
-      }
-
-      return (await response.json()) as WorkerConnectResponse;
-    } catch (err: unknown) {
-      // If the worker process is currently starting up or offline, record desired state in DB
-      console.warn(
-        `[WhatsApp Worker Client] Worker unreachable at ${url}: ${err instanceof Error ? err.message : String(err)}. Falling back to database state.`,
-      );
-
-      // Upsert connection record so worker restores it once online
-      await db.whatsAppConnection.upsert({
-        where: { organizationId },
-        update: { status: "CONNECTING" },
-        create: {
-          organizationId,
-          status: "CONNECTING",
-        },
-      });
-
+    if (existing?.status === "CONNECTED") {
       return {
-        success: false,
-        message:
-          "WhatsApp worker process is initializing. Please ensure the persistent worker is running.",
-        status: "CONNECTING",
+        success: true,
+        message: "WhatsApp session is already connected.",
+        status: "CONNECTED",
       };
     }
+
+    // 2. Set intermediate CONNECTING state in database
+    await db.whatsAppConnection.upsert({
+      where: { organizationId },
+      update: {
+        status: "CONNECTING",
+        disconnectReason: null,
+      },
+      create: {
+        organizationId,
+        status: "CONNECTING",
+      },
+    });
+
+    // 3. Enqueue durable CONNECT command for the daemon
+    const command = await WhatsAppCommandQueue.enqueueCommand({
+      organizationId,
+      commandType: "CONNECT",
+    });
+
+    return {
+      success: true,
+      message: "Connection command queued for WhatsApp daemon.",
+      status: "CONNECTING",
+      commandId: command.id,
+    };
   }
 
   /**
-   * Request the worker to disconnect and unlink the Baileys session for the clinic organization.
+   * Request the daemon to disconnect and unlink the Baileys session for the clinic organization
+   * via the durable PostgreSQL command queue.
    */
   public static async disconnect(
     organizationId: string,
   ): Promise<WorkerDisconnectResponse> {
-    const url = `${this.getBaseUrl()}/api/sessions/${organizationId}/disconnect`;
-
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: this.getHeaders(),
-        signal: AbortSignal.timeout(10000),
-      });
-
-      if (!response.ok) {
-        const errorData = (await response.json().catch(() => ({}))) as {
-          message?: string;
-        };
-        throw new Error(
-          errorData.message ||
-            `Worker disconnect failed with HTTP ${response.status}`,
-        );
-      }
-
-      return (await response.json()) as WorkerDisconnectResponse;
-    } catch (err: unknown) {
-      console.warn(
-        `[WhatsApp Worker Client] Direct disconnect RPC to worker failed: ${err instanceof Error ? err.message : String(err)}. Updating DB directly.`,
-      );
-
-      // Perform local database cleanup if worker is unreachable
-      await db.whatsAppConnection.upsert({
-        where: { organizationId },
-        update: {
-          status: "DISCONNECTED",
-          qrCode: null,
-          qrExpiresAt: null,
-          disconnectReason: "Manually disconnected by user",
-          lastDisconnectedAt: new Date(),
-        },
-        create: {
-          organizationId,
-          status: "DISCONNECTED",
-          disconnectReason: "Manually disconnected by user",
-          lastDisconnectedAt: new Date(),
-        },
-      });
-
-      await db.whatsAppAuthState.deleteMany({
-        where: { organizationId },
-      });
-
-      return {
-        success: true,
-        message: "Session disconnected and authentication state cleared.",
-      };
+    if (!organizationId) {
+      throw new Error("organizationId is required to disconnect WhatsApp.");
     }
+
+    // 1. Eagerly update database state to DISCONNECTED to stop UI polling immediately
+    await db.whatsAppConnection.upsert({
+      where: { organizationId },
+      update: {
+        status: "DISCONNECTED",
+        qrCode: null,
+        qrExpiresAt: null,
+        disconnectReason: "Manually disconnected by user",
+        lastDisconnectedAt: new Date(),
+      },
+      create: {
+        organizationId,
+        status: "DISCONNECTED",
+        disconnectReason: "Manually disconnected by user",
+        lastDisconnectedAt: new Date(),
+      },
+    });
+
+    // 2. Purge encrypted auth credentials from database for security
+    await db.whatsAppAuthState.deleteMany({
+      where: { organizationId },
+    });
+
+    // 3. Enqueue durable DISCONNECT command so daemon terminates live socket in memory
+    const command = await WhatsAppCommandQueue.enqueueCommand({
+      organizationId,
+      commandType: "DISCONNECT",
+    });
+
+    return {
+      success: true,
+      message: "Session disconnected and authentication state cleared.",
+      commandId: command.id,
+    };
   }
 
   /**
-   * Get the current WhatsApp connection state for the organization.
-   * Checks the worker first for real-time memory state; falls back to the database.
+   * Get the current WhatsApp connection state for the organization directly from PostgreSQL.
    */
   public static async getStatus(
     organizationId: string,
   ): Promise<WorkerSessionStatusResponse> {
-    const url = `${this.getBaseUrl()}/api/sessions/${organizationId}/status`;
-
-    try {
-      const response = await fetch(url, {
-        method: "GET",
-        headers: this.getHeaders(),
-        signal: AbortSignal.timeout(5000),
-      });
-
-      if (response.ok) {
-        return (await response.json()) as WorkerSessionStatusResponse;
-      }
-    } catch {
-      // Worker offline or unreachable — fall through to database
+    if (!organizationId) {
+      return {
+        success: false,
+        state: {
+          organizationId: "",
+          status: "DISCONNECTED",
+        },
+        isSocketActive: false,
+      };
     }
 
     const conn = await db.whatsAppConnection.findUnique({
       where: { organizationId },
     });
 
+    const isConnected = conn?.status === "CONNECTED";
+    const now = new Date();
+
+    // Check if QR code has expired
+    const isQrExpired =
+      conn?.status === "AWAITING_SCAN" &&
+      conn.qrExpiresAt &&
+      conn.qrExpiresAt < now;
+
+    const effectiveStatus = isQrExpired
+      ? "CONNECTING"
+      : conn?.status || "DISCONNECTED";
+    const effectiveQrCode = isQrExpired ? null : conn?.qrCode || null;
+
     const state: WhatsAppConnectionState = {
       organizationId,
-      status: conn?.status || "DISCONNECTED",
+      status: effectiveStatus,
       phoneNumber: conn?.phoneNumber,
       jid: conn?.jid,
       platform: conn?.platform,
       pushName: conn?.pushName,
-      qrCode: conn?.qrCode,
+      qrCode: effectiveQrCode,
       qrExpiresAt: conn?.qrExpiresAt?.toISOString() || null,
       lastConnectedAt: conn?.lastConnectedAt?.toISOString() || null,
       lastDisconnectedAt: conn?.lastDisconnectedAt?.toISOString() || null,
@@ -180,7 +163,7 @@ export class WhatsAppWorkerClient {
     return {
       success: true,
       state,
-      isSocketActive: conn?.status === "CONNECTED",
+      isSocketActive: isConnected,
     };
   }
 }

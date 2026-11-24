@@ -45,12 +45,23 @@ export async function GET(_req: NextRequest) {
   const encoder = new TextEncoder();
 
   let intervalId: NodeJS.Timeout | null = null;
+  let isClosed = false;
+
+  _req.signal.addEventListener("abort", () => {
+    isClosed = true;
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  });
 
   const stream = new ReadableStream({
     async start(controller) {
       const sendUpdate = async () => {
+        if (isClosed) return;
         try {
           const status = await WhatsAppWorkerClient.getStatus(organizationId);
+          if (isClosed) return;
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify(status.state)}\n\n`),
           );
@@ -60,14 +71,19 @@ export async function GET(_req: NextRequest) {
             status.state.status === "CONNECTED" ||
             status.state.status === "FAILED"
           ) {
+            isClosed = true;
             if (intervalId) {
               clearInterval(intervalId);
               intervalId = null;
             }
-            controller.close();
+            try {
+              controller.close();
+            } catch {
+              // controller might already be closed
+            }
           }
         } catch {
-          // If error fetching status, stream error message
+          // If error fetching status, continue polling
         }
       };
 
@@ -80,6 +96,7 @@ export async function GET(_req: NextRequest) {
       }, 2000);
     },
     cancel() {
+      isClosed = true;
       if (intervalId) {
         clearInterval(intervalId);
         intervalId = null;
@@ -90,7 +107,10 @@ export async function GET(_req: NextRequest) {
   return new Response(stream, {
     headers: {
       "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache, no-transform",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
+      "X-Accel-Buffering": "no",
       Connection: "keep-alive",
     },
   });

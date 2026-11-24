@@ -97,6 +97,14 @@ Dental clinics upload their real-world clinical guidelines, insurance policies, 
 - **Branding Customization:** Practice owners configure primary colors, assistant name, welcome greetings, launcher position, and branding badges.
 - **In-Browser Audio Testing:** Experimental Web Speech API support allows staff and patients to test microphone speech recognition and voice playback directly within the browser.
 
+### 📱 WhatsApp AI Receptionist & Vercel Daemons
+
+- **Autonomous WhatsApp Pairing:** Dental practices link their phone line via Baileys WhatsApp Web QR pairing at `/dashboard/whatsapp`.
+- **24/7 Direct Patient Intake:** Inbound WhatsApp messages are routed directly through the AI Receptionist to answer clinic questions and book appointments.
+- **Vercel Daemons Deployment:** Deployed using Vercel Daemons (Fluid compute container) alongside Next.js, communicating via an indexed PostgreSQL command queue with atomic locking (`FOR UPDATE SKIP LOCKED`).
+- **Encrypted Credential Storage:** Signal protocol keys and session credentials encrypted at rest using AES-256-GCM.
+- **Atomic Deduplication:** Inbound messages are deduplicated using database unique constraints to prevent duplicate replies.
+
 ---
 
 ## How It Works
@@ -614,6 +622,9 @@ pnpm typecheck
 
 # Run the automated integration test suite
 pnpm test
+
+# Run the persistent WhatsApp worker daemon locally
+pnpm worker:whatsapp
 
 # Generate Prisma Client TypeScript definitions
 pnpm db:generate

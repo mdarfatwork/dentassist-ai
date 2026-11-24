@@ -26,11 +26,13 @@ export interface WorkerConnectResponse {
   message: string;
   status: WhatsAppStatus;
   qrCode?: string | null;
+  commandId?: string;
 }
 
 export interface WorkerDisconnectResponse {
   success: boolean;
   message: string;
+  commandId?: string;
 }
 
 export interface IncomingWhatsAppMessagePayload {
@@ -40,4 +42,27 @@ export interface IncomingWhatsAppMessagePayload {
   messageId: string;
   text: string;
   timestamp: number;
+}
+
+export type WhatsAppCommandType = "CONNECT" | "DISCONNECT";
+
+export type WhatsAppCommandStatus =
+  "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+
+export interface WhatsAppCommandRecord {
+  id: string;
+  organizationId: string;
+  commandType: WhatsAppCommandType;
+  status: WhatsAppCommandStatus;
+  payload?: string | null;
+  attemptCount: number;
+  maxAttempts: number;
+  claimedAt?: Date | null;
+  claimedBy?: string | null;
+  leaseExpiresAt?: Date | null;
+  completedAt?: Date | null;
+  error?: string | null;
+  idempotencyKey?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
 }

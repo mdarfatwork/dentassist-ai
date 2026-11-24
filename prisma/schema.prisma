@@ -100,6 +100,7 @@ model Organization {
   whatsappConnection        WhatsAppConnection?
   whatsappAuthStates        WhatsAppAuthState[]
   whatsappProcessedMessages WhatsAppProcessedMessage[]
+  whatsappCommands          WhatsAppCommand[]
 
   @@index([slug])
   @@map("organization")
@@ -413,6 +414,7 @@ model WhatsAppConnection {
   organization       Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
+  @@index([status])
   @@map("whatsapp_connection")
 }
 
@@ -445,5 +447,42 @@ model WhatsAppProcessedMessage {
   @@index([organizationId])
   @@map("whatsapp_processed_message")
 }
+
+enum WhatsAppCommandType {
+  CONNECT
+  DISCONNECT
+}
+
+enum WhatsAppCommandStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model WhatsAppCommand {
+  id             String                @id @default(cuid())
+  organizationId String
+  commandType    WhatsAppCommandType
+  status         WhatsAppCommandStatus @default(PENDING)
+  payload        String?               @db.Text
+  attemptCount   Int                   @default(0)
+  maxAttempts    Int                   @default(3)
+  claimedAt      DateTime?
+  claimedBy      String?
+  leaseExpiresAt DateTime?
+  completedAt    DateTime?
+  error          String?               @db.Text
+  idempotencyKey String?               @unique
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([status, leaseExpiresAt, createdAt])
+  @@index([organizationId, status])
+  @@map("whatsapp_command")
+}
+
 
 

@@ -1,0 +1,39 @@
+# Multi-stage Dockerfile for DentAssist AI WhatsApp Vercel Daemon
+# Target architecture: linux/amd64, Node.js 24 LTS
+FROM node:24-slim AS base
+
+ENV NODE_ENV=production
+WORKDIR /app
+
+# Install OpenSSL required by Prisma engine on Debian/Ubuntu slim
+RUN apt-get update -y && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+
+# Enable and configure pnpm
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable && corepack prepare pnpm@10.20.0 --activate
+
+# Copy package manifests and lockfiles
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml* ./
+COPY prisma ./prisma/
+
+# Install dependencies (including devDependencies required for tsx and prisma client generation)
+RUN pnpm install --frozen-lockfile --prod=false
+
+# Generate Prisma Client
+RUN pnpm prisma generate
+
+# Copy application source code needed by the worker
+COPY tsconfig.json ./
+COPY config ./config/
+COPY lib ./lib/
+COPY server ./server/
+
+# Prune unnecessary files and adjust file permissions for unprivileged node user
+RUN chown -R node:node /app
+
+# Run as unprivileged node user for security
+USER node
+
+# Execute persistent WhatsApp daemon loop without HTTP server
+CMD ["pnpm", "tsx", "server/whatsapp/worker.ts"]
